@@ -344,6 +344,282 @@ Status: 🔲
 
 ---
 
+## 💾 SAVE SYSTEM ARCHITECTURE
+
+> **Status**: Code is IMPLEMENTED ✅ (`SaveData.cs` + `SaveManager.cs`)
+> **Testing needed**: Stage 4 (Step 4.4-4.5)
+
+### How Game Progress Is Saved
+
+The save system uses **JSON serialization** with optional **XOR encryption**, stored at:
+```
+Windows: C:\Users\<User>\AppData\LocalLow\<CompanyName>\TheWalkingDead\saves\
+         slot_0.json  (auto-save)
+         slot_1.json  (manual save)
+         slot_2.json  (manual save)
+```
+
+### What Gets Saved (SaveData.cs)
+
+```
+SaveData  ← Complete game state snapshot
+├── Player State
+│   ├── playerHealth          (float)     — current HP
+│   ├── playerStamina         (float)     — current stamina
+│   ├── playerPosition        (Vector3)   — exact world position
+│   ├── playerRotation        (Quaternion) — which way player faces
+│   └── currentScene          (string)    — "Level_01_House"
+│
+├── Inventory
+│   ├── inventoryItems[]      (list)      — each item: { itemId, quantity, slotIndex }
+│   ├── equippedWeaponId      (string)    — which weapon is active
+│   └── ammoCounts            (dict)      — { "PistolAmmo": 12, "ShotgunShells": 4 }
+│
+├── World State (permanent changes)
+│   ├── unlockedDoors[]       (list)      — ["door_kitchen", "door_basement"]
+│   ├── collectedItems[]      (list)      — ["item_12345"] (so pickups don't respawn)
+│   ├── killedEnemies[]       (list)      — ["zombie_basic_99"] (so enemies stay dead)
+│   ├── completedPuzzles[]    (list)      — ["puzzle_sequence_01"]
+│   └── triggeredEvents[]     (list)      — ["cutscene_intro_played"]
+│
+└── Meta
+    ├── saveTimestamp          (string)    — "2026-03-29 15:30:00"
+    ├── totalPlayTime          (float)     — seconds played
+    ├── saveSlot               (int)       — 0, 1, or 2
+    └── gameVersion            (string)    — "1.0.0"
+```
+
+### Save/Load Data Flow
+
+```
+┌─────────────┐     Save()      ┌──────────────┐     ToJson()     ┌───────────┐
+│ Game Systems │ ──────────────► │  SaveData    │ ──────────────► │ JSON File │
+│             │                 │  (C# object) │                 │ slot_0.json│
+│ PlayerHealth│ GatherSaveData()│              │  XOR Encrypt    │            │
+│ Inventory   │ ◄──────────────│              │ ────────────►   │ (encrypted)│
+│ Doors       │                 │              │                 │            │
+│ Enemies     │     Load()      │              │  FromJson()     │            │
+│ Puzzles     │ ◄────────────── │              │ ◄────────────── │            │
+└─────────────┘ ApplySaveData() └──────────────┘  XOR Decrypt    └───────────┘
+```
+
+### When Does It Auto-Save?
+
+| Trigger | Method | Slot |
+|---------|--------|------|
+| Scene transition (level complete) | `SaveManager.AutoSave()` | Slot 0 |
+| Entering a safe room | `SaveManager.AutoSave()` | Slot 0 |
+| Player manually saves (Pause → Save) | `SaveManager.Save(slot)` | 0, 1, or 2 |
+
+### What Happens On Load?
+
+1. `SaveManager.Load(slot)` reads the JSON file
+2. XOR decrypts → deserializes into `SaveData` object
+3. `SceneLoader.LoadScene(data.currentScene)` loads the correct level
+4. After scene loads → applies player position, health, inventory
+5. World state lists are checked: doors stay unlocked, items stay collected, enemies stay dead
+
+### How World Objects Know Their State
+
+Each world object has a **unique ID** (e.g., `door_kitchen_01`, `item_key_house_42`):
+- **Door.cs**: Checks `SaveData.unlockedDoors.Contains(doorId)` → stays open
+- **ItemPickup.cs**: Checks `SaveData.collectedItems.Contains(pickupId)` → stays destroyed
+- **EnemyBase.cs**: Checks `SaveData.killedEnemies.Contains(enemyId)` → stays dead
+- **PuzzleBase.cs**: Checks `SaveData.completedPuzzles.Contains(puzzleId)` → stays solved
+
+> [!NOTE]
+> The `GatherSaveData()` method in SaveManager.cs currently captures player + inventory.
+> World state tracking (doors, kills, puzzles) needs to be wired up during Stage 4.
+> Each system fires EventBus events → SaveManager listens and accumulates the lists.
+
+---
+
+## 🔀 GIT & VERSION CONTROL WORKFLOW
+
+> **Status**: Git initialized ✅, `.gitignore` created ✅, initial commit done ✅
+
+### Quick Reference (Daily Commands)
+
+```powershell
+# 1. Check what changed
+git status
+
+# 2. Stage all changes
+git add -A
+
+# 3. Commit with descriptive message
+git commit -m "feat: add zombie basic prefab and attack animations"
+
+# 4. Push to GitHub (after remote is set up — see below)
+git push origin main
+```
+
+### Git Setup (Already Done ✅)
+
+| Step | Command | Status |
+|------|---------|--------|
+| Initialize repo | `git init` | ✅ Done |
+| Create `.gitignore` | Unity-specific ignores (Library/, Temp/, Obj/, Build/) | ✅ Done |
+| Initial commit | All 40 scripts + configs + scenes | ✅ Done |
+
+### Setting Up GitHub Remote (Do This Once)
+
+```powershell
+# 1. Create a new repository on GitHub.com (private recommended)
+#    Name: "the-walking-dead-game"
+#    Do NOT initialize with README (we already have files)
+
+# 2. Connect your local repo to GitHub
+git remote add origin https://github.com/YOUR_USERNAME/the-walking-dead-game.git
+
+# 3. Push everything
+git branch -M main
+git push -u origin main
+```
+
+### Commit Message Convention
+
+Follow the same convention as web dev — **Conventional Commits**:
+
+```
+<type>: <short description>
+
+Types:
+  feat:     New feature or system          (feat: add inventory grid UI)
+  fix:      Bug fix                        (fix: player falling through floor)
+  refactor: Code restructure, no new feat  (refactor: extract damage calc to utility)
+  asset:    New art/audio/model assets     (asset: add zombie walk animation from Mixamo)
+  scene:    Level design changes           (scene: build Level_01 kitchen area)
+  config:   Project settings changes       (config: update physics collision matrix)
+  docs:     Documentation updates          (docs: update checklist progress)
+  test:     Testing related                (test: verify save/load cycle works)
+```
+
+### When to Commit
+
+| Event | Commit? | Example Message |
+|-------|---------|-----------------|
+| Completed a checklist step | ✅ Yes | `feat: implement HUD health bar and ammo display` |
+| Before starting something risky | ✅ Yes | `checkpoint: before refactoring movement system` |
+| End of work session | ✅ Yes | `wip: progress on Level_02 Streets layout` |
+| After fixing a bug | ✅ Yes | `fix: zombie not chasing player after reload` |
+| Added art/audio assets | ✅ Yes | `asset: import zombie_walk.fbx from Mixamo` |
+
+### Branching Strategy (Simple)
+
+For a solo/small team project, keep it simple:
+
+```
+main          ← stable, always works
+  └── dev     ← daily work happens here
+       ├── feature/combat-system    ← big features get their own branch
+       └── feature/level-02-design
+```
+
+```powershell
+# Create dev branch for daily work
+git checkout -b dev
+
+# Work on a big feature
+git checkout -b feature/combat-system
+
+# Merge back when done
+git checkout dev
+git merge feature/combat-system
+git branch -d feature/combat-system
+
+# When dev is stable, merge to main
+git checkout main
+git merge dev
+```
+
+### Unity-Specific Git Tips
+
+> [!IMPORTANT]
+> Unity has some quirks with Git that are different from web dev.
+
+| Issue | Solution |
+|-------|----------|
+| **Binary files are huge** (FBX, textures, audio) | Use **Git LFS** for files >1MB: `git lfs track "*.fbx" "*.png" "*.wav"` |
+| **Scene merge conflicts** | Unity scenes are YAML — merges usually work, but avoid 2 people editing the same scene |
+| **Meta files** | ALWAYS commit `.meta` files! They store asset import settings and GUID references |
+| **Prefab merge conflicts** | Same as scenes — keep prefab editing to one person at a time |
+| **ProjectSettings changes** | Always commit `ProjectSettings/` — these are your tags, layers, physics, etc. |
+
+### Git LFS Setup (For Large Assets)
+
+```powershell
+# Install Git LFS (one-time)
+git lfs install
+
+# Track large binary file types
+git lfs track "*.fbx"
+git lfs track "*.png"
+git lfs track "*.jpg"
+git lfs track "*.wav"
+git lfs track "*.mp3"
+git lfs track "*.psd"
+git lfs track "*.tga"
+git lfs track "*.unitypackage"
+
+# Commit the .gitattributes file that LFS creates
+git add .gitattributes
+git commit -m "config: setup Git LFS for binary assets"
+```
+
+### CI/CD for Unity (Optional, Advanced)
+
+Unlike web dev where you push → build → deploy automatically, Unity CI works differently:
+
+**Option A: GitHub Actions (Free for public repos)**
+```yaml
+# .github/workflows/unity-build.yml
+name: Unity Build
+on:
+  push:
+    branches: [main]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          lfs: true
+      - uses: game-ci/unity-builder@v4
+        with:
+          targetPlatform: StandaloneWindows64
+          unityVersion: 6000.4.0f1
+```
+> Requires a Unity license activation step. See [game-ci.github.io](https://game-ci.github.io/docs/) for full setup.
+
+**Option B: Unity Cloud Build**
+- Built into Unity Dashboard → **Build Automation**
+- Connect your GitHub repo → auto-builds on push
+- Free tier available
+
+**Option C: Manual Builds (What We'll Do)**
+```
+Unity → File → Build Settings → Build
+```
+This is fine for solo dev. CI is more important for teams.
+
+### Recommended Git Workflow Per Session
+
+```
+1. Start session
+   └── git pull origin main        (if using GitHub)
+
+2. Do work (code, assets, scenes)
+   └── Commit after each milestone step
+
+3. End session
+   ├── git add -A
+   ├── git commit -m "session: <summary of what was done>"
+   └── git push origin main        (if using GitHub)
+```
+
+---
+
 ## 🆓 FREE RESOURCES
 
 ### Where to Get Assets
@@ -366,6 +642,7 @@ Status: 🔲
 | 2026-03-28 | Session 1 | Project setup, folder structure, 15 foundation scripts | Stage 0 complete |
 | 2026-03-29 | Session 2 | 25 new gameplay scripts, input actions, checklist created | Start Stage 1 |
 | 2026-03-29 | Session 3 | AI automated Stage 1 steps 1.1-1.5: packages, tags, layers, physics matrix, 8 scenes, build settings | Start Step 1.6 (Create ScriptableObjects) |
+| 2026-03-29 | Session 4 | Documented save system architecture, initialized Git repo + .gitignore + first commit, added Git/CI workflow guide | Continue Step 1.6 or push to GitHub |
 | | | | |
 
 ---
