@@ -1,0 +1,91 @@
+# ============================================================
+# Unity .gitignore
+# Comprehensive ignore rules for Unity 6 projects
+# ============================================================
+
+# ---- Unity Generated ----
+/[Ll]ibrary/
+/[Tt]emp/
+/[Oo]bj/
+/[Bb]uild/
+/[Bb]uilds/
+/[Ll]ogs/
+/[Uu]ser[Ss]ettings/
+
+# ---- IDE ----
+# Visual Studio
+.vs/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+*.csproj
+*.sln
+*.slnx
+
+# JetBrains Rider
+.idea/
+*.iml
+
+# VS Code
+.vscode/
+
+# ---- OS Generated ----
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+desktop.ini
+
+# ---- Unity Specific ----
+# Crashlytics
+crashlytics-build.properties
+sysinfo.txt
+
+# Asset meta files (for .dll and other binary imports)
+*.pidb.meta
+*.pdb.meta
+*.mdb.meta
+
+# ---- Builds ----
+*.apk
+*.aab
+*.unitypackage
+*.app
+
+# ---- Packaging ----
+ExportedObj/
+*.svd
+*.unitypackage
+*.unitypackage.meta
+
+# ---- Video ----
+# Uncomment if you don't want to track large video files
+# *.mp4
+# *.mov
+
+# ---- Large Binary Assets (optional, use Git LFS instead) ----
+# Uncomment these if using Git LFS for large files
+# *.fbx
+# *.psd
+# *.png
+# *.jpg
+# *.wav
+# *.mp3
+
+# ---- Memoryscape / Profiler ----
+/MemoryCaptures/
+
+# ---- Gradle (Android builds) ----
+/Assets/Plugins/Android/gradleOut.aab
+
+# ---- Plastic SCM ----
+ignore.conf
+*.private.0
+*.private
+
+# ---- Debug ----
+*.stackdump

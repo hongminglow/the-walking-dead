@@ -1,0 +1,219 @@
+// ============================================================
+// File:        ThirdPersonCamera.cs
+// Namespace:   TWD.Camera
+// Description: Over-the-shoulder third-person camera controller.
+//              Supports aiming zoom, collision avoidance, and
+//              smooth follow. Will be replaced by Cinemachine later.
+// Author:      The Walking Dead Team
+// Created:     2026-03-29
+// ============================================================
+
+using UnityEngine;
+using UnityEngine.InputSystem;
+using TWD.Core;
+
+namespace TWD.Camera
+{
+    /// <summary>
+    /// RE4-style over-the-shoulder camera. Follows the player,
+    /// handles mouse/gamepad look, and shifts for aim mode.
+    /// This is a placeholder until Cinemachine is integrated.
+    /// </summary>
+    public class ThirdPersonCamera : MonoBehaviour
+    {
+        #region Serialized Fields
+
+        [Header("Follow Target")]
+        [SerializeField] private Transform _followTarget;
+        [SerializeField] private float _followSpeed = 12f;
+
+        [Header("Normal Camera")]
+        [SerializeField] private Vector3 _normalOffset = new Vector3(0.5f, 1.6f, -3f);
+        [SerializeField] private float _normalFOV = 60f;
+
+        [Header("Aim Camera")]
+        [SerializeField] private Vector3 _aimOffset = new Vector3(0.8f, 1.5f, -1.5f);
+        [SerializeField] private float _aimFOV = 45f;
+
+        [Header("Sensitivity")]
+        [SerializeField] private float _mouseSensitivity = 2f;
+        [SerializeField] private float _gamepadSensitivity = 150f;
+        [SerializeField] private float _verticalClampMin = -40f;
+        [SerializeField] private float _verticalClampMax = 70f;
+
+        [Header("Collision")]
+        [SerializeField] private float _collisionRadius = 0.3f;
+        [SerializeField] private LayerMask _collisionLayers;
+
+        [Header("Smoothing")]
+        [SerializeField] private float _aimTransitionSpeed = 8f;
+
+        #endregion
+
+        #region Private Fields
+
+        private UnityEngine.Camera _camera;
+        private float _yaw;
+        private float _pitch;
+        private Vector2 _lookInput;
+        private bool _isAiming;
+        private Vector3 _currentOffset;
+        private float _currentFOV;
+
+        #endregion
+
+        #region Properties
+
+        /// <summary>Horizontal rotation (yaw) of the camera.</summary>
+        public float Yaw => _yaw;
+
+        /// <summary>Vertical rotation (pitch) of the camera.</summary>
+        public float Pitch => _pitch;
+
+        #endregion
+
+        #region Lifecycle
+
+        private void Awake()
+        {
+            _camera = GetComponent<UnityEngine.Camera>();
+            if (_camera == null)
+                _camera = UnityEngine.Camera.main;
+
+            _currentOffset = _normalOffset;
+            _currentFOV = _normalFOV;
+        }
+
+        private void Start()
+        {
+            if (_followTarget == null)
+            {
+                var player = GameObject.FindWithTag("Player");
+                if (player != null) _followTarget = player.transform;
+            }
+
+            // Initialize rotation from current
+            _yaw = transform.eulerAngles.y;
+            _pitch = transform.eulerAngles.x;
+        }
+
+        private void LateUpdate()
+        {
+            if (_followTarget == null || !GameManager.Instance.IsPlaying) return;
+
+            HandleLookInput();
+            UpdatePosition();
+            HandleCollision();
+            UpdateFOV();
+        }
+
+        #endregion
+
+        #region Input Callbacks
+
+        /// <summary>Called by PlayerInput for Look action.</summary>
+        public void OnLook(InputAction.CallbackContext context)
+        {
+            _lookInput = context.ReadValue<Vector2>();
+        }
+
+        /// <summary>Called by PlayerInput for Aim action.</summary>
+        public void OnAim(InputAction.CallbackContext context)
+        {
+            _isAiming = context.performed;
+        }
+
+        #endregion
+
+        #region Camera Logic
+
+        private void HandleLookInput()
+        {
+            // Determine sensitivity (mouse vs gamepad based on input magnitude)
+            float sensitivity = _lookInput.magnitude > 2f ? _gamepadSensitivity * Time.deltaTime
+                                                          : _mouseSensitivity;
+
+            _yaw += _lookInput.x * sensitivity;
+            _pitch -= _lookInput.y * sensitivity;
+            _pitch = Mathf.Clamp(_pitch, _verticalClampMin, _verticalClampMax);
+        }
+
+        private void UpdatePosition()
+        {
+            // Smooth transition between normal and aim offsets
+            Vector3 targetOffset = _isAiming ? _aimOffset : _normalOffset;
+            _currentOffset = Vector3.Lerp(_currentOffset, targetOffset, Time.deltaTime * _aimTransitionSpeed);
+
+            // Build rotation
+            Quaternion rotation = Quaternion.Euler(_pitch, _yaw, 0f);
+
+            // Calculate desired position
+            Vector3 targetPosition = _followTarget.position + rotation * _currentOffset;
+
+            // Smooth follow
+            transform.position = Vector3.Lerp(transform.position, targetPosition, Time.deltaTime * _followSpeed);
+            transform.rotation = rotation;
+        }
+
+        private void HandleCollision()
+        {
+            // Raycast from target to camera to prevent going through walls
+            Vector3 targetPos = _followTarget.position + Vector3.up * _currentOffset.y;
+            Vector3 direction = transform.position - targetPos;
+            float desiredDistance = direction.magnitude;
+
+            if (Physics.SphereCast(targetPos, _collisionRadius, direction.normalized,
+                out RaycastHit hit, desiredDistance, _collisionLayers))
+            {
+                // Move camera in front of the wall
+                transform.position = hit.point + hit.normal * _collisionRadius;
+            }
+        }
+
+        private void UpdateFOV()
+        {
+            if (_camera == null) return;
+
+            float targetFOV = _isAiming ? _aimFOV : _normalFOV;
+            _currentFOV = Mathf.Lerp(_currentFOV, targetFOV, Time.deltaTime * _aimTransitionSpeed);
+            _camera.fieldOfView = _currentFOV;
+        }
+
+        #endregion
+
+        #region Public Methods
+
+        /// <summary>
+        /// Applies a camera shake effect. Call from CameraShake or directly.
+        /// </summary>
+        public void ApplyShake(float intensity, float duration)
+        {
+            // Simplified inline shake — will be replaced by CameraShake component
+            StartCoroutine(ShakeRoutine(intensity, duration));
+        }
+
+        private System.Collections.IEnumerator ShakeRoutine(float intensity, float duration)
+        {
+            float elapsed = 0f;
+            while (elapsed < duration)
+            {
+                float x = Random.Range(-1f, 1f) * intensity;
+                float y = Random.Range(-1f, 1f) * intensity;
+
+                transform.localPosition += new Vector3(x, y, 0f);
+
+                elapsed += Time.deltaTime;
+                intensity = Mathf.Lerp(intensity, 0f, elapsed / duration);
+                yield return null;
+            }
+        }
+
+        /// <summary>Sets the follow target (useful for cutscenes).</summary>
+        public void SetTarget(Transform target)
+        {
+            _followTarget = target;
+        }
+
+        #endregion
+    }
+}
