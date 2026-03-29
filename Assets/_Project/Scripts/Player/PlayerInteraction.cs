@@ -61,7 +61,7 @@ namespace TWD.Player
         {
             if (_cameraTransform == null)
             {
-                _cameraTransform = Camera.main?.transform;
+                _cameraTransform = UnityEngine.Camera.main?.transform;
             }
         }
 

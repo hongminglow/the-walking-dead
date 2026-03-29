@@ -75,7 +75,7 @@ namespace TWD.Player
         private void Start()
         {
             if (_cameraTransform == null)
-                _cameraTransform = Camera.main?.transform;
+                _cameraTransform = UnityEngine.Camera.main?.transform;
 
             if (_currentWeaponData != null)
                 _currentAmmoInClip = _currentWeaponData.magazineSize;

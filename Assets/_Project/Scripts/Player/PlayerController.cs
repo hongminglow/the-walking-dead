@@ -107,7 +107,7 @@ namespace TWD.Player
         {
             if (_cameraTransform == null)
             {
-                _cameraTransform = Camera.main?.transform;
+                _cameraTransform = UnityEngine.Camera.main?.transform;
                 if (_cameraTransform == null)
                 {
                     Debug.LogError("[PlayerController] No camera found! Assign CameraTransform.");
