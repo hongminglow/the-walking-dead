@@ -5,8 +5,8 @@
 > - Update this file after each work session.
 > - When resuming with AI, say: _"Continue from Stage X, Step Y"_
 
-> **LAST UPDATED**: 2026-03-29 (Session 3)
-> **CURRENT STAGE**: Stage 1 — Steps 1.1-1.5 DONE ✅ | Step 1.6 onward 🚧
+> **LAST UPDATED**: 2026-03-29 (Session 5)
+> **CURRENT STAGE**: Stage 1 — Steps 1.1-1.8 DONE ✅ | Stage 2 next 🚧
 
 ---
 
@@ -15,7 +15,7 @@
 | Stage | Name | Status | Notes |
 |-------|------|--------|-------|
 | 0 | Project Foundation (Scripts) | ✅ COMPLETE | 40 scripts created |
-| 1 | Unity Editor Setup | 🚧 IN PROGRESS | Steps 1.1-1.5 auto-done by AI, Step 1.6+ next |
+| 1 | Unity Editor Setup | ✅ COMPLETE | Steps 1.1-1.8 auto-done by AI |
 | 2 | Phase 1: Prototype | 🔲 Not started | Walk + pickup + door |
 | 3 | Phase 2: Combat | 🔲 Not started | Fight zombies |
 | 4 | Phase 3: Systems | 🔲 Not started | Inventory UI + Save/Load |
@@ -152,37 +152,37 @@
 
 ---
 
-### Step 1.6 — Create ScriptableObject Data Assets
+### Step 1.6 — Create ScriptableObject Data Assets ✅ AUTO-DONE BY AI
 
-> **How:** In Unity → navigate to the folder → right-click → **Create → TWD → [category]**
-> Fill in the values shown below in the Inspector panel.
+> **AI automated this!** Created 12 `.asset` files with correct script GUIDs, enum values, and game stats.
+> Unity will auto-import them when you next open the Editor.
 
-#### Weapons (right-click → Create → TWD → Weapons → Weapon Data)
-
-| # | Asset Name | Folder | Key Values | Status |
-|---|-----------|--------|------------|--------|
-| 1 | `SO_WeaponKnife` | ScriptableObjects/Weapons/ | Melee, 15 dmg, 0.8s rate, 1.5m range | 🔲 |
-| 2 | `SO_WeaponPistol` | ScriptableObjects/Weapons/ | Pistol, 25 dmg, 0.4s rate, 30m, PistolAmmo, mag:12 | 🔲 |
-| 3 | `SO_WeaponShotgun` | ScriptableObjects/Weapons/ | Shotgun, 60 dmg, 1.2s rate, 10m, ShotgunShells, mag:6 | 🔲 |
-| 4 | `SO_WeaponWrench` | ScriptableObjects/Weapons/ | Melee, 35 dmg, 1.0s rate, 2.0m range | 🔲 |
-
-#### Enemies (right-click → Create → TWD → Enemies → Enemy Data)
+#### Weapons (4 assets)
 
 | # | Asset Name | Folder | Key Values | Status |
 |---|-----------|--------|------------|--------|
-| 1 | `SO_Zombie_Basic` | ScriptableObjects/Enemies/ | 80 HP, 15 dmg, walk:1.2, chase:2.0 | 🔲 |
-| 2 | `SO_Zombie_Crawler` | ScriptableObjects/Enemies/ | 40 HP, 10 dmg, walk:0.8, chase:1.5 | 🔲 |
-| 3 | `SO_Zombie_Brute` | ScriptableObjects/Enemies/ | 300 HP, 40 dmg, walk:0.6, chase:1.2 | 🔲 |
+| 1 | `SO_WeaponKnife` | ScriptableObjects/Weapons/ | Melee, 15 dmg, 0.8s rate, 1.5m range | ✅ |
+| 2 | `SO_WeaponPistol` | ScriptableObjects/Weapons/ | Pistol, 25 dmg, 0.4s rate, 30m, PistolAmmo, mag:12 | ✅ |
+| 3 | `SO_WeaponShotgun` | ScriptableObjects/Weapons/ | Shotgun, 60 dmg, 1.2s rate, 10m, ShotgunShells, mag:6 | ✅ |
+| 4 | `SO_WeaponWrench` | ScriptableObjects/Weapons/ | Melee, 35 dmg, 1.0s rate, 2.0m range | ✅ |
 
-#### Items (right-click → Create → TWD → Items → Item Data)
+#### Enemies (3 assets)
 
 | # | Asset Name | Folder | Key Values | Status |
 |---|-----------|--------|------------|--------|
-| 1 | `SO_HealthPack` | ScriptableObjects/Items/ | Healing, heal:50, stackable, maxStack:5 | 🔲 |
-| 2 | `SO_Ammo_Pistol` | ScriptableObjects/Items/ | Ammo, PistolAmmo, amount:6, stackable | 🔲 |
-| 3 | `SO_Ammo_Shotgun` | ScriptableObjects/Items/ | Ammo, ShotgunShells, amount:4, stackable | 🔲 |
-| 4 | `SO_Key_House` | ScriptableObjects/Items/ | Key, isKeyItem:true, itemId:"key_house" | 🔲 |
-| 5 | `SO_Key_Hospital` | ScriptableObjects/Items/ | Key, isKeyItem:true, itemId:"key_hospital" | 🔲 |
+| 1 | `SO_Zombie_Basic` | ScriptableObjects/Enemies/ | 80 HP, 15 dmg, walk:1.2, chase:2.0, sight:15m | ✅ |
+| 2 | `SO_Zombie_Crawler` | ScriptableObjects/Enemies/ | 40 HP, 10 dmg, walk:0.8, chase:1.5, sight:10m | ✅ |
+| 3 | `SO_Zombie_Brute` | ScriptableObjects/Enemies/ | 300 HP, 40 dmg, walk:0.6, chase:1.2, sight:20m | ✅ |
+
+#### Items (5 assets)
+
+| # | Asset Name | Folder | Key Values | Status |
+|---|-----------|--------|------------|--------|
+| 1 | `SO_HealthPack` | ScriptableObjects/Items/ | Healing, heal:50, stackable, maxStack:5 | ✅ |
+| 2 | `SO_Ammo_Pistol` | ScriptableObjects/Items/ | Ammo, PistolAmmo, amount:6, stackable | ✅ |
+| 3 | `SO_Ammo_Shotgun` | ScriptableObjects/Items/ | Ammo, ShotgunShells, amount:4, stackable | ✅ |
+| 4 | `SO_Key_House` | ScriptableObjects/Items/ | Key, isKeyItem:true, itemId:"key_house" | ✅ |
+| 5 | `SO_Key_Hospital` | ScriptableObjects/Items/ | Key, isKeyItem:true, itemId:"key_hospital" | ✅ |
 
 ---
 
@@ -204,31 +204,33 @@
 
 > AudioManager auto-creates its 5 AudioSource children at runtime — no manual setup needed!
 
-Status: 🔲
+Status: ✅ AUTO-DONE BY AI (embedded in `_TestScene.unity`)
 
 ---
 
-### Step 1.8 — Build Player Prefab
+### Step 1.8 — Build Player Prefab ✅ AUTO-DONE BY AI
 
-> **How:** 
-> 1. For quick start: use a **Capsule** as placeholder (GameObject → 3D Object → Capsule)
-> 2. Or download a character from [Mixamo](https://www.mixamo.com) for proper animations
+> **AI automated this!** Player GameObject with capsule model, CharacterController, and all scripts
+> is embedded directly in `_TestScene.unity`. No need to create separately.
 
 ```
 Player  (tag: "Player", layer: 6-Player)
-├── Add Component: CharacterController  (height:1.8, radius:0.3, center: 0, 0.9, 0)
-├── Add Component: PlayerInput          (Actions: drag PlayerInputActions asset, Behavior: "Send Messages")
-├── Add Component: PlayerController     (assign camera transform reference)
-├── Add Component: PlayerHealth
-├── Add Component: PlayerCombat         (assign weapon data SOs)
-├── Add Component: PlayerAnimator       (needs Animator component too)
-├── Add Component: PlayerInteraction    (assign camera + interactable layer mask)
-├── Add Component: AudioSource
-├── Add Component: Animator             (need AnimatorController — create later)
-└── Create child empty: "CameraTarget"  (position: 0, 1.6, 0 — head height)
+├── CharacterController       (height:1.8, radius:0.3, center: 0, 0.9, 0)
+├── PlayerInput               (Actions: PlayerInputActions, default map: Gameplay)
+├── PlayerController           (camera transform wired to Main Camera)
+├── PlayerHealth
+├── PlayerCombat
+├── PlayerAnimator
+├── PlayerInteraction          (camera wired, interactable layer: 8)
+├── AudioSource
+├── SceneLoader                (on Player for scene access)
+├── Child: "CameraTarget"      (position: 0, 1.6, 0 — head height)
+└── Child: "PlayerModel"       (Capsule mesh, scaled 0.6/0.9/0.6)
 ```
 
-Status: 🔲
+Status: ✅ (embedded in _TestScene)
+
+Main Camera also has **ThirdPersonCamera** script targeting `CameraTarget`.
 
 ---
 
@@ -643,6 +645,7 @@ This is fine for solo dev. CI is more important for teams.
 | 2026-03-29 | Session 2 | 25 new gameplay scripts, input actions, checklist created | Start Stage 1 |
 | 2026-03-29 | Session 3 | AI automated Stage 1 steps 1.1-1.5: packages, tags, layers, physics matrix, 8 scenes, build settings | Start Step 1.6 (Create ScriptableObjects) |
 | 2026-03-29 | Session 4 | Documented save system architecture, initialized Git repo + .gitignore + first commit, added Git/CI workflow guide | Continue Step 1.6 or push to GitHub |
+| 2026-03-29 | Session 5 | Created 12 ScriptableObject .asset files (4 weapons, 3 enemies, 5 items) with correct GUIDs and values | Start Step 1.7 (Build Manager Prefab) |
 | | | | |
 
 ---

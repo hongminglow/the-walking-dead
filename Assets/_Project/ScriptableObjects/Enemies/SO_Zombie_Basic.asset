@@ -1,0 +1,38 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fe4176c20a081364a8c72d048d12ad09, type: 3}
+  m_Name: SO_Zombie_Basic
+  m_EditorClassIdentifier: 
+  enemyName: Zombie Basic
+  enemyType: 0
+  maxHealth: 80
+  staggerThreshold: 30
+  attackDamage: 15
+  attackCooldown: 1.5
+  attackRange: 1.5
+  walkSpeed: 1.2
+  chaseSpeed: 2
+  angularSpeed: 120
+  acceleration: 8
+  sightAngle: 60
+  sightRange: 15
+  hearingRange: 8
+  chaseLoseDuration: 8
+  searchDuration: 5
+  wanderRadius: 5
+  corpseLifetime: 30
+  killScore: 100
+  idleSounds: []
+  alertSound: {fileID: 0}
+  attackSound: {fileID: 0}
+  hitSound: {fileID: 0}
+  deathSound: {fileID: 0}
