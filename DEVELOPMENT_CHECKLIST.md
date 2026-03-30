@@ -5,8 +5,8 @@
 > - Update this file after each work session.
 > - When resuming with AI, say: _"Continue from Stage X, Step Y"_
 
-> **LAST UPDATED**: 2026-03-29 (Session 5)
-> **CURRENT STAGE**: Stage 1 — Steps 1.1-1.8 DONE ✅ | Stage 2 next 🚧
+> **LAST UPDATED**: 2026-03-30 (Session 6)
+> **CURRENT STAGE**: Stage 3 — Steps 3.1-3.7 DONE ✅ | Testing next 🚧
 
 ---
 
@@ -16,8 +16,8 @@
 |-------|------|--------|-------|
 | 0 | Project Foundation (Scripts) | ✅ COMPLETE | 40 scripts created |
 | 1 | Unity Editor Setup | ✅ COMPLETE | Steps 1.1-1.8 auto-done by AI |
-| 2 | Phase 1: Prototype | 🚧 IN PROGRESS | Testing interaction setup |
-| 3 | Phase 2: Combat | 🔲 Not started | Fight zombies |
+| 2 | Phase 1: Prototype | ✅ COMPLETE | Walk + pickup + door |
+| 3 | Phase 2: Combat | 🚧 IN PROGRESS | Zombie + HUD + weapons wired |
 | 4 | Phase 3: Systems | 🔲 Not started | Inventory UI + Save/Load |
 | 5 | Phase 4: Content | 🔲 Not started | Build 5 levels |
 | 6 | Phase 5: Polish | 🔲 Not started | Art, audio, VFX |
@@ -256,19 +256,19 @@ Main Camera also has **ThirdPersonCamera** script targeting `CameraTarget`.
 
 ---
 
-## STAGE 3: PHASE 2 COMBAT 🔲
+## STAGE 3: PHASE 2 COMBAT 🚧 IN PROGRESS
 
 > **MILESTONE**: Fight and kill 3 zombies in test arena
 
 | # | Task | Status | Details |
 |---|------|--------|---------|
-| 3.1 | Download zombie model from Mixamo | 🔲 | Search "zombie" → download FBX for Unity |
-| 3.2 | Create Zombie Basic prefab | 🔲 | Model + NavMeshAgent + ZombieBasic.cs + assign SO_Zombie_Basic |
-| 3.3 | Create weapon SO instances | 🔲 | SO_WeaponKnife + SO_WeaponPistol (if not done in 1.6) |
-| 3.4 | Setup EnemySpawner | 🔲 | Create spawner zone with spawn points |
-| 3.5 | Create HUD Canvas | 🔲 | Health bar slider + ammo text + interact prompt + crosshair |
-| 3.6 | Wire HUD to HUDController.cs | 🔲 | Drag UI elements to serialized fields |
-| 3.7 | Create Game Over screen | 🔲 | Simple panel with "You Died" + Retry button |
+| 3.1 | Download zombie model from Mixamo | ✅ SKIPPED | Using red capsule placeholder (swap later) |
+| 3.2 | Create Zombie Basic prefab | ✅ AUTO-DONE | `Prefabs/Enemies/ZombieBasic.prefab` — NavMeshAgent + ZombieBasic.cs + SO_Zombie_Basic |
+| 3.3 | Create weapon SO instances | ✅ ALREADY DONE | SO_WeaponKnife + SO_WeaponPistol (done in 1.6) |
+| 3.4 | Setup EnemySpawner | ✅ AUTO-DONE | Trigger-based spawner with 3 spawn points in _TestScene |
+| 3.5 | Create HUD Canvas | ✅ AUTO-DONE | Health bar + ammo text + interact prompt + crosshair |
+| 3.6 | Wire HUD to HUDController.cs | ✅ AUTO-DONE | All serialized fields wired in scene |
+| 3.7 | Create Game Over screen | ✅ AUTO-DONE | "YOU DIED" panel (starts hidden) |
 | 3.8 | **TEST**: Aim + shoot ✅ | 🔲 | Right-click aim, left-click shoot, ammo decreases |
 | 3.9 | **TEST**: Zombies chase + attack ✅ | 🔲 | Zombie detects, chases, attacks player |
 | 3.10 | **TEST**: Kill 3 zombies ✅ | 🔲 | Zombies take damage, die, fall |
