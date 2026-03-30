@@ -287,7 +287,7 @@ Main Camera also has **ThirdPersonCamera** script targeting `CameraTarget`.
 | 4.4 | Implement Save/Load UI | ✅ AUTO-DONE | PauseMenu SaveGame/LoadGame calls SaveManager |
 | 4.5 | Test Save/Load works | 🔲 | Save state, reload, position restored |
 | 4.6 | Pause menu fully functional | ✅ AUTO-DONE | ESC toggles PausePanel, "PAUSED" text |
-| 4.7 | Audio setup (basic SFX) | 🔲 | Footsteps, gunshot, zombie groan, door |
+| 4.7 | Audio setup (basic SFX) | ✅ AUTO-DONE | ProceduralSFX: 12 placeholder sounds (gunshot, footstep, zombie groan, door, pickup, reload, melee, hurt, UI click, ambient wind) |
 | 4.8 | Build greybox Level 1 (House) | 🔲 | Multiple rooms, locked door, key, enemies |
 | 4.9 | **TEST**: Full Level 1 loop ✅ | 🔲 | Start → explore → key → fight → door → exit |
 
