@@ -16,7 +16,7 @@
 |-------|------|--------|-------|
 | 0 | Project Foundation (Scripts) | ✅ COMPLETE | 40 scripts created |
 | 1 | Unity Editor Setup | ✅ COMPLETE | Steps 1.1-1.8 auto-done by AI |
-| 2 | Phase 1: Prototype | 🔲 Not started | Walk + pickup + door |
+| 2 | Phase 1: Prototype | 🚧 IN PROGRESS | Testing interaction setup |
 | 3 | Phase 2: Combat | 🔲 Not started | Fight zombies |
 | 4 | Phase 3: Systems | 🔲 Not started | Inventory UI + Save/Load |
 | 5 | Phase 4: Content | 🔲 Not started | Build 5 levels |
@@ -234,22 +234,22 @@ Main Camera also has **ThirdPersonCamera** script targeting `CameraTarget`.
 
 ---
 
-## STAGE 2: PHASE 1 PROTOTYPE 🔲
+## STAGE 2: PHASE 1 PROTOTYPE 🚧 IN PROGRESS
 
 > **MILESTONE**: Walk around, pick up a key, unlock a door
 
 | # | Task | Status | Details |
 |---|------|--------|---------|
-| 2.1 | Create `_TestScene` with ground plane | 🔲 | Use ProBuilder or a simple Plane |
-| 2.2 | Place `[Managers]` prefab in scene | 🔲 | Drag from Prefabs folder |
-| 2.3 | Place Player prefab in scene | 🔲 | Position at (0, 1, 0) |
-| 2.4 | Setup camera | 🔲 | Add ThirdPersonCamera to Main Camera, assign player as follow target |
-| 2.5 | Build greybox room with ProBuilder | 🔲 | Simple walls + floor + ceiling |
-| 2.6 | Create a Door object | 🔲 | Box collider + Door.cs, set requiredKeyId:"key_house" |
-| 2.7 | Create a key pickup | 🔲 | Cube/Capsule + ItemPickup.cs, assign SO_Key_House |
-| 2.8 | Setup Interactable layer mask | 🔲 | Set door + pickup to Layer 8 (Interactable) |
-| 2.9 | Setup Ground layer | 🔲 | Set floor objects to Layer 9 (Ground) |
-| 2.10 | Bake NavMesh | 🔲 | Window → AI → Navigation → Bake |
+| 2.1 | Create `_TestScene` with ground plane | ✅ AUTO-DONE | Use ProBuilder or a simple Plane |
+| 2.2 | Place `[Managers]` prefab in scene | ✅ AUTO-DONE | Drag from Prefabs folder |
+| 2.3 | Place Player prefab in scene | ✅ AUTO-DONE | Position at (0, 1, 0) |
+| 2.4 | Setup camera | ✅ AUTO-DONE | Add ThirdPersonCamera to Main Camera, assign player as follow target |
+| 2.5 | Build greybox room with ProBuilder | ✅ AUTO-DONE | Created 4 walls around the player |
+| 2.6 | Create a Door object | ✅ AUTO-DONE | Box collider + Door.cs, set requiredKeyId:"key_house", Layer:8 |
+| 2.7 | Create a key pickup | ✅ AUTO-DONE | Cube + ItemPickup.cs, assign SO_Key_House, Layer:8 |
+| 2.8 | Setup Interactable layer mask | ✅ AUTO-DONE | Door + pickup set to Layer 8 (Interactable) |
+| 2.9 | Setup Ground layer | ✅ AUTO-DONE | Floor set to Layer 9 (Ground) |
+| 2.10 | Bake NavMesh | 🔲 | **MANUAL:** Unity Window → AI → Navigation → Bake |
 | 2.11 | **TEST**: Walk around ✅ | 🔲 | WASD movement works, camera follows |
 | 2.12 | **TEST**: Pick up key ✅ | 🔲 | Press E near key, appears in inventory |
 | 2.13 | **TEST**: Unlock door ✅ | 🔲 | Press E on door, it opens |
