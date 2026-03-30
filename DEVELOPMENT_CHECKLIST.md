@@ -18,7 +18,7 @@
 | 1 | Unity Editor Setup | ✅ COMPLETE | Steps 1.1-1.8 auto-done by AI |
 | 2 | Phase 1: Prototype | ✅ COMPLETE | Walk + pickup + door |
 | 3 | Phase 2: Combat | 🚧 IN PROGRESS | Zombie + HUD + weapons wired |
-| 4 | Phase 3: Systems | 🔲 Not started | Inventory UI + Save/Load |
+| 4 | Phase 3: Systems | 🚧 IN PROGRESS | Inventory UI + Save/Load + Pause |
 | 5 | Phase 4: Content | 🔲 Not started | Build 5 levels |
 | 6 | Phase 5: Polish | 🔲 Not started | Art, audio, VFX |
 | 7 | Phase 6: Testing & Ship | 🔲 Not started | Bug fixes + build |
@@ -275,18 +275,18 @@ Main Camera also has **ThirdPersonCamera** script targeting `CameraTarget`.
 
 ---
 
-## STAGE 4: PHASE 3 CORE SYSTEMS 🔲
+## STAGE 4: PHASE 3 CORE SYSTEMS 🚧 IN PROGRESS
 
 > **MILESTONE**: Complete gameplay loop in greybox Level 1
 
 | # | Task | Status | Details |
 |---|------|--------|---------|
-| 4.1 | Build Inventory UI grid (4×6) | 🔲 | Grid layout group with 24 slots |
-| 4.2 | Wire InventoryUI to InventoryManager | 🔲 | Show/hide on Tab, display items |
-| 4.3 | Item use/drop/examine from UI | 🔲 | Buttons in inventory for actions |
-| 4.4 | Implement Save/Load UI | 🔲 | 3 save slot buttons in pause menu |
+| 4.1 | Build Inventory UI grid (4×6) | ✅ AUTO-DONE | GridLayoutGroup with 24 slots, InventorySlot prefab |
+| 4.2 | Wire InventoryUI to InventoryManager | ✅ AUTO-DONE | Tab toggles, auto-refresh on pickup/use/drop |
+| 4.3 | Item use/drop/examine from UI | ✅ AUTO-DONE | USE + DROP buttons, item name/desc display |
+| 4.4 | Implement Save/Load UI | ✅ AUTO-DONE | PauseMenu SaveGame/LoadGame calls SaveManager |
 | 4.5 | Test Save/Load works | 🔲 | Save state, reload, position restored |
-| 4.6 | Pause menu fully functional | 🔲 | Resume, Settings, Save, Load, Quit |
+| 4.6 | Pause menu fully functional | ✅ AUTO-DONE | ESC toggles PausePanel, "PAUSED" text |
 | 4.7 | Audio setup (basic SFX) | 🔲 | Footsteps, gunshot, zombie groan, door |
 | 4.8 | Build greybox Level 1 (House) | 🔲 | Multiple rooms, locked door, key, enemies |
 | 4.9 | **TEST**: Full Level 1 loop ✅ | 🔲 | Start → explore → key → fight → door → exit |

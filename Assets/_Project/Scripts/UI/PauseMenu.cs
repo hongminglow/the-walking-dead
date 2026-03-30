@@ -96,16 +96,16 @@ namespace TWD.UI
         /// <summary>Saves the current game.</summary>
         public void SaveGame()
         {
-            // SaveManager.Instance.Save(0);
-            Debug.Log("[PauseMenu] Save requested.");
+            SaveManager.Instance.Save(0);
+            Debug.Log("[PauseMenu] Game saved to slot 0.");
         }
 
         /// <summary>Loads the most recent save.</summary>
         public void LoadGame()
         {
             Resume();
-            // SaveManager.Instance.Load(0);
-            Debug.Log("[PauseMenu] Load requested.");
+            SaveManager.Instance.Load(0);
+            Debug.Log("[PauseMenu] Game loaded from slot 0.");
         }
 
         /// <summary>Returns to the main menu.</summary>
