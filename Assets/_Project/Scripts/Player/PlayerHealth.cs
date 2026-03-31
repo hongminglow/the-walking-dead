@@ -8,6 +8,8 @@
 // ============================================================
 
 using UnityEngine;
+using UnityEngine.Rendering;
+using UnityEngine.Rendering.Universal;
 using TWD.Combat;
 using TWD.Core;
 using TWD.Utilities;
@@ -28,12 +30,16 @@ namespace TWD.Player
         [Header("Damage Feedback")]
         [SerializeField] private float _invincibilityDuration = 0.5f;
         [SerializeField] private float _damageScreenDuration = 2f;
+        [SerializeField] private float _criticalSpeedMultiplier = 0.6f;
 
         [Header("Audio")]
         [SerializeField] private AudioClip _hurtSound;
         [SerializeField] private AudioClip _deathSound;
         [SerializeField] private AudioClip _healSound;
         [SerializeField] private AudioClip _heartbeatSound;
+
+        [Header("Post-Processing")]
+        [SerializeField] private Volume _postProcessVolume;
 
         #endregion
 
@@ -44,7 +50,12 @@ namespace TWD.Player
         private float _invincibilityTimer;
         private bool _isDead;
         private AudioSource _audioSource;
+        private AudioSource _heartbeatSource;
         private PlayerController _controller;
+        private float _damageFlashTimer;
+        private Vignette _vignette;
+        private ColorAdjustments _colorAdjustments;
+        private float _baseVignetteIntensity;
 
         #endregion
 
@@ -64,6 +75,9 @@ namespace TWD.Player
         /// <summary>Health as a 0-1 normalized value.</summary>
         public float HealthNormalized => _currentHealth / _maxHealth;
 
+        /// <summary>Speed multiplier based on health status (1.0 normal, 0.6 critical).</summary>
+        public float SpeedMultiplier => _currentStatus == HealthStatus.Critical ? _criticalSpeedMultiplier : 1f;
+
         #endregion
 
         #region Lifecycle
@@ -73,15 +87,48 @@ namespace TWD.Player
             _audioSource = GetComponent<AudioSource>();
             _controller = GetComponent<PlayerController>();
             _currentHealth = _maxHealth;
+
+            // Create dedicated heartbeat audio source
+            var hbGo = new GameObject("HeartbeatSource");
+            hbGo.transform.SetParent(transform);
+            _heartbeatSource = hbGo.AddComponent<AudioSource>();
+            _heartbeatSource.loop = true;
+            _heartbeatSource.playOnAwake = false;
+            _heartbeatSource.spatialBlend = 0f;
+            _heartbeatSource.volume = 0.6f;
+
             UpdateHealthStatus();
+        }
+
+        private void Start()
+        {
+            // Find post-process volume in scene if not assigned
+            if (_postProcessVolume == null)
+                _postProcessVolume = FindFirstObjectByType<Volume>();
+
+            if (_postProcessVolume != null && _postProcessVolume.profile != null)
+            {
+                _postProcessVolume.profile.TryGet(out _vignette);
+                _postProcessVolume.profile.TryGet(out _colorAdjustments);
+                if (_vignette != null)
+                    _baseVignetteIntensity = _vignette.intensity.value;
+            }
         }
 
         private void Update()
         {
             if (_invincibilityTimer > 0f)
-            {
                 _invincibilityTimer -= Time.deltaTime;
+
+            // Damage flash fade-out (blood splatter effect)
+            if (_damageFlashTimer > 0f)
+            {
+                _damageFlashTimer -= Time.deltaTime;
+                UpdateDamageVignette();
             }
+
+            // Continuous health-based vignette
+            UpdateHealthVignette();
         }
 
         #endregion
@@ -107,6 +154,9 @@ namespace TWD.Player
             {
                 _audioSource.PlayOneShot(_hurtSound);
             }
+
+            // Blood splatter / damage flash
+            _damageFlashTimer = _damageScreenDuration;
 
             if (_currentHealth <= 0f)
             {
@@ -171,23 +221,83 @@ namespace TWD.Player
             switch (status)
             {
                 case HealthStatus.Fine:
-                    // Normal: no effects
+                    StopHeartbeat();
+                    SetVignetteColor(Color.black);
                     break;
 
                 case HealthStatus.Hurt:
-                    // Red tint on screen edges, slight limp
-                    Debug.Log("[PlayerHealth] Status: HURT — screen tint active.");
+                    StopHeartbeat();
+                    // Red tint on screen edges
+                    SetVignetteColor(new Color(0.5f, 0f, 0f));
                     break;
 
                 case HealthStatus.Critical:
-                    // Heavy vignette, heartbeat SFX, slow movement
-                    Debug.Log("[PlayerHealth] Status: CRITICAL — heartbeat SFX active.");
+                    // Heavy vignette + heartbeat SFX + slow movement
+                    StartHeartbeat();
+                    SetVignetteColor(new Color(0.7f, 0f, 0f));
                     break;
 
                 case HealthStatus.Dead:
-                    // Handled by Die()
+                    StopHeartbeat();
                     break;
             }
+        }
+
+        #endregion
+
+        #region Visual Feedback
+
+        private void UpdateHealthVignette()
+        {
+            if (_vignette == null) return;
+
+            float healthPct = _currentHealth / _maxHealth;
+            // Vignette increases as health drops: 0.25 at full → 0.55 at critical
+            float targetIntensity = Mathf.Lerp(0.55f, _baseVignetteIntensity, healthPct);
+
+            // Add damage flash on top
+            if (_damageFlashTimer > 0f)
+            {
+                float flashPct = _damageFlashTimer / _damageScreenDuration;
+                targetIntensity = Mathf.Max(targetIntensity, 0.6f * flashPct);
+            }
+
+            _vignette.intensity.value = targetIntensity;
+        }
+
+        private void UpdateDamageVignette()
+        {
+            // Red color tint fades out after taking damage
+            if (_colorAdjustments != null && _damageFlashTimer > 0f)
+            {
+                float flashPct = _damageFlashTimer / _damageScreenDuration;
+                _colorAdjustments.colorFilter.value = Color.Lerp(Color.white, new Color(1f, 0.7f, 0.7f), flashPct * 0.3f);
+            }
+            else if (_colorAdjustments != null)
+            {
+                _colorAdjustments.colorFilter.value = Color.white;
+            }
+        }
+
+        private void SetVignetteColor(Color color)
+        {
+            if (_vignette != null)
+                _vignette.color.value = color;
+        }
+
+        private void StartHeartbeat()
+        {
+            if (_heartbeatSource != null && _heartbeatSound != null && !_heartbeatSource.isPlaying)
+            {
+                _heartbeatSource.clip = _heartbeatSound;
+                _heartbeatSource.Play();
+            }
+        }
+
+        private void StopHeartbeat()
+        {
+            if (_heartbeatSource != null && _heartbeatSource.isPlaying)
+                _heartbeatSource.Stop();
         }
 
         #endregion

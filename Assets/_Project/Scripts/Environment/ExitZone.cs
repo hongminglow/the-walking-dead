@@ -8,14 +8,15 @@ namespace TWD.Environment
     {
         [SerializeField] private string _nextSceneName;
 
+        private bool _triggered;
+
         private void OnTriggerEnter(Collider other)
         {
+            if (_triggered) return;
             if (other.CompareTag(Constants.Tags.PLAYER))
             {
-                if (SceneLoader.Instance != null)
-                    SceneLoader.Instance.LoadScene(_nextSceneName);
-                else
-                    UnityEngine.SceneManagement.SceneManager.LoadScene(_nextSceneName);
+                _triggered = true;
+                GameManager.Instance.CompleteLevel(_nextSceneName);
             }
         }
     }

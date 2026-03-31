@@ -10,6 +10,7 @@
 using UnityEngine;
 using UnityEngine.UI;
 using TWD.Core;
+using TWD.Player;
 
 namespace TWD.UI
 {
@@ -41,6 +42,17 @@ namespace TWD.UI
         [Header("Crosshair")]
         [SerializeField] private GameObject _crosshair;
 
+        [Header("Damage Overlay")]
+        [SerializeField] private Image _damageOverlay;
+        [SerializeField] private float _damageFlashDuration = 0.5f;
+
+        #endregion
+
+        #region Private Fields
+
+        private float _damageFlashTimer;
+        private PlayerController _playerController;
+
         #endregion
 
         #region Lifecycle
@@ -53,6 +65,7 @@ namespace TWD.UI
             EventBus.OnWeaponSwitched += UpdateWeapon;
             EventBus.OnShowInteractPrompt += ShowPrompt;
             EventBus.OnHideInteractPrompt += HidePrompt;
+            EventBus.OnPlayerDamaged += OnDamageTaken;
         }
 
         private void OnDisable()
@@ -63,6 +76,41 @@ namespace TWD.UI
             EventBus.OnWeaponSwitched -= UpdateWeapon;
             EventBus.OnShowInteractPrompt -= ShowPrompt;
             EventBus.OnHideInteractPrompt -= HidePrompt;
+            EventBus.OnPlayerDamaged -= OnDamageTaken;
+        }
+
+        private void Start()
+        {
+            var player = GameObject.FindWithTag("Player");
+            if (player != null)
+                _playerController = player.GetComponent<PlayerController>();
+
+            if (_damageOverlay != null)
+            {
+                var c = _damageOverlay.color;
+                c.a = 0f;
+                _damageOverlay.color = c;
+            }
+        }
+
+        private void Update()
+        {
+            // Crosshair: visible only when aiming
+            if (_crosshair != null && _playerController != null)
+                _crosshair.SetActive(_playerController.IsAiming);
+
+            // Damage overlay fade
+            if (_damageFlashTimer > 0f)
+            {
+                _damageFlashTimer -= Time.deltaTime;
+                if (_damageOverlay != null)
+                {
+                    float alpha = Mathf.Clamp01(_damageFlashTimer / _damageFlashDuration) * 0.4f;
+                    var c = _damageOverlay.color;
+                    c.a = alpha;
+                    _damageOverlay.color = c;
+                }
+            }
         }
 
         #endregion
@@ -151,6 +199,21 @@ namespace TWD.UI
             if (_crosshair != null)
             {
                 _crosshair.SetActive(visible);
+            }
+        }
+
+        #endregion
+
+        #region Damage Overlay
+
+        private void OnDamageTaken(float amount)
+        {
+            _damageFlashTimer = _damageFlashDuration;
+            if (_damageOverlay != null)
+            {
+                var c = _damageOverlay.color;
+                c.a = 0.4f;
+                _damageOverlay.color = c;
             }
         }
 

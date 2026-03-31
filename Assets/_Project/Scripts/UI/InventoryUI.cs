@@ -72,17 +72,19 @@ namespace TWD.UI
                 _dropButton.onClick.AddListener(OnDropClicked);
 
             // Subscribe to inventory changes
-            EventBus.OnItemPickedUp += _ => RefreshUI();
-            EventBus.OnItemUsed += _ => RefreshUI();
-            EventBus.OnItemDropped += _ => RefreshUI();
+            EventBus.OnItemPickedUp += OnInventoryChanged;
+            EventBus.OnItemUsed += OnInventoryChanged;
+            EventBus.OnItemDropped += OnInventoryChanged;
         }
 
         private void OnDestroy()
         {
-            EventBus.OnItemPickedUp -= _ => RefreshUI();
-            EventBus.OnItemUsed -= _ => RefreshUI();
-            EventBus.OnItemDropped -= _ => RefreshUI();
+            EventBus.OnItemPickedUp -= OnInventoryChanged;
+            EventBus.OnItemUsed -= OnInventoryChanged;
+            EventBus.OnItemDropped -= OnInventoryChanged;
         }
+
+        private void OnInventoryChanged(string _) => RefreshUI();
 
         private void Update()
         {
@@ -124,12 +126,7 @@ namespace TWD.UI
             _inventoryPanel?.SetActive(true);
             RefreshUI();
 
-            // Show cursor for item clicking
-            Cursor.lockState = CursorLockMode.None;
-            Cursor.visible = true;
-
-            // Pause-like state (optional — freeze player movement)
-            Time.timeScale = 0.1f; // Slow-motion while inventory is open
+            GameManager.Instance.SetState(GameState.Inventory);
         }
 
         /// <summary>Closes the inventory UI.</summary>
@@ -140,11 +137,7 @@ namespace TWD.UI
             _selectedSlot = -1;
             ClearItemInfo();
 
-            // Hide cursor
-            Cursor.lockState = CursorLockMode.Locked;
-            Cursor.visible = false;
-
-            Time.timeScale = 1f;
+            GameManager.Instance.SetState(GameState.Playing);
         }
 
         #endregion

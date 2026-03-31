@@ -179,8 +179,12 @@ namespace TWD.Inventory
                     break;
 
                 case ItemType.Ammo:
-                    // TODO: Add ammo to player's ammo pool
-                    used = true;
+                    var playerAmmo = GameObject.FindWithTag(Constants.Tags.PLAYER);
+                    if (playerAmmo != null && playerAmmo.TryGetComponent<Player.PlayerCombat>(out var combat))
+                    {
+                        combat.AddReserveAmmo(item.ammoAmount);
+                        used = true;
+                    }
                     break;
             }
 

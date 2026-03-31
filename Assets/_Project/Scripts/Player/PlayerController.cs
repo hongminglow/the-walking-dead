@@ -48,6 +48,7 @@ namespace TWD.Player
 
         private CharacterController _characterController;
         private PlayerAnimator _playerAnimator;
+        private PlayerHealth _playerHealth;
         private Vector2 _moveInput;
         private Vector3 _verticalVelocity;
         private float _currentStamina;
@@ -83,9 +84,14 @@ namespace TWD.Player
             get
             {
                 if (_isAiming) return 0f; // Cannot move while aiming (RE-style)
-                if (_isCrouching) return _crouchSpeed;
-                if (_isSprinting && _currentStamina > 0f) return _sprintSpeed;
-                return _walkSpeed;
+                float baseSpeed;
+                if (_isCrouching) baseSpeed = _crouchSpeed;
+                else if (_isSprinting && _currentStamina > 0f) baseSpeed = _sprintSpeed;
+                else baseSpeed = _walkSpeed;
+
+                // Slow down when critically injured
+                float healthMult = _playerHealth != null ? _playerHealth.SpeedMultiplier : 1f;
+                return baseSpeed * healthMult;
             }
         }
 
@@ -100,6 +106,7 @@ namespace TWD.Player
         {
             _characterController = GetComponent<CharacterController>();
             _playerAnimator = GetComponent<PlayerAnimator>();
+            _playerHealth = GetComponent<PlayerHealth>();
             _currentStamina = _maxStamina;
         }
 

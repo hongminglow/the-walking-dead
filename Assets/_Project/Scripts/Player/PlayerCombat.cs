@@ -11,6 +11,7 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 using TWD.Combat;
 using TWD.Core;
+using TWD.Inventory;
 using TWD.Utilities;
 
 namespace TWD.Player
@@ -43,6 +44,7 @@ namespace TWD.Player
         private AudioSource _audioSource;
 
         private int _currentAmmoInClip;
+        private int _reserveAmmo;
         private float _fireTimer;
         private float _reloadTimer;
         private bool _isReloading;
@@ -57,6 +59,9 @@ namespace TWD.Player
 
         /// <summary>Ammo count in current magazine.</summary>
         public int AmmoInClip => _currentAmmoInClip;
+
+        /// <summary>Reserve ammo not in magazine.</summary>
+        public int ReserveAmmo => _reserveAmmo;
 
         /// <summary>Whether currently reloading.</summary>
         public bool IsReloading => _isReloading;
@@ -217,8 +222,18 @@ namespace TWD.Player
             if (_currentWeaponData == null || !_currentWeaponData.UsesAmmo) return;
             if (_currentAmmoInClip >= _currentWeaponData.magazineSize) return;
 
-            // TODO: Check if player has ammo in inventory
-            // For now, just reload
+            // Check reserve ammo first; if none, try consuming from inventory
+            if (_reserveAmmo <= 0)
+            {
+                _reserveAmmo += ConsumeAmmoFromInventory(_currentWeaponData.ammoType);
+            }
+
+            if (_reserveAmmo <= 0)
+            {
+                Debug.Log("[PlayerCombat] No ammo available to reload!");
+                return;
+            }
+
             _isReloading = true;
             _reloadTimer = _currentWeaponData.reloadTime;
             _canFire = false;
@@ -229,6 +244,25 @@ namespace TWD.Player
             Debug.Log($"[PlayerCombat] Reloading {_currentWeaponData.weaponName}...");
         }
 
+        private int ConsumeAmmoFromInventory(AmmoType ammoType)
+        {
+            if (InventoryManager.Instance == null) return 0;
+
+            var slots = InventoryManager.Instance.Slots;
+            for (int i = 0; i < slots.Length; i++)
+            {
+                if (slots[i].IsEmpty) continue;
+                var item = slots[i].ItemData;
+                if (item.itemType == ItemType.Ammo && item.ammoType == ammoType)
+                {
+                    int amount = item.ammoAmount * slots[i].Quantity;
+                    InventoryManager.Instance.RemoveItem(i, slots[i].Quantity);
+                    return amount;
+                }
+            }
+            return 0;
+        }
+
         private void HandleReloadTimer()
         {
             if (!_isReloading) return;
@@ -236,14 +270,18 @@ namespace TWD.Player
             _reloadTimer -= Time.deltaTime;
             if (_reloadTimer <= 0f)
             {
-                _currentAmmoInClip = _currentWeaponData.magazineSize;
+                int needed = _currentWeaponData.magazineSize - _currentAmmoInClip;
+                int toLoad = Mathf.Min(needed, _reserveAmmo);
+                _currentAmmoInClip += toLoad;
+                _reserveAmmo -= toLoad;
+
                 _isReloading = false;
                 _canFire = true;
 
                 UpdateAmmoUI();
                 EventBus.WeaponReloaded();
 
-                Debug.Log($"[PlayerCombat] Reload complete. Ammo: {_currentAmmoInClip}");
+                Debug.Log($"[PlayerCombat] Reload complete. Ammo: {_currentAmmoInClip} (reserve: {_reserveAmmo})");
             }
         }
 
@@ -290,6 +328,7 @@ namespace TWD.Player
         {
             _currentWeaponData = weaponData;
             _currentAmmoInClip = weaponData.magazineSize;
+            _reserveAmmo = 0;
             _isReloading = false;
             _canFire = true;
             _fireTimer = 0f;
@@ -298,6 +337,14 @@ namespace TWD.Player
             EventBus.WeaponSwitched(weaponData.weaponName);
 
             Debug.Log($"[PlayerCombat] Equipped: {weaponData.weaponName}");
+        }
+
+        /// <summary>Adds ammo to reserve pool (from inventory pickup).</summary>
+        public void AddReserveAmmo(int amount)
+        {
+            _reserveAmmo += amount;
+            UpdateAmmoUI();
+            Debug.Log($"[PlayerCombat] Added {amount} reserve ammo. Total reserve: {_reserveAmmo}");
         }
 
         #endregion
