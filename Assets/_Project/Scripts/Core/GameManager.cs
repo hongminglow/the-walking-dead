@@ -169,8 +169,8 @@ namespace TWD.Core
             _playTime = 0f;
             EventBus.ClearAll(); // Clean slate
             SetState(GameState.Loading);
-            // SceneLoader.Instance.LoadScene(Constants.Scenes.LEVEL_01_HOUSE);
-            Debug.Log("[GameManager] New game started. Load Level 1 when SceneLoader is ready.");
+            SceneLoader.Instance.LoadScene(Constants.Scenes.LEVEL_01_HOUSE);
+            Debug.Log("[GameManager] New game started. Loading Level 1.");
         }
 
         /// <summary>
@@ -180,7 +180,7 @@ namespace TWD.Core
         {
             EventBus.ClearAll();
             SetState(GameState.MainMenu);
-            // SceneLoader.Instance.LoadScene(Constants.Scenes.MAIN_MENU);
+            SceneLoader.Instance.LoadSceneDirect(Constants.Scenes.MAIN_MENU);
             Debug.Log("[GameManager] Returning to main menu.");
         }
 
@@ -191,7 +191,7 @@ namespace TWD.Core
         {
             EventBus.LevelCompleted(nextSceneName);
             SetState(GameState.Loading);
-            // SceneLoader.Instance.LoadScene(nextSceneName);
+            SceneLoader.Instance.LoadScene(nextSceneName);
             Debug.Log($"[GameManager] Level complete. Next: {nextSceneName}");
         }
 

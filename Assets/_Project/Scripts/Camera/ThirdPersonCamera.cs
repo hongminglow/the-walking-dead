@@ -36,8 +36,8 @@ namespace TWD.Camera
         [SerializeField] private float _aimFOV = 45f;
 
         [Header("Sensitivity")]
-        [SerializeField] private float _mouseSensitivity = 2f;
-        [SerializeField] private float _gamepadSensitivity = 150f;
+        [SerializeField] private float _mouseSensitivity = 0.15f;
+        [SerializeField] private float _gamepadSensitivity = 100f;
         [SerializeField] private float _verticalClampMin = -40f;
         [SerializeField] private float _verticalClampMax = 70f;
 

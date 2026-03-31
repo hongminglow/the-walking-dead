@@ -7,27 +7,24 @@ EditorBuildSettings:
   m_Scenes:
   - enabled: 1
     path: Assets/_Project/Scenes/MainMenu.unity
-    guid: 
+    guid: b6c27cfdb1b0d8748b0807977c6df07c
   - enabled: 1
     path: Assets/_Project/Scenes/Loading.unity
-    guid: 
+    guid: 90d729d8f209e034098feca385277295
   - enabled: 1
     path: Assets/_Project/Scenes/Level_01_House.unity
-    guid: 
+    guid: 0b252644cb6d912478bf9d63f5e9163d
   - enabled: 1
     path: Assets/_Project/Scenes/Level_02_Streets.unity
-    guid: 
+    guid: cdfbaa0c5547b0c4499e5b44a3d108b6
   - enabled: 1
     path: Assets/_Project/Scenes/Level_03_Hospital.unity
-    guid: 
+    guid: ad0bb61715b5b06428d722b0790641f1
   - enabled: 1
     path: Assets/_Project/Scenes/Level_04_Underground.unity
-    guid: 
+    guid: eca6d2ed4c287ef4494fb1b6d70d48e2
   - enabled: 1
     path: Assets/_Project/Scenes/Level_05_Finale.unity
-    guid: 
-  - enabled: 1
-    path: Assets/_Project/Scenes/_TestScene.unity
-    guid: 
+    guid: 5b2b8d1f3ea6a104c8173d961b5deec5
   m_configObjects:
     com.unity.input.settings.actions: {fileID: -944628639613478452, guid: 052faaac586de48259a63d0c4782560b, type: 3}
