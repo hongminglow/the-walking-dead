@@ -89,11 +89,29 @@ namespace TWD.Player
                 _fireTimer -= Time.deltaTime;
 
             HandleReloadTimer();
+
+            if (GameManager.Instance.IsPlaying)
+                ReadCombatInput();
         }
 
         #endregion
 
-        #region Input Callbacks
+        #region Direct Input Polling
+
+        private void ReadCombatInput()
+        {
+            var mouse = Mouse.current;
+            var kb = Keyboard.current;
+
+            if (mouse != null && mouse.leftButton.wasPressedThisFrame && _controller != null && _controller.IsAiming)
+                TryFire();
+
+            if (kb != null && kb.rKey.wasPressedThisFrame)
+                TryReload();
+
+            if (kb != null && kb.vKey.wasPressedThisFrame)
+                PerformMelee();
+        }
 
         /// <summary>Called by PlayerInput for Shoot action.</summary>
         public void OnShoot(InputAction.CallbackContext context)

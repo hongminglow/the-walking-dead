@@ -119,6 +119,7 @@ namespace TWD.Player
         {
             if (!_inputEnabled || !GameManager.Instance.IsPlaying) return;
 
+            ReadInput();
             GroundCheck();
             HandleMovement();
             HandleStamina();
@@ -127,7 +128,37 @@ namespace TWD.Player
 
         #endregion
 
-        #region Input Callbacks (New Input System)
+        #region Direct Input Polling
+
+        private void ReadInput()
+        {
+            var kb = Keyboard.current;
+            if (kb != null)
+            {
+                float x = 0f, y = 0f;
+                if (kb.wKey.isPressed) y += 1f;
+                if (kb.sKey.isPressed) y -= 1f;
+                if (kb.aKey.isPressed) x -= 1f;
+                if (kb.dKey.isPressed) x += 1f;
+                _moveInput = new Vector2(x, y).normalized;
+
+                _isSprinting = kb.leftShiftKey.isPressed;
+
+                if (kb.cKey.wasPressedThisFrame)
+                {
+                    _isCrouching = !_isCrouching;
+                    if (_isCrouching) _isSprinting = false;
+                    _characterController.height = _isCrouching ? 1.2f : 1.8f;
+                    _characterController.center = new Vector3(0f, _characterController.height / 2f, 0f);
+                }
+            }
+
+            var mouse = Mouse.current;
+            if (mouse != null)
+            {
+                _isAiming = mouse.rightButton.isPressed;
+            }
+        }
 
         /// <summary>Called by PlayerInput component for Move action.</summary>
         public void OnMove(InputAction.CallbackContext context)

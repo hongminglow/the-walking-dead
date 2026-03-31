@@ -43,7 +43,12 @@ namespace TWD.Player
         private void Awake()
         {
             _animator = GetComponent<Animator>();
-            CacheParameterHashes();
+            if (_animator != null && _animator.runtimeAnimatorController == null)
+            {
+                _animator = null; // No controller assigned — disable animation calls
+            }
+            if (_animator != null)
+                CacheParameterHashes();
         }
 
         #endregion
@@ -73,6 +78,7 @@ namespace TWD.Player
         /// </summary>
         public void SetMovement(float speedFactor)
         {
+            if (_animator == null) return;
             _smoothSpeed = Mathf.Lerp(_smoothSpeed, speedFactor, Time.deltaTime / SPEED_DAMP_TIME);
             _animator.SetFloat(_speedHash, _smoothSpeed);
         }
@@ -80,12 +86,14 @@ namespace TWD.Player
         /// <summary>Sets the sprinting state.</summary>
         public void SetSprinting(bool isSprinting)
         {
+            if (_animator == null) return;
             _animator.SetBool(_isSprintingHash, isSprinting);
         }
 
         /// <summary>Sets the crouching state.</summary>
         public void SetCrouching(bool isCrouching)
         {
+            if (_animator == null) return;
             _animator.SetBool(_isCrouchingHash, isCrouching);
         }
 
@@ -96,24 +104,28 @@ namespace TWD.Player
         /// <summary>Sets the aiming state.</summary>
         public void SetAiming(bool isAiming)
         {
+            if (_animator == null) return;
             _animator.SetBool(_isAimingHash, isAiming);
         }
 
         /// <summary>Triggers the shoot animation.</summary>
         public void TriggerShoot()
         {
+            if (_animator == null) return;
             _animator.SetTrigger(_shootHash);
         }
 
         /// <summary>Triggers the reload animation.</summary>
         public void TriggerReload()
         {
+            if (_animator == null) return;
             _animator.SetTrigger(_reloadHash);
         }
 
         /// <summary>Triggers the melee attack animation.</summary>
         public void TriggerMelee()
         {
+            if (_animator == null) return;
             _animator.SetTrigger(_meleeHash);
         }
 
@@ -124,12 +136,14 @@ namespace TWD.Player
         /// <summary>Triggers the take damage animation.</summary>
         public void TriggerDamage()
         {
+            if (_animator == null) return;
             _animator.SetTrigger(_takeDamageHash);
         }
 
         /// <summary>Sets the death state (stays in death pose).</summary>
         public void SetDead(bool isDead)
         {
+            if (_animator == null) return;
             _animator.SetBool(_isDeadHash, isDead);
         }
 
@@ -140,6 +154,7 @@ namespace TWD.Player
         /// <summary>Triggers the interaction animation (pick up, open door).</summary>
         public void TriggerInteract()
         {
+            if (_animator == null) return;
             _animator.SetTrigger(_interactHash);
         }
 

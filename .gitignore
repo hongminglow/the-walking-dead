@@ -89,3 +89,7 @@ ignore.conf
 
 # ---- Debug ----
 *.stackdump
+
+# ---- AI Skills ----
+*.claude
+*.github

@@ -69,6 +69,16 @@ namespace TWD.Player
         {
             if (!_inputEnabled || !GameManager.Instance.IsPlaying) return;
             PerformRaycast();
+
+            var kb = Keyboard.current;
+            if (kb != null && kb.eKey.wasPressedThisFrame)
+            {
+                if (_currentTarget != null && _currentTarget.CanInteract)
+                {
+                    _currentTarget.Interact();
+                    _playerAnimator?.TriggerInteract();
+                }
+            }
         }
 
         #endregion

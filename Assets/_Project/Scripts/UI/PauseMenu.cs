@@ -35,6 +35,15 @@ namespace TWD.UI
             if (_settingsPanel != null) _settingsPanel.SetActive(false);
         }
 
+        private void Update()
+        {
+            var kb = Keyboard.current;
+            if (kb != null && kb.escapeKey.wasPressedThisFrame)
+            {
+                TogglePause();
+            }
+        }
+
         #endregion
 
         #region Input Callbacks

@@ -129,6 +129,13 @@ namespace TWD.Camera
 
         private void HandleLookInput()
         {
+            var mouse = Mouse.current;
+            if (mouse != null)
+            {
+                _lookInput = mouse.delta.ReadValue();
+                _isAiming = mouse.rightButton.isPressed;
+            }
+
             // Determine sensitivity (mouse vs gamepad based on input magnitude)
             float sensitivity = _lookInput.magnitude > 2f ? _gamepadSensitivity * Time.deltaTime
                                                           : _mouseSensitivity;

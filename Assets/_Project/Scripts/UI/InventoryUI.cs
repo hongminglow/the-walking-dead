@@ -84,6 +84,15 @@ namespace TWD.UI
             EventBus.OnItemDropped -= _ => RefreshUI();
         }
 
+        private void Update()
+        {
+            var kb = Keyboard.current;
+            if (kb != null && kb.tabKey.wasPressedThisFrame)
+            {
+                Toggle();
+            }
+        }
+
         #endregion
 
         #region Input

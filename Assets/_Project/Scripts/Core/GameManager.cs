@@ -8,6 +8,7 @@
 // ============================================================
 
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using TWD.Utilities;
 
 namespace TWD.Core
@@ -52,6 +53,16 @@ namespace TWD.Core
         {
             Application.targetFrameRate = 60;
             SetState(GameState.MainMenu);
+        }
+
+        private void Start()
+        {
+            string sceneName = SceneManager.GetActiveScene().name;
+            if (sceneName != Constants.Scenes.MAIN_MENU && _currentState == GameState.MainMenu)
+            {
+                SetState(GameState.Playing);
+                Debug.Log($"[GameManager] Auto-started Playing for scene: {sceneName}");
+            }
         }
 
         private void Update()
