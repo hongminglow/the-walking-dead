@@ -182,34 +182,50 @@ namespace TWD.Enemies
             switch (state)
             {
                 case EnemyState.Idle:
-                    _agent.speed = _data.walkSpeed;
+                    if (HasActiveNavMeshAgent())
+                    {
+                        _agent.speed = _data.walkSpeed;
+                        _agent.ResetPath();
+                    }
                     _stateTimer = Random.Range(2f, 5f);
-                    _agent.ResetPath();
                     break;
 
                 case EnemyState.Wandering:
-                    _agent.speed = _data.walkSpeed;
-                    WanderToRandomPoint();
+                    if (HasActiveNavMeshAgent())
+                    {
+                        _agent.speed = _data.walkSpeed;
+                        WanderToRandomPoint();
+                    }
+                    else
+                    {
+                        _stateTimer = Random.Range(1.5f, 3f);
+                    }
                     break;
 
                 case EnemyState.Chasing:
-                    _agent.speed = _data.chaseSpeed;
+                    if (HasActiveNavMeshAgent())
+                        _agent.speed = _data.chaseSpeed;
                     PlaySound(_data.alertSound);
                     EventBus.EnemyAlerted(_enemyId);
                     break;
 
                 case EnemyState.Attacking:
-                    _agent.ResetPath();
+                    if (HasActiveNavMeshAgent())
+                        _agent.ResetPath();
                     break;
 
                 case EnemyState.Searching:
-                    _agent.speed = _data.walkSpeed;
                     _stateTimer = _data.searchDuration;
-                    _agent.SetDestination(_lastKnownPlayerPosition);
+                    if (HasActiveNavMeshAgent())
+                    {
+                        _agent.speed = _data.walkSpeed;
+                        _agent.SetDestination(_lastKnownPlayerPosition);
+                    }
                     break;
 
                 case EnemyState.Staggered:
-                    _agent.ResetPath();
+                    if (HasActiveNavMeshAgent())
+                        _agent.ResetPath();
                     _stateTimer = 1f;
                     _animator?.SetTrigger(Constants.AnimParams.STAGGER);
                     break;
@@ -251,6 +267,13 @@ namespace TWD.Enemies
 
         protected virtual void OnWander()
         {
+            if (!HasActiveNavMeshAgent())
+            {
+                if (_stateTimer <= 0f)
+                    SetState(EnemyState.Idle);
+                return;
+            }
+
             if (CanSeePlayer() || CanHearPlayer())
             {
                 SetState(EnemyState.Chasing);
@@ -274,7 +297,8 @@ namespace TWD.Enemies
                 _stateTimer = _data.chaseLoseDuration;
             }
 
-            _agent.SetDestination(_lastKnownPlayerPosition);
+            if (HasActiveNavMeshAgent())
+                _agent.SetDestination(_lastKnownPlayerPosition);
 
             // In attack range?
             float distToPlayer = Vector3.Distance(transform.position, _playerTransform.position);
@@ -328,6 +352,13 @@ namespace TWD.Enemies
 
         protected virtual void OnSearch()
         {
+            if (!HasActiveNavMeshAgent())
+            {
+                if (_stateTimer <= 0f)
+                    SetState(EnemyState.Idle);
+                return;
+            }
+
             if (CanSeePlayer() || CanHearPlayer())
             {
                 SetState(EnemyState.Chasing);
@@ -481,6 +512,9 @@ namespace TWD.Enemies
 
         protected void WanderToRandomPoint()
         {
+            if (!HasActiveNavMeshAgent())
+                return;
+
             Vector3 randomDirection = Random.insideUnitSphere * _data.wanderRadius;
             randomDirection += transform.position;
 
@@ -516,9 +550,14 @@ namespace TWD.Enemies
         {
             if (_animator == null) return;
 
-            float speed = _agent.velocity.magnitude / _data.chaseSpeed;
+            float speed = HasActiveNavMeshAgent() ? _agent.velocity.magnitude / _data.chaseSpeed : 0f;
             _animator.SetFloat(Constants.AnimParams.SPEED, speed);
             _animator.SetBool(Constants.AnimParams.IS_CHASING, _currentState == EnemyState.Chasing);
+        }
+
+        private bool HasActiveNavMeshAgent()
+        {
+            return _agent != null && _agent.enabled && _agent.isOnNavMesh;
         }
 
         #endregion

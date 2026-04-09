@@ -5,7 +5,7 @@
 > - Update this file after each work session.
 > - When resuming with AI, say: _"Continue from Stage X, Step Y"_
 
-> **LAST UPDATED**: 2026-04-10 (Session 15)
+> **LAST UPDATED**: 2026-04-10 (Session 16)
 > **CURRENT STAGE**: Stage 6 — Polish 🚧
 
 ---
@@ -20,7 +20,7 @@
 | 3 | Phase 2: Combat | ✅ COMPLETE | Zombie + HUD + weapons wired, input fixed |
 | 4 | Phase 3: Systems | ✅ COMPLETE | Inventory UI + Save/Load + Pause + direct input |
 | 5 | Phase 4: Content | ✅ COMPLETE | 5 levels + MainMenu + Loading + Build Settings |
-| 6 | Phase 5: Polish | 🚧 IN PROGRESS | Runtime polish active; Level 1 intro/tutorial pass retuned, Level 2 Streets combat/readability restored, Level 3-5 scene audit and fallback recovery underway |
+| 6 | Phase 5: Polish | 🚧 IN PROGRESS | Runtime polish active; Level 1 intro/tutorial pass retuned, Level 2 Streets combat/readability restored, Level 3 Hospital combat/progression restored, Level 4-5 scene audit and fallback recovery underway |
 | 7 | Phase 6: Testing & Ship | 🔲 Not started | Bug fixes + build |
 
 ---
@@ -656,6 +656,7 @@ This is fine for solo dev. CI is more important for teams.
 | 2026-04-09 | Session 13 | Progression-content recovery pass: added runtime-generated key/document/puzzle items, weapon pickup inference for shotgun/wrench, scene-name-based door/puzzle key inference for obvious blockers, save/load support for generated items, and stable puzzle IDs for persistence | Validate `Level_04` and `Level_03` in Unity and replace any remaining bespoke scene blockers with authored logic |
 | 2026-04-10 | Session 14 | Level 1 intro polish pass: fixed missing `TWD.Utilities` imports that blocked play mode, stabilized third-person camera startup/orbit around `CameraTarget`, replaced Unity 6 `Arial.ttf` runtime fallbacks with `LegacyRuntime.ttf`, disabled broken Level 1 zombies/spawner, and retuned the Level 1 spawn/light balance around the house-key tutorial path | Manually play Level 1 for readability/flow and continue scene-by-scene Stage 6 polish |
 | 2026-04-10 | Session 15 | Level 2 Streets recovery pass: added a baked `NavMeshSurface`, verified all 6 zombies regain runtime movement, confirmed item/enemy auto-resolution and HUD prompt repair, rotated the spawn to face the hospital route, and retuned street lighting/fog while removing point-light shadows that were overloading the shadow atlas | Manually play Level 2 for encounter feel, then continue with Level 3 hospital polish |
+| 2026-04-10 | Session 16 | Level 3 Hospital recovery pass: added navmesh-bake support and `EnemyBase` agent safety guards, baked hospital navigation, rewired the fuse-box puzzle to remove the jammed sewer-exit door, moved the spawn deeper into the lobby, and retuned hospital lighting/fog while disabling point-light shadows to restore readable combat and progression | Manually play Level 3 for puzzle feel/readability and continue with Level 4 underground polish |
 
 ---
 

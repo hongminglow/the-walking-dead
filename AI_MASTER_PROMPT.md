@@ -26,6 +26,7 @@
 16. [Save/Load System](#16-saveload-system)
 17. [Development Phases](#17-development-phases)
 18. [AI Prompt Templates](#18-ai-prompt-templates)
+19. [Agent Git Workflow](#19-agent-git-workflow)
 
 ---
 
@@ -50,6 +51,31 @@
 > doors requiring keys/puzzles, the player must scavenge, fight, and solve
 > their way to escape. Think **Resident Evil 4** meets **The Last of Us**,
 > but scoped down for a solo indie developer.
+
+---
+
+## 19. AGENT GIT WORKFLOW
+
+> **RULE FOR ALL AI AGENTS WORKING ON THIS PROJECT**
+>
+> Before any `git commit` or `git push`, the agent must:
+>
+> 1. **Auto-generate a suggested commit message** based on the actual work completed.
+> 2. **Show that suggested commit message to the user clearly**.
+> 3. **Ask for permission first** before running `git commit`.
+> 4. **Ask for permission first** before running `git push`, even if commit permission was already granted.
+>
+> Additional rules:
+> - Do **not** commit silently.
+> - Do **not** push silently.
+> - Prefer concise Conventional Commit style messages such as:
+>   - `fix: restore Level 03 hospital navmesh and fuse-door progression`
+>   - `scene: retune Level 02 streets spawn and lighting`
+>   - `docs: update AI master prompt with git approval workflow`
+> - If multiple unrelated changes were made, the agent should suggest either:
+>   - one combined commit message, or
+>   - a short list of recommended commit messages grouped by change area.
+> - If the user says no, the agent must stop before committing or pushing.
 
 ---
 
