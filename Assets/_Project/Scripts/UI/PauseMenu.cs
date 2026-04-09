@@ -74,6 +74,12 @@ namespace TWD.UI
 
         private void Pause()
         {
+            if (_pausePanel == null)
+            {
+                Debug.LogWarning("[PauseMenu] Pause panel is not configured in this scene.");
+                return;
+            }
+
             _pausePanel?.SetActive(true);
             GameManager.Instance.TogglePause();
         }

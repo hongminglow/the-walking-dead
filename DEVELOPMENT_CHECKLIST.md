@@ -325,7 +325,7 @@ Main Camera also has **ThirdPersonCamera** script targeting `CameraTarget`.
 | 6.5 | All enemy animations integrated | 🔲 | Walk, attack, death, stagger |
 | 6.6 | Full SFX implementation | 🚧 | Procedural SFX expanded: surface-aware footsteps, pause/save/load/item feedback, scene-safe resubscribe after EventBus resets |
 | 6.7 | Music tracks per area | 🚧 | Auto-bootstrapped procedural music/ambient director for menu, level moods, combat, boss |
-| 6.8 | UI polish (HUD + menus) | ✅ DONE | Crosshair, health bar, ammo text, dark overlays for pause/inventory/gameover |
+| 6.8 | UI polish (HUD + menus) | ✅ DONE | Crosshair, health bar, ammo text, dark overlays for pause/inventory, runtime game-over overlay with retry/continue/menu flow |
 | 6.9 | Cutscenes (intro + ending) | 🚧 | Reusable Timeline cutscene controller added with skip, one-shot playback, scene handoff |
 | 6.10 | **TEST**: Full visual/audio experience ✅ | 🔲 | Feels like a complete game |
 
@@ -649,6 +649,8 @@ This is fine for solo dev. CI is more important for teams.
 | 2026-03-30 | Session 6 | Stage 2-4 completed in _TestScene. All systems wired (player, combat, inventory, HUD, pause, save/load). Fixed pink materials → URP Lit. Fixed GameManager starting in MainMenu → Playing. Rewrote all input to direct polling (Keyboard/Mouse.current). | Test gameplay loop |
 | 2026-03-31 | Session 7 | Stage 6 partial: 8 URP materials, post-processing volume, horror lighting, UI polish. Camera sensitivity fixed. Starting Stage 5 content. | Build Level 1-5 |
 | 2026-04-09 | Session 8 | Stage 6 systems polish: player animator state sync, best-effort save/load scene handoff, menu continue flow, upgraded procedural SFX, procedural scene music, runtime loading overlay, reusable Timeline cutscene controller | Hook new systems in Unity and finish final animation/cutscene content |
+| 2026-04-09 | Session 9 | Level 1 stabilization pass: repaired `Level_01_House` player/camera/door/pickup/zombie/HUD references, added HUD TMP runtime fallback, and prevented blank inventory/pause states in incomplete scenes | Re-test Level 1 inside Unity and continue scene-by-scene stabilization |
+| 2026-04-09 | Session 10 | Stage 6 runtime fail-state polish: added persistent game-over overlay with retry/continue/menu actions, session summary, audio ducking, and cleaner GameManager state transition hooks | Validate death/retry flow in Unity and continue scene stabilization |
 
 ---
 

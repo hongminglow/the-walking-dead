@@ -122,6 +122,12 @@ namespace TWD.UI
         /// <summary>Opens the inventory UI.</summary>
         public void Open()
         {
+            if (_inventoryPanel == null)
+            {
+                Debug.LogWarning("[InventoryUI] Inventory panel is not configured in this scene.");
+                return;
+            }
+
             _isOpen = true;
             _inventoryPanel?.SetActive(true);
             RefreshUI();

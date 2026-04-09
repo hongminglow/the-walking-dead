@@ -216,15 +216,23 @@ namespace TWD.Player          // Namespace: TWD.<Subsystem>
 | Stage | Milestone | Status |
 |-------|-----------|--------|
 | Stage 0 | 40 core C# scripts (all systems) | ✅ Complete |
-| Stage 1 | Unity Editor Setup (tags, layers, packages, scenes) | 🚧 In Progress |
-| Stage 2 | Phase 1 Prototype — walk, pick up key, unlock door | 🔲 Next |
-| Stage 3 | Phase 2 Combat — fight and kill zombies | 🔲 |
-| Stage 4 | Phase 3 Systems — inventory UI, save/load | 🔲 |
-| Stage 5 | Phase 4 Content — build all 5 levels | 🔲 |
-| Stage 6 | Phase 5 Polish — art, audio, VFX | 🔲 |
-| Stage 7 | Phase 6 Testing & Ship | 🔲 |
+| Stage 1 | Unity Editor Setup (tags, layers, packages, scenes) | ✅ Complete |
+| Stage 2 | Phase 1 Prototype — walk, pick up key, unlock door | ✅ Complete |
+| Stage 3 | Phase 2 Combat — fight and kill zombies | ✅ Complete |
+| Stage 4 | Phase 3 Systems — inventory UI, save/load | ✅ Complete |
+| Stage 5 | Phase 4 Content — build all 5 levels | ✅ Greybox content built |
+| Stage 6 | Phase 5 Polish — art, audio, VFX | 🚧 In Progress |
+| Stage 7 | Phase 6 Testing & Ship | ⏳ Not started |
 
 > See [DEVELOPMENT_CHECKLIST.md](./DEVELOPMENT_CHECKLIST.md) for the full stage-by-stage task list with progress tracking.
+
+### Current Prototype Status
+
+- Core gameplay systems are implemented: movement, interaction, combat, inventory, pause, save/load, scene transitions, and basic cutscene/loading/audio polish.
+- `_TestScene` is still the most fully wired validation scene, while authored campaign scenes are being stabilized and corrected scene-by-scene.
+- `Level_01_House` has now been repaired for the core first-loop references: player camera/combat setup, key + locked door flow, zombie AI data, HUD hookups, and pickup assignments.
+- Several campaign scenes still use greybox enemy presentation and placeholder art/audio, so behavior is ahead of final presentation.
+- Current focus is Stage 6 stabilization: fix remaining scene wiring gaps, then swap placeholder visuals, VFX, animation, and authored cutscene content.
 
 <br>
 

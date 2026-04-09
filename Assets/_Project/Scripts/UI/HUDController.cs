@@ -9,6 +9,7 @@
 
 using UnityEngine;
 using UnityEngine.UI;
+using TMPro;
 using TWD.Core;
 using TWD.Player;
 
@@ -30,11 +31,13 @@ namespace TWD.UI
 
         [Header("Ammo")]
         [SerializeField] private Text _ammoText;
+        [SerializeField] private TMP_Text _ammoTmpText;
         [SerializeField] private Image _weaponIcon;
 
         [Header("Interaction")]
         [SerializeField] private GameObject _interactPromptPanel;
         [SerializeField] private Text _interactPromptText;
+        [SerializeField] private TMP_Text _interactPromptTmpText;
 
         [Header("Stamina")]
         [SerializeField] private Slider _staminaBar;
@@ -81,9 +84,17 @@ namespace TWD.UI
 
         private void Start()
         {
+            ResolveRuntimeReferences();
+
             var player = GameObject.FindWithTag("Player");
             if (player != null)
                 _playerController = player.GetComponent<PlayerController>();
+
+            if (_interactPromptPanel != null)
+                _interactPromptPanel.SetActive(false);
+
+            if (_crosshair != null)
+                _crosshair.SetActive(false);
 
             if (_damageOverlay != null)
             {
@@ -152,10 +163,13 @@ namespace TWD.UI
 
         private void UpdateAmmo(int current, int max)
         {
+            string ammoLabel = $"{current} / {max}";
+
             if (_ammoText != null)
-            {
-                _ammoText.text = $"{current} / {max}";
-            }
+                _ammoText.text = ammoLabel;
+
+            if (_ammoTmpText != null)
+                _ammoTmpText.text = ammoLabel;
         }
 
         private void UpdateWeapon(string weaponName)
@@ -178,6 +192,11 @@ namespace TWD.UI
             if (_interactPromptText != null)
             {
                 _interactPromptText.text = text;
+            }
+
+            if (_interactPromptTmpText != null)
+            {
+                _interactPromptTmpText.text = text;
             }
         }
 
@@ -215,6 +234,56 @@ namespace TWD.UI
                 c.a = 0.4f;
                 _damageOverlay.color = c;
             }
+        }
+
+        private void ResolveRuntimeReferences()
+        {
+            if (_healthBar == null)
+                _healthBar = FindNamedComponentInChildren<Slider>("HealthBar");
+
+            if (_healthBarFill == null && _healthBar != null && _healthBar.fillRect != null)
+                _healthBarFill = _healthBar.fillRect.GetComponent<Image>();
+
+            if (_ammoText == null)
+                _ammoText = FindNamedComponentInChildren<Text>("AmmoText");
+
+            if (_ammoTmpText == null)
+                _ammoTmpText = FindNamedComponentInChildren<TMP_Text>("AmmoText");
+
+            if (_interactPromptPanel == null)
+            {
+                RectTransform promptTransform = FindNamedComponentInChildren<RectTransform>("InteractPrompt");
+                if (promptTransform != null)
+                    _interactPromptPanel = promptTransform.gameObject;
+            }
+
+            if (_interactPromptText == null)
+                _interactPromptText = FindNamedComponentInChildren<Text>("InteractPrompt");
+
+            if (_interactPromptTmpText == null)
+                _interactPromptTmpText = FindNamedComponentInChildren<TMP_Text>("InteractPrompt");
+
+            if (_staminaBar == null)
+                _staminaBar = FindNamedComponentInChildren<Slider>("StaminaBar");
+
+            if (_crosshair == null)
+            {
+                RectTransform crosshairTransform = FindNamedComponentInChildren<RectTransform>("Crosshair");
+                if (crosshairTransform != null)
+                    _crosshair = crosshairTransform.gameObject;
+            }
+        }
+
+        private T FindNamedComponentInChildren<T>(string objectName) where T : Component
+        {
+            T[] components = GetComponentsInChildren<T>(true);
+            for (int i = 0; i < components.Length; i++)
+            {
+                if (components[i] != null && components[i].gameObject.name == objectName)
+                    return components[i];
+            }
+
+            return null;
         }
 
         #endregion

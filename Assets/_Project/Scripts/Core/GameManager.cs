@@ -7,6 +7,7 @@
 // Created:     2026-03-29
 // ============================================================
 
+using System;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using TWD.Utilities;
@@ -28,6 +29,9 @@ namespace TWD.Core
 
         private GameState _previousState;
         private float _playTime;
+
+        /// <summary>Raised whenever the game state changes. Params: previous, current.</summary>
+        public event Action<GameState, GameState> OnStateChanged;
 
         // ================================================================
         // Properties
@@ -85,6 +89,7 @@ namespace TWD.Core
         {
             if (_currentState == newState) return;
 
+            GameState oldState = _currentState;
             _previousState = _currentState;
             _currentState = newState;
 
@@ -129,8 +134,10 @@ namespace TWD.Core
 
             if (_showDebugInfo)
             {
-                Debug.Log($"[GameManager] State: {_previousState} → {newState}");
+                Debug.Log($"[GameManager] State: {oldState} → {newState}");
             }
+
+            OnStateChanged?.Invoke(oldState, newState);
         }
 
         /// <summary>
@@ -196,12 +203,35 @@ namespace TWD.Core
         }
 
         /// <summary>
+        /// Restarts the current gameplay scene through the loading flow.
+        /// </summary>
+        public void RestartCurrentLevel()
+        {
+            SetState(GameState.Loading);
+            SceneLoader.Instance.ReloadCurrentScene();
+            Debug.Log($"[GameManager] Restarting scene: {SceneLoader.Instance.CurrentSceneName}");
+        }
+
+        /// <summary>
+        /// Attempts to continue from the latest save. Falls back to a fresh game if none exist.
+        /// </summary>
+        public void ContinueLatestOrStartNew()
+        {
+            if (SaveManager.Instance != null && SaveManager.Instance.HasAnySave())
+            {
+                SaveManager.Instance.LoadLatest();
+                return;
+            }
+
+            StartNewGame();
+        }
+
+        /// <summary>
         /// Triggers game over state.
         /// </summary>
         public void TriggerGameOver()
         {
             SetState(GameState.GameOver);
-            EventBus.PlayerDied();
             Debug.Log("[GameManager] Game Over triggered.");
         }
 

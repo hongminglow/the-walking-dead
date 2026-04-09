@@ -821,14 +821,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: cacaf13a1d989bd4b9bb8165196b6561, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TWD.Enemies.ZombieBasic
-  _data: {fileID: 0}
+  _data: {fileID: 11400000, guid: 20e0e3f525da61f4e972644280056d3f, type: 2}
   _eyeTransform: {fileID: 0}
   _playerLayer:
     serializedVersion: 2
-    m_Bits: 0
+    m_Bits: 64
   _obstacleLayers:
     serializedVersion: 2
-    m_Bits: 0
+    m_Bits: 1025
   _showGizmos: 1
   _grabChance: 0.15
   _grabDamage: 20
@@ -1104,14 +1104,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: cacaf13a1d989bd4b9bb8165196b6561, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TWD.Enemies.ZombieBasic
-  _data: {fileID: 0}
+  _data: {fileID: 11400000, guid: 20e0e3f525da61f4e972644280056d3f, type: 2}
   _eyeTransform: {fileID: 0}
   _playerLayer:
     serializedVersion: 2
-    m_Bits: 0
+    m_Bits: 64
   _obstacleLayers:
     serializedVersion: 2
-    m_Bits: 0
+    m_Bits: 1025
   _showGizmos: 1
   _grabChance: 0.15
   _grabDamage: 20
@@ -1264,20 +1264,20 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7a68d360343285144978d201fb71cb71, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TWD.Camera.ThirdPersonCamera
-  _followTarget: {fileID: 0}
+  _followTarget: {fileID: 722925869}
   _followSpeed: 12
   _normalOffset: {x: 0.5, y: 1.6, z: -3}
   _normalFOV: 60
   _aimOffset: {x: 0.8, y: 1.5, z: -1.5}
   _aimFOV: 45
-  _mouseSensitivity: 0.15
-  _gamepadSensitivity: 100
+  _mouseSensitivity: 2
+  _gamepadSensitivity: 150
   _verticalClampMin: -40
   _verticalClampMax: 70
   _collisionRadius: 0.3
   _collisionLayers:
     serializedVersion: 2
-    m_Bits: 0
+    m_Bits: 1536
   _aimTransitionSpeed: 8
 --- !u!114 &487014846
 MonoBehaviour:
@@ -2067,9 +2067,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0e874cdfcf71deb4d82dc6f0032649a8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TWD.Inventory.ItemPickup
-  _itemData: {fileID: 0}
+  _itemData: {fileID: 11400000, guid: b53478fb84379ab47b7dbd51aa76a31f, type: 2}
   _quantity: 1
-  _pickupId: 
+  _pickupId: item_pistol_ammo_2
   _destroyOnPickup: 1
   _bobSpeed: 2
   _bobHeight: 0.1
@@ -2643,16 +2643,16 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 285d9b6b18795394cb282d71469db183, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TWD.UI.HUDController
-  _healthBar: {fileID: 0}
+  _healthBar: {fileID: 2105151108}
   _healthBarFill: {fileID: 0}
   _healthColorFine: {r: 0.545, g: 0, b: 0, a: 1}
   _healthColorLow: {r: 1, g: 0.267, b: 0.267, a: 1}
   _ammoText: {fileID: 0}
   _weaponIcon: {fileID: 0}
-  _interactPromptPanel: {fileID: 0}
+  _interactPromptPanel: {fileID: 59812608}
   _interactPromptText: {fileID: 0}
   _staminaBar: {fileID: 0}
-  _crosshair: {fileID: 0}
+  _crosshair: {fileID: 888063692}
 --- !u!114 &826220010
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3013,9 +3013,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 55836d67adb3ac94589dd3f6817c9432, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TWD.Environment.Door
-  _doorId: 
+  _doorId: door_level1
   _initialState: 0
-  _requiredKeyId: 
+  _requiredKeyId: key_house
   _consumeKey: 1
   _animator: {fileID: 0}
   _openAngle: 90
@@ -3805,9 +3805,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0e874cdfcf71deb4d82dc6f0032649a8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TWD.Inventory.ItemPickup
-  _itemData: {fileID: 0}
+  _itemData: {fileID: 11400000, guid: 3691bb19abf68bb46bf4a6d152a0adec, type: 2}
   _quantity: 1
-  _pickupId: 
+  _pickupId: item_healthpack_1
   _destroyOnPickup: 1
   _bobSpeed: 2
   _bobHeight: 0.1
@@ -4058,9 +4058,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0e874cdfcf71deb4d82dc6f0032649a8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TWD.Inventory.ItemPickup
-  _itemData: {fileID: 0}
+  _itemData: {fileID: 11400000, guid: b53478fb84379ab47b7dbd51aa76a31f, type: 2}
   _quantity: 1
-  _pickupId: 
+  _pickupId: item_pistol_ammo_1
   _destroyOnPickup: 1
   _bobSpeed: 2
   _bobHeight: 0.1
@@ -4447,14 +4447,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: cacaf13a1d989bd4b9bb8165196b6561, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TWD.Enemies.ZombieBasic
-  _data: {fileID: 0}
+  _data: {fileID: 11400000, guid: 20e0e3f525da61f4e972644280056d3f, type: 2}
   _eyeTransform: {fileID: 0}
   _playerLayer:
     serializedVersion: 2
-    m_Bits: 0
+    m_Bits: 64
   _obstacleLayers:
     serializedVersion: 2
-    m_Bits: 0
+    m_Bits: 1025
   _showGizmos: 1
   _grabChance: 0.15
   _grabDamage: 20
@@ -5316,7 +5316,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!114 &1413587971
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -5329,9 +5329,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0e874cdfcf71deb4d82dc6f0032649a8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TWD.Inventory.ItemPickup
-  _itemData: {fileID: 0}
+  _itemData: {fileID: 11400000, guid: b53478fb84379ab47b7dbd51aa76a31f, type: 2}
   _quantity: 1
-  _pickupId: 
+  _pickupId: item_disabled_placeholder
   _destroyOnPickup: 1
   _bobSpeed: 2
   _bobHeight: 0.1
@@ -6133,8 +6133,8 @@ MonoBehaviour:
   _interactDistance: 3
   _interactableLayer:
     serializedVersion: 2
-    m_Bits: 0
-  _cameraTransform: {fileID: 0}
+    m_Bits: 256
+  _cameraTransform: {fileID: 487014849}
 --- !u!114 &1635935833
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -6181,13 +6181,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 83d57c83cc99c21409bbd6c113db96e3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TWD.Player.PlayerCombat
-  _currentWeaponData: {fileID: 0}
-  _muzzlePoint: {fileID: 0}
+  _currentWeaponData: {fileID: 11400000, guid: 1d937c682d2f2244299d8800eb41990c, type: 2}
+  _muzzlePoint: {fileID: 1827106038}
   _shootableLayers:
     serializedVersion: 2
-    m_Bits: 0
-  _cameraTransform: {fileID: 0}
-  _meleeWeaponData: {fileID: 0}
+    m_Bits: 128
+  _cameraTransform: {fileID: 487014849}
+  _meleeWeaponData: {fileID: 11400000, guid: 1169b50d397443244a890503e5a6cf0d, type: 2}
 --- !u!114 &1635935836
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -6227,12 +6227,12 @@ MonoBehaviour:
   _groundCheckDistance: 0.3
   _groundMask:
     serializedVersion: 2
-    m_Bits: 0
+    m_Bits: 512
   _maxStamina: 100
   _staminaDrainRate: 15
   _staminaRegenRate: 8
   _staminaRegenDelay: 1
-  _cameraTransform: {fileID: 0}
+  _cameraTransform: {fileID: 487014849}
 --- !u!114 &1635935838
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -6672,15 +6672,19 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 805c1a5e42701c14d96ceb2079b65c82, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TWD.Enemies.EnemySpawner
-  _enemyPrefabs: []
-  _spawnPoints: []
+  _enemyPrefabs:
+  - {fileID: 7000000000000000001, guid: a1b2c3d4e5f60bcd1234567890abcdef, type: 3}
+  _spawnPoints:
+  - {fileID: 1210275814}
+  - {fileID: 179910873}
+  - {fileID: 1093923099}
   _maxEnemiesPerWave: 3
   _totalWaves: 1
   _delayBetweenSpawns: 0.5
   _delayBetweenWaves: 3
   _activateOnTrigger: 1
   _disableAfterCleared: 1
-  _spawnerId: 
+  _spawnerId: spawner_level1_house
 --- !u!65 &1813052422
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -7446,9 +7450,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0e874cdfcf71deb4d82dc6f0032649a8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TWD.Inventory.ItemPickup
-  _itemData: {fileID: 0}
+  _itemData: {fileID: 11400000, guid: 4609326cf68e5dd4184bf4e22abfb9f1, type: 2}
   _quantity: 1
-  _pickupId: 
+  _pickupId: item_housekey
   _destroyOnPickup: 1
   _bobSpeed: 2
   _bobHeight: 0.1
