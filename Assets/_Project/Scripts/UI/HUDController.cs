@@ -297,7 +297,7 @@ namespace TWD.UI
 
         private void CreateRuntimeHealthBar()
         {
-            Font font = Resources.GetBuiltinResource<Font>("Arial.ttf");
+            Font font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
             GameObject background = CreateUiChild("HealthBarBg", transform);
             RectTransform bgRect = background.GetComponent<RectTransform>();
             bgRect.anchorMin = new Vector2(0f, 0f);
@@ -339,7 +339,7 @@ namespace TWD.UI
 
         private void CreateRuntimeAmmoText()
         {
-            Font font = Resources.GetBuiltinResource<Font>("Arial.ttf");
+            Font font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
             GameObject ammo = CreateUiChild("AmmoText", transform);
             RectTransform rect = ammo.GetComponent<RectTransform>();
             rect.anchorMin = new Vector2(1f, 0f);
@@ -358,7 +358,7 @@ namespace TWD.UI
 
         private void CreateRuntimeInteractPrompt()
         {
-            Font font = Resources.GetBuiltinResource<Font>("Arial.ttf");
+            Font font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
             GameObject prompt = CreateUiChild("InteractPrompt", transform);
             RectTransform rect = prompt.GetComponent<RectTransform>();
             rect.anchorMin = new Vector2(0.5f, 0.18f);
@@ -370,12 +370,22 @@ namespace TWD.UI
             Image panel = prompt.AddComponent<Image>();
             panel.color = new Color(0f, 0f, 0f, 0.5f);
 
-            Text text = prompt.AddComponent<Text>();
+            GameObject label = CreateUiChild("Label", prompt.transform);
+            RectTransform labelRect = label.GetComponent<RectTransform>();
+            labelRect.anchorMin = Vector2.zero;
+            labelRect.anchorMax = Vector2.one;
+            labelRect.offsetMin = Vector2.zero;
+            labelRect.offsetMax = Vector2.zero;
+
+            Text text = label.AddComponent<Text>();
             text.font = font;
             text.fontSize = 16;
             text.alignment = TextAnchor.MiddleCenter;
             text.color = Color.white;
             text.text = string.Empty;
+
+            _interactPromptPanel = prompt;
+            _interactPromptText = text;
 
             prompt.SetActive(false);
         }

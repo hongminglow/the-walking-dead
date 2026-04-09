@@ -5,7 +5,7 @@
 > - Update this file after each work session.
 > - When resuming with AI, say: _"Continue from Stage X, Step Y"_
 
-> **LAST UPDATED**: 2026-04-09 (Session 12)
+> **LAST UPDATED**: 2026-04-10 (Session 15)
 > **CURRENT STAGE**: Stage 6 — Polish 🚧
 
 ---
@@ -20,7 +20,7 @@
 | 3 | Phase 2: Combat | ✅ COMPLETE | Zombie + HUD + weapons wired, input fixed |
 | 4 | Phase 3: Systems | ✅ COMPLETE | Inventory UI + Save/Load + Pause + direct input |
 | 5 | Phase 4: Content | ✅ COMPLETE | 5 levels + MainMenu + Loading + Build Settings |
-| 6 | Phase 5: Polish | 🚧 IN PROGRESS | Runtime polish active; Level 1 stabilized, Level 2-5 scene audit and fallback recovery underway |
+| 6 | Phase 5: Polish | 🚧 IN PROGRESS | Runtime polish active; Level 1 intro/tutorial pass retuned, Level 2 Streets combat/readability restored, Level 3-5 scene audit and fallback recovery underway |
 | 7 | Phase 6: Testing & Ship | 🔲 Not started | Bug fixes + build |
 
 ---
@@ -654,6 +654,8 @@ This is fine for solo dev. CI is more important for teams.
 | 2026-04-09 | Session 11 | Cross-scene stabilization pass: audited Level 2-5 wiring, added runtime auto-binding for player camera/combat, enemy data/layer masks, item pickup inference, safer door fallback, and runtime HUD scaffolding for fast-authored scenes | Re-test campaign scenes in Unity and patch remaining unsupported pickups/puzzles |
 | 2026-04-09 | Session 12 | Scene quality audit pass: ranked campaign scenes by stabilization risk (`Level_04` > `Level_03` > `Level_02` > `Level_05`), fixed runtime compile-safety in scene resolver, and stopped broken pickups from showing misleading interaction prompts | Validate the ranked scenes in Unity and replace unsupported authored pickups/puzzle props with real content |
 | 2026-04-09 | Session 13 | Progression-content recovery pass: added runtime-generated key/document/puzzle items, weapon pickup inference for shotgun/wrench, scene-name-based door/puzzle key inference for obvious blockers, save/load support for generated items, and stable puzzle IDs for persistence | Validate `Level_04` and `Level_03` in Unity and replace any remaining bespoke scene blockers with authored logic |
+| 2026-04-10 | Session 14 | Level 1 intro polish pass: fixed missing `TWD.Utilities` imports that blocked play mode, stabilized third-person camera startup/orbit around `CameraTarget`, replaced Unity 6 `Arial.ttf` runtime fallbacks with `LegacyRuntime.ttf`, disabled broken Level 1 zombies/spawner, and retuned the Level 1 spawn/light balance around the house-key tutorial path | Manually play Level 1 for readability/flow and continue scene-by-scene Stage 6 polish |
+| 2026-04-10 | Session 15 | Level 2 Streets recovery pass: added a baked `NavMeshSurface`, verified all 6 zombies regain runtime movement, confirmed item/enemy auto-resolution and HUD prompt repair, rotated the spawn to face the hospital route, and retuned street lighting/fog while removing point-light shadows that were overloading the shadow atlas | Manually play Level 2 for encounter feel, then continue with Level 3 hospital polish |
 
 ---
 

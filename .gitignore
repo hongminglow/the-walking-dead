@@ -93,3 +93,14 @@ ignore.conf
 # ---- AI Skills ----
 *.claude
 *.github
+.agents/*
+.codex/*
+
+# ---- Local AI / Codex / Unity MCP tooling ----
+.codex-unity-ping.json
+.__audit/
+.__codex_*.ps1
+
+# Embedded local MCP package source copied into Packages/.
+# The project already resolves this via manifest/registry on each machine.
+Packages/com.ivanmurzak.unity.mcp/

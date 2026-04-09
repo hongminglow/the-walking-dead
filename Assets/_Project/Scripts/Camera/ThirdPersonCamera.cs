@@ -11,6 +11,7 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
 using TWD.Core;
+using TWD.Utilities;
 
 namespace TWD.Camera
 {
@@ -40,6 +41,7 @@ namespace TWD.Camera
         [SerializeField] private float _gamepadSensitivity = 100f;
         [SerializeField] private float _verticalClampMin = -40f;
         [SerializeField] private float _verticalClampMax = 70f;
+        [SerializeField] private float _startingPitch = 10f;
 
         [Header("Collision")]
         [SerializeField] private float _collisionRadius = 0.3f;
@@ -47,6 +49,7 @@ namespace TWD.Camera
 
         [Header("Smoothing")]
         [SerializeField] private float _aimTransitionSpeed = 8f;
+        [SerializeField] private float _startupLookDelay = 0.25f;
 
         #endregion
 
@@ -59,6 +62,7 @@ namespace TWD.Camera
         private bool _isAiming;
         private Vector3 _currentOffset;
         private float _currentFOV;
+        private float _ignoreLookInputUntil;
 
         #endregion
 
@@ -98,9 +102,18 @@ namespace TWD.Camera
             if (_collisionLayers.value == 0)
                 _collisionLayers = RuntimeSceneResolver.MaskFromLayers(Constants.Layers.GROUND, Constants.Layers.OBSTACLE);
 
-            // Initialize rotation from current
-            _yaw = transform.eulerAngles.y;
-            _pitch = transform.eulerAngles.x;
+            // Seed the opening camera from the follow target so the first frame
+            // matches the authored player facing direction rather than stale editor camera data.
+            _yaw = _followTarget != null ? _followTarget.eulerAngles.y : transform.eulerAngles.y;
+
+            float initialPitch = transform.eulerAngles.x;
+            if (initialPitch > 180f)
+                initialPitch -= 360f;
+
+            _pitch = Mathf.Clamp(Mathf.Approximately(initialPitch, 0f) ? _startingPitch : initialPitch, _verticalClampMin, _verticalClampMax);
+            _ignoreLookInputUntil = Time.unscaledTime + _startupLookDelay;
+
+            SnapToTarget();
         }
 
         private void LateUpdate()
@@ -135,10 +148,21 @@ namespace TWD.Camera
 
         private void HandleLookInput()
         {
+            if (Time.unscaledTime < _ignoreLookInputUntil)
+            {
+                _lookInput = Vector2.zero;
+                return;
+            }
+
             var mouse = Mouse.current;
             if (mouse != null)
             {
-                _lookInput = mouse.delta.ReadValue();
+                bool hasMouseLookIntent =
+                    mouse.rightButton.isPressed ||
+                    mouse.leftButton.isPressed ||
+                    mouse.middleButton.isPressed;
+
+                _lookInput = hasMouseLookIntent ? mouse.delta.ReadValue() : Vector2.zero;
                 _isAiming = mouse.rightButton.isPressed;
             }
 
@@ -160,8 +184,13 @@ namespace TWD.Camera
             // Build rotation
             Quaternion rotation = Quaternion.Euler(_pitch, _yaw, 0f);
 
+            // CameraTarget already sits at head height, so treat it as the orbit
+            // pivot instead of stacking another authored vertical offset on top.
+            Vector3 pivotPosition = GetPivotPosition();
+            Vector3 orbitOffset = new Vector3(_currentOffset.x, 0f, _currentOffset.z);
+
             // Calculate desired position
-            Vector3 targetPosition = _followTarget.position + rotation * _currentOffset;
+            Vector3 targetPosition = pivotPosition + rotation * orbitOffset;
 
             // Smooth follow
             transform.position = Vector3.Lerp(transform.position, targetPosition, Time.deltaTime * _followSpeed);
@@ -171,16 +200,44 @@ namespace TWD.Camera
         private void HandleCollision()
         {
             // Raycast from target to camera to prevent going through walls
-            Vector3 targetPos = _followTarget.position + Vector3.up * _currentOffset.y;
-            Vector3 direction = transform.position - targetPos;
+            Vector3 pivotPosition = GetPivotPosition();
+            Vector3 direction = transform.position - pivotPosition;
             float desiredDistance = direction.magnitude;
 
-            if (Physics.SphereCast(targetPos, _collisionRadius, direction.normalized,
+            if (desiredDistance <= Mathf.Epsilon)
+                return;
+
+            if (Physics.SphereCast(pivotPosition, _collisionRadius, direction.normalized,
                 out RaycastHit hit, desiredDistance, _collisionLayers))
             {
                 // Move camera in front of the wall
                 transform.position = hit.point + hit.normal * _collisionRadius;
             }
+        }
+
+        private Vector3 GetPivotPosition()
+        {
+            if (_followTarget == null)
+                return transform.position;
+
+            bool useFollowTargetAsPivot =
+                _followTarget.name.IndexOf("CameraTarget", System.StringComparison.OrdinalIgnoreCase) >= 0;
+
+            return useFollowTargetAsPivot
+                ? _followTarget.position
+                : _followTarget.position + Vector3.up * _currentOffset.y;
+        }
+
+        private void SnapToTarget()
+        {
+            if (_followTarget == null)
+                return;
+
+            Quaternion rotation = Quaternion.Euler(_pitch, _yaw, 0f);
+            Vector3 orbitOffset = new Vector3(_currentOffset.x, 0f, _currentOffset.z);
+            transform.position = GetPivotPosition() + rotation * orbitOffset;
+            transform.rotation = rotation;
+            HandleCollision();
         }
 
         private void UpdateFOV()

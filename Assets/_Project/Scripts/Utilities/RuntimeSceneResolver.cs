@@ -13,6 +13,9 @@ using UnityEngine;
 using TWD.Combat;
 using TWD.Enemies;
 using TWD.Inventory;
+#if UNITY_EDITOR
+using UnityEditor;
+#endif
 
 namespace TWD.Utilities
 {
@@ -65,6 +68,16 @@ namespace TWD.Utilities
                     return allEnemies[i];
             }
 
+#if UNITY_EDITOR
+            string[] guids = AssetDatabase.FindAssets("t:EnemyData", new[] { "Assets/_Project/ScriptableObjects/Enemies" });
+            for (int i = 0; i < guids.Length; i++)
+            {
+                EnemyData enemy = AssetDatabase.LoadAssetAtPath<EnemyData>(AssetDatabase.GUIDToAssetPath(guids[i]));
+                if (enemy != null && enemy.enemyType == enemyType)
+                    return enemy;
+            }
+#endif
+
             return null;
         }
 
@@ -79,6 +92,16 @@ namespace TWD.Utilities
                 if (allWeapons[i] != null && string.Equals(allWeapons[i].weaponId, weaponId, StringComparison.OrdinalIgnoreCase))
                     return allWeapons[i];
             }
+
+#if UNITY_EDITOR
+            string[] guids = AssetDatabase.FindAssets("t:WeaponData", new[] { "Assets/_Project/ScriptableObjects/Weapons" });
+            for (int i = 0; i < guids.Length; i++)
+            {
+                WeaponData weapon = AssetDatabase.LoadAssetAtPath<WeaponData>(AssetDatabase.GUIDToAssetPath(guids[i]));
+                if (weapon != null && string.Equals(weapon.weaponId, weaponId, StringComparison.OrdinalIgnoreCase))
+                    return weapon;
+            }
+#endif
 
             return null;
         }
@@ -103,6 +126,25 @@ namespace TWD.Utilities
                         return weapon;
                 }
             }
+
+#if UNITY_EDITOR
+            string[] guids = AssetDatabase.FindAssets("t:WeaponData", new[] { "Assets/_Project/ScriptableObjects/Weapons" });
+            for (int i = 0; i < guids.Length; i++)
+            {
+                WeaponData weapon = AssetDatabase.LoadAssetAtPath<WeaponData>(AssetDatabase.GUIDToAssetPath(guids[i]));
+                if (weapon == null || weapon.weaponType != weaponType)
+                    continue;
+
+                fallback ??= weapon;
+
+                if (!string.IsNullOrEmpty(preferredNameHint))
+                {
+                    string haystack = $"{weapon.weaponId} {weapon.weaponName}".ToLowerInvariant();
+                    if (haystack.Contains(preferredNameHint.ToLowerInvariant()))
+                        return weapon;
+                }
+            }
+#endif
 
             return fallback;
         }
@@ -210,6 +252,16 @@ namespace TWD.Utilities
                 if (item != null && predicate(item))
                     return item;
             }
+
+#if UNITY_EDITOR
+            string[] guids = AssetDatabase.FindAssets("t:ItemData", new[] { "Assets/_Project/ScriptableObjects/Items" });
+            for (int i = 0; i < guids.Length; i++)
+            {
+                ItemData item = AssetDatabase.LoadAssetAtPath<ItemData>(AssetDatabase.GUIDToAssetPath(guids[i]));
+                if (item != null && predicate(item))
+                    return item;
+            }
+#endif
 
             return null;
         }
