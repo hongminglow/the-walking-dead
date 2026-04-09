@@ -120,7 +120,14 @@ namespace TWD.Environment
             _openRotation = _closedRotation * Quaternion.Euler(0f, _openAngle, 0f);
 
             if (string.IsNullOrEmpty(_doorId))
-                _doorId = $"door_{gameObject.GetInstanceID()}";
+                _doorId = gameObject.name.Replace(" ", "_").ToLowerInvariant();
+
+            // Prevent half-configured scenes from shipping permanently locked doors.
+            if (_currentState == DoorState.Locked && string.IsNullOrWhiteSpace(_requiredKeyId))
+            {
+                Debug.LogWarning($"[Door] {gameObject.name} was locked with no required key. Falling back to unlocked.");
+                _currentState = DoorState.Unlocked;
+            }
         }
 
         #endregion

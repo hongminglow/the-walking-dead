@@ -5,7 +5,7 @@
 > - Update this file after each work session.
 > - When resuming with AI, say: _"Continue from Stage X, Step Y"_
 
-> **LAST UPDATED**: 2026-04-09 (Session 8)
+> **LAST UPDATED**: 2026-04-09 (Session 12)
 > **CURRENT STAGE**: Stage 6 — Polish 🚧
 
 ---
@@ -20,7 +20,7 @@
 | 3 | Phase 2: Combat | ✅ COMPLETE | Zombie + HUD + weapons wired, input fixed |
 | 4 | Phase 3: Systems | ✅ COMPLETE | Inventory UI + Save/Load + Pause + direct input |
 | 5 | Phase 4: Content | ✅ COMPLETE | 5 levels + MainMenu + Loading + Build Settings |
-| 6 | Phase 5: Polish | 🚧 IN PROGRESS | Visual polish done, runtime audio/loading/cutscene systems improved |
+| 6 | Phase 5: Polish | 🚧 IN PROGRESS | Runtime polish active; Level 1 stabilized, Level 2-5 scene audit and fallback recovery underway |
 | 7 | Phase 6: Testing & Ship | 🔲 Not started | Bug fixes + build |
 
 ---
@@ -325,7 +325,7 @@ Main Camera also has **ThirdPersonCamera** script targeting `CameraTarget`.
 | 6.5 | All enemy animations integrated | 🔲 | Walk, attack, death, stagger |
 | 6.6 | Full SFX implementation | 🚧 | Procedural SFX expanded: surface-aware footsteps, pause/save/load/item feedback, scene-safe resubscribe after EventBus resets |
 | 6.7 | Music tracks per area | 🚧 | Auto-bootstrapped procedural music/ambient director for menu, level moods, combat, boss |
-| 6.8 | UI polish (HUD + menus) | ✅ DONE | Crosshair, health bar, ammo text, dark overlays for pause/inventory, runtime game-over overlay with retry/continue/menu flow |
+| 6.8 | UI polish (HUD + menus) | ✅ DONE | Crosshair, health bar, ammo text, dark overlays for pause/inventory, runtime game-over overlay with retry/continue/menu flow, fallback HUD scaffold for under-wired campaign scenes |
 | 6.9 | Cutscenes (intro + ending) | 🚧 | Reusable Timeline cutscene controller added with skip, one-shot playback, scene handoff |
 | 6.10 | **TEST**: Full visual/audio experience ✅ | 🔲 | Feels like a complete game |
 
@@ -651,6 +651,8 @@ This is fine for solo dev. CI is more important for teams.
 | 2026-04-09 | Session 8 | Stage 6 systems polish: player animator state sync, best-effort save/load scene handoff, menu continue flow, upgraded procedural SFX, procedural scene music, runtime loading overlay, reusable Timeline cutscene controller | Hook new systems in Unity and finish final animation/cutscene content |
 | 2026-04-09 | Session 9 | Level 1 stabilization pass: repaired `Level_01_House` player/camera/door/pickup/zombie/HUD references, added HUD TMP runtime fallback, and prevented blank inventory/pause states in incomplete scenes | Re-test Level 1 inside Unity and continue scene-by-scene stabilization |
 | 2026-04-09 | Session 10 | Stage 6 runtime fail-state polish: added persistent game-over overlay with retry/continue/menu actions, session summary, audio ducking, and cleaner GameManager state transition hooks | Validate death/retry flow in Unity and continue scene stabilization |
+| 2026-04-09 | Session 11 | Cross-scene stabilization pass: audited Level 2-5 wiring, added runtime auto-binding for player camera/combat, enemy data/layer masks, item pickup inference, safer door fallback, and runtime HUD scaffolding for fast-authored scenes | Re-test campaign scenes in Unity and patch remaining unsupported pickups/puzzles |
+| 2026-04-09 | Session 12 | Scene quality audit pass: ranked campaign scenes by stabilization risk (`Level_04` > `Level_03` > `Level_02` > `Level_05`), fixed runtime compile-safety in scene resolver, and stopped broken pickups from showing misleading interaction prompts | Validate the ranked scenes in Unity and replace unsupported authored pickups/puzzle props with real content |
 
 ---
 

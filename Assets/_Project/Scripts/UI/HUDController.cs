@@ -12,6 +12,7 @@ using UnityEngine.UI;
 using TMPro;
 using TWD.Core;
 using TWD.Player;
+using TWD.Utilities;
 
 namespace TWD.UI
 {
@@ -84,6 +85,7 @@ namespace TWD.UI
 
         private void Start()
         {
+            EnsureRuntimeHudScaffold();
             ResolveRuntimeReferences();
 
             var player = GameObject.FindWithTag("Player");
@@ -132,12 +134,12 @@ namespace TWD.UI
         {
             if (_healthBar != null)
             {
-                _healthBar.value = health / Utilities.Constants.Player.MAX_HEALTH;
+                _healthBar.value = health / Constants.Player.MAX_HEALTH;
             }
 
             if (_healthBarFill != null)
             {
-                float healthPercent = health / Utilities.Constants.Player.MAX_HEALTH;
+                float healthPercent = health / Constants.Player.MAX_HEALTH;
                 _healthBarFill.color = Color.Lerp(_healthColorLow, _healthColorFine, healthPercent);
             }
         }
@@ -150,10 +152,10 @@ namespace TWD.UI
         {
             if (_staminaBar != null)
             {
-                _staminaBar.value = stamina / Utilities.Constants.Player.MAX_STAMINA;
+                _staminaBar.value = stamina / Constants.Player.MAX_STAMINA;
 
                 // Hide stamina bar when full
-                _staminaBar.gameObject.SetActive(stamina < Utilities.Constants.Player.MAX_STAMINA);
+                _staminaBar.gameObject.SetActive(stamina < Constants.Player.MAX_STAMINA);
             }
         }
 
@@ -272,6 +274,133 @@ namespace TWD.UI
                 if (crosshairTransform != null)
                     _crosshair = crosshairTransform.gameObject;
             }
+        }
+
+        private void EnsureRuntimeHudScaffold()
+        {
+            if (_healthBar == null && FindNamedComponentInChildren<Slider>("HealthBar") == null)
+                CreateRuntimeHealthBar();
+
+            if (_ammoText == null && _ammoTmpText == null &&
+                FindNamedComponentInChildren<Text>("AmmoText") == null &&
+                FindNamedComponentInChildren<TMPro.TMP_Text>("AmmoText") == null)
+            {
+                CreateRuntimeAmmoText();
+            }
+
+            if (_interactPromptPanel == null && FindNamedComponentInChildren<RectTransform>("InteractPrompt") == null)
+                CreateRuntimeInteractPrompt();
+
+            if (_crosshair == null && FindNamedComponentInChildren<RectTransform>("Crosshair") == null)
+                CreateRuntimeCrosshair();
+        }
+
+        private void CreateRuntimeHealthBar()
+        {
+            Font font = Resources.GetBuiltinResource<Font>("Arial.ttf");
+            GameObject background = CreateUiChild("HealthBarBg", transform);
+            RectTransform bgRect = background.GetComponent<RectTransform>();
+            bgRect.anchorMin = new Vector2(0f, 0f);
+            bgRect.anchorMax = new Vector2(0f, 0f);
+            bgRect.pivot = new Vector2(0f, 0f);
+            bgRect.anchoredPosition = new Vector2(20f, 20f);
+            bgRect.sizeDelta = new Vector2(220f, 20f);
+
+            Image bgImage = background.AddComponent<Image>();
+            bgImage.color = new Color(0f, 0f, 0f, 0.55f);
+
+            GameObject fillArea = CreateUiChild("FillArea", background.transform);
+            RectTransform fillAreaRect = fillArea.GetComponent<RectTransform>();
+            fillAreaRect.anchorMin = Vector2.zero;
+            fillAreaRect.anchorMax = Vector2.one;
+            fillAreaRect.offsetMin = new Vector2(3f, 3f);
+            fillAreaRect.offsetMax = new Vector2(-3f, -3f);
+
+            GameObject fill = CreateUiChild("Fill", fillArea.transform);
+            RectTransform fillRect = fill.GetComponent<RectTransform>();
+            fillRect.anchorMin = Vector2.zero;
+            fillRect.anchorMax = Vector2.one;
+            fillRect.offsetMin = Vector2.zero;
+            fillRect.offsetMax = Vector2.zero;
+            Image fillImage = fill.AddComponent<Image>();
+            fillImage.color = _healthColorFine;
+
+            Slider slider = background.AddComponent<Slider>();
+            slider.minValue = 0f;
+            slider.maxValue = Constants.Player.MAX_HEALTH;
+            slider.value = Constants.Player.MAX_HEALTH;
+            slider.targetGraphic = bgImage;
+            slider.fillRect = fillRect;
+            slider.direction = Slider.Direction.LeftToRight;
+
+            // Keep font loaded on some platforms even though this scaffold uses images.
+            _ = font;
+        }
+
+        private void CreateRuntimeAmmoText()
+        {
+            Font font = Resources.GetBuiltinResource<Font>("Arial.ttf");
+            GameObject ammo = CreateUiChild("AmmoText", transform);
+            RectTransform rect = ammo.GetComponent<RectTransform>();
+            rect.anchorMin = new Vector2(1f, 0f);
+            rect.anchorMax = new Vector2(1f, 0f);
+            rect.pivot = new Vector2(1f, 0f);
+            rect.anchoredPosition = new Vector2(-20f, 20f);
+            rect.sizeDelta = new Vector2(160f, 32f);
+
+            Text text = ammo.AddComponent<Text>();
+            text.font = font;
+            text.fontSize = 20;
+            text.alignment = TextAnchor.MiddleRight;
+            text.color = Color.white;
+            text.text = "-- / --";
+        }
+
+        private void CreateRuntimeInteractPrompt()
+        {
+            Font font = Resources.GetBuiltinResource<Font>("Arial.ttf");
+            GameObject prompt = CreateUiChild("InteractPrompt", transform);
+            RectTransform rect = prompt.GetComponent<RectTransform>();
+            rect.anchorMin = new Vector2(0.5f, 0.18f);
+            rect.anchorMax = new Vector2(0.5f, 0.18f);
+            rect.pivot = new Vector2(0.5f, 0.5f);
+            rect.anchoredPosition = Vector2.zero;
+            rect.sizeDelta = new Vector2(320f, 36f);
+
+            Image panel = prompt.AddComponent<Image>();
+            panel.color = new Color(0f, 0f, 0f, 0.5f);
+
+            Text text = prompt.AddComponent<Text>();
+            text.font = font;
+            text.fontSize = 16;
+            text.alignment = TextAnchor.MiddleCenter;
+            text.color = Color.white;
+            text.text = string.Empty;
+
+            prompt.SetActive(false);
+        }
+
+        private void CreateRuntimeCrosshair()
+        {
+            GameObject crosshair = CreateUiChild("Crosshair", transform);
+            RectTransform rect = crosshair.GetComponent<RectTransform>();
+            rect.anchorMin = new Vector2(0.5f, 0.5f);
+            rect.anchorMax = new Vector2(0.5f, 0.5f);
+            rect.pivot = new Vector2(0.5f, 0.5f);
+            rect.anchoredPosition = Vector2.zero;
+            rect.sizeDelta = new Vector2(5f, 5f);
+
+            Image image = crosshair.AddComponent<Image>();
+            image.color = new Color(1f, 1f, 1f, 0.7f);
+
+            crosshair.SetActive(false);
+        }
+
+        private static GameObject CreateUiChild(string name, Transform parent)
+        {
+            GameObject go = new GameObject(name, typeof(RectTransform));
+            go.transform.SetParent(parent, false);
+            return go;
         }
 
         private T FindNamedComponentInChildren<T>(string objectName) where T : Component

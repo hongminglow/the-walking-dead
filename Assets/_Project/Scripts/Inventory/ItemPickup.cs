@@ -78,7 +78,8 @@ namespace TWD.Inventory
 
         public void OnLookAt()
         {
-            EventBus.ShowInteractPrompt(InteractPrompt);
+            if (CanInteract)
+                EventBus.ShowInteractPrompt(InteractPrompt);
         }
 
         public void OnLookAway()
@@ -92,10 +93,19 @@ namespace TWD.Inventory
 
         private void Start()
         {
+            if (_itemData == null)
+            {
+                _itemData = RuntimeSceneResolver.InferItemDataFromObjectName(gameObject.name);
+                if (_itemData == null)
+                {
+                    Debug.LogWarning($"[ItemPickup] Could not infer item data for pickup '{gameObject.name}'.");
+                }
+            }
+
             _startPosition = transform.position;
 
             if (string.IsNullOrEmpty(_pickupId))
-                _pickupId = $"item_{gameObject.GetInstanceID()}";
+                _pickupId = gameObject.name.Replace(" ", "_").ToLowerInvariant();
         }
 
         private void Update()

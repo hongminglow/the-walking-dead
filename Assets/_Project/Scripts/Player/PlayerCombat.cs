@@ -82,7 +82,21 @@ namespace TWD.Player
             if (_cameraTransform == null)
                 _cameraTransform = UnityEngine.Camera.main?.transform;
 
-            if (_currentWeaponData != null)
+            if (_muzzlePoint == null)
+                _muzzlePoint = RuntimeSceneResolver.FindChildRecursive(transform, "MuzzlePoint");
+
+            if (_shootableLayers.value == 0)
+                _shootableLayers = RuntimeSceneResolver.MaskFromLayers(Constants.Layers.ENEMY);
+
+            if (_currentWeaponData == null)
+                _currentWeaponData = RuntimeSceneResolver.FindWeaponById("weapon_pistol") ??
+                                     RuntimeSceneResolver.FindWeaponByType(WeaponType.Pistol, "pistol");
+
+            if (_meleeWeaponData == null)
+                _meleeWeaponData = RuntimeSceneResolver.FindWeaponById("weapon_knife") ??
+                                   RuntimeSceneResolver.FindWeaponByType(WeaponType.Melee, "knife");
+
+            if (_currentWeaponData != null && _currentAmmoInClip <= 0)
                 _currentAmmoInClip = _currentWeaponData.magazineSize;
 
             UpdateAmmoUI();

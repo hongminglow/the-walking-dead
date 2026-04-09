@@ -63,6 +63,9 @@ namespace TWD.Player
             {
                 _cameraTransform = UnityEngine.Camera.main?.transform;
             }
+
+            if (_interactableLayer.value == 0)
+                _interactableLayer = RuntimeSceneResolver.MaskFromLayers(Constants.Layers.INTERACTABLE);
         }
 
         private void Update()
@@ -111,28 +114,24 @@ namespace TWD.Player
                 // Check if hit object implements IInteractable
                 if (hit.collider.TryGetComponent<IInteractable>(out var interactable))
                 {
+                    if (!interactable.CanInteract)
+                    {
+                        ClearCurrentTarget();
+                        return;
+                    }
+
                     if (interactable != _currentTarget)
                     {
-                        // Lost old target
-                        _currentTarget?.OnLookAway();
-
-                        // New target acquired
+                        ClearCurrentTarget();
                         _currentTarget = interactable;
                         _currentTarget.OnLookAt();
-
-                        EventBus.ShowInteractPrompt(_currentTarget.InteractPrompt);
                     }
                     return;
                 }
             }
 
             // No valid hit — clear target
-            if (_currentTarget != null)
-            {
-                _currentTarget.OnLookAway();
-                _currentTarget = null;
-                EventBus.HideInteractPrompt();
-            }
+            ClearCurrentTarget();
         }
 
         #endregion
@@ -143,12 +142,18 @@ namespace TWD.Player
         public void SetEnabled(bool enabled)
         {
             _inputEnabled = enabled;
-            if (!enabled && _currentTarget != null)
-            {
-                _currentTarget.OnLookAway();
-                _currentTarget = null;
-                EventBus.HideInteractPrompt();
-            }
+            if (!enabled)
+                ClearCurrentTarget();
+        }
+
+        private void ClearCurrentTarget()
+        {
+            if (_currentTarget == null)
+                return;
+
+            _currentTarget.OnLookAway();
+            _currentTarget = null;
+            EventBus.HideInteractPrompt();
         }
 
         #endregion

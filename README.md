@@ -231,6 +231,9 @@ namespace TWD.Player          // Namespace: TWD.<Subsystem>
 - Core gameplay systems are implemented: movement, interaction, combat, inventory, pause, save/load, scene transitions, and basic cutscene/loading/audio polish.
 - `_TestScene` is still the most fully wired validation scene, while authored campaign scenes are being stabilized and corrected scene-by-scene.
 - `Level_01_House` has now been repaired for the core first-loop references: player camera/combat setup, key + locked door flow, zombie AI data, HUD hookups, and pickup assignments.
+- Current scene audit priority is `Level_04_Underground` first, then `Level_03_Hospital`, then `Level_02_Streets`, with `Level_05_Finale` behind those and `Level_01_House` now in much healthier shape.
+- Shared runtime fallbacks now recover common fast-authored scene gaps: missing player camera/combat references, HUD wiring, enemy data, pickup item inference, and blank locked-door config.
+- The remaining manual content gaps are mostly authored-content issues rather than null refs: unsupported world pickups like `Shotgun`, `Fuse`, and `GateValveHandle`, plus placeholder zombie presentation and final lighting/art passes.
 - Several campaign scenes still use greybox enemy presentation and placeholder art/audio, so behavior is ahead of final presentation.
 - Current focus is Stage 6 stabilization: fix remaining scene wiring gaps, then swap placeholder visuals, VFX, animation, and authored cutscene content.
 

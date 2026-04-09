@@ -77,11 +77,19 @@ namespace TWD.Enemies
             _agent = GetComponent<NavMeshAgent>();
             _animator = GetComponent<Animator>();
             _audioSource = GetComponent<AudioSource>();
-            _enemyId = $"{_data.enemyType}_{gameObject.GetInstanceID()}";
+            ResolveRuntimeDefaults();
+            _enemyId = _data != null ? $"{_data.enemyType}_{gameObject.GetInstanceID()}" : $"enemy_{gameObject.GetInstanceID()}";
         }
 
         protected virtual void Start()
         {
+            if (_data == null)
+            {
+                Debug.LogWarning($"[EnemyBase] Missing EnemyData on {gameObject.name}. Disabling enemy component.");
+                enabled = false;
+                return;
+            }
+
             _currentHealth = _data.maxHealth;
 
             // Cache player reference
@@ -112,6 +120,27 @@ namespace TWD.Enemies
         #endregion
 
         #region State Machine
+
+        private void ResolveRuntimeDefaults()
+        {
+            if (_data == null)
+            {
+                EnemyType fallbackType = EnemyType.ZombieBasic;
+                if (this is ZombieBrute) fallbackType = EnemyType.ZombieBrute;
+                else if (this is ZombieCrawler) fallbackType = EnemyType.ZombieCrawler;
+
+                _data = RuntimeSceneResolver.FindEnemyData(fallbackType);
+            }
+
+            if (_eyeTransform == null)
+                _eyeTransform = transform;
+
+            if (_playerLayer.value == 0)
+                _playerLayer = RuntimeSceneResolver.MaskFromLayers(Constants.Layers.PLAYER);
+
+            if (_obstacleLayers.value == 0)
+                _obstacleLayers = RuntimeSceneResolver.MaskFromLayers(Constants.Layers.DEFAULT, Constants.Layers.GROUND, Constants.Layers.OBSTACLE);
+        }
 
         protected virtual void UpdateStateMachine()
         {

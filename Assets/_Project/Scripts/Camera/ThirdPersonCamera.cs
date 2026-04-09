@@ -89,8 +89,14 @@ namespace TWD.Camera
             if (_followTarget == null)
             {
                 var player = GameObject.FindWithTag("Player");
-                if (player != null) _followTarget = player.transform;
+                if (player != null)
+                {
+                    _followTarget = RuntimeSceneResolver.FindChildRecursive(player.transform, "CameraTarget") ?? player.transform;
+                }
             }
+
+            if (_collisionLayers.value == 0)
+                _collisionLayers = RuntimeSceneResolver.MaskFromLayers(Constants.Layers.GROUND, Constants.Layers.OBSTACLE);
 
             // Initialize rotation from current
             _yaw = transform.eulerAngles.y;

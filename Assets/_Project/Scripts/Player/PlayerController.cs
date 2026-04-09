@@ -120,6 +120,9 @@ namespace TWD.Player
                     Debug.LogError("[PlayerController] No camera found! Assign CameraTransform.");
                 }
             }
+
+            if (_groundMask.value == 0)
+                _groundMask = RuntimeSceneResolver.MaskFromLayers(Constants.Layers.GROUND);
         }
 
         private void Update()
