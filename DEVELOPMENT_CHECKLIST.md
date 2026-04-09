@@ -653,6 +653,7 @@ This is fine for solo dev. CI is more important for teams.
 | 2026-04-09 | Session 10 | Stage 6 runtime fail-state polish: added persistent game-over overlay with retry/continue/menu actions, session summary, audio ducking, and cleaner GameManager state transition hooks | Validate death/retry flow in Unity and continue scene stabilization |
 | 2026-04-09 | Session 11 | Cross-scene stabilization pass: audited Level 2-5 wiring, added runtime auto-binding for player camera/combat, enemy data/layer masks, item pickup inference, safer door fallback, and runtime HUD scaffolding for fast-authored scenes | Re-test campaign scenes in Unity and patch remaining unsupported pickups/puzzles |
 | 2026-04-09 | Session 12 | Scene quality audit pass: ranked campaign scenes by stabilization risk (`Level_04` > `Level_03` > `Level_02` > `Level_05`), fixed runtime compile-safety in scene resolver, and stopped broken pickups from showing misleading interaction prompts | Validate the ranked scenes in Unity and replace unsupported authored pickups/puzzle props with real content |
+| 2026-04-09 | Session 13 | Progression-content recovery pass: added runtime-generated key/document/puzzle items, weapon pickup inference for shotgun/wrench, scene-name-based door/puzzle key inference for obvious blockers, save/load support for generated items, and stable puzzle IDs for persistence | Validate `Level_04` and `Level_03` in Unity and replace any remaining bespoke scene blockers with authored logic |
 
 ---
 

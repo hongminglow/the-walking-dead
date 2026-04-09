@@ -10,6 +10,7 @@
 using UnityEngine;
 using TWD.Core;
 using TWD.Inventory;
+using TWD.Utilities;
 
 namespace TWD.Puzzle
 {
@@ -33,6 +34,14 @@ namespace TWD.Puzzle
 
         public override string InteractPrompt =>
             _isCompleted ? "[Completed]" : "[E] Unlock";
+
+        protected override void Awake()
+        {
+            base.Awake();
+
+            if (string.IsNullOrWhiteSpace(_requiredKeyId))
+                _requiredKeyId = RuntimeSceneResolver.InferRequiredItemIdFromObjectName(gameObject.name);
+        }
 
         protected override void OnPuzzleInteract()
         {

@@ -8,6 +8,7 @@
 // ============================================================
 
 using System;
+using System.Collections.Generic;
 using UnityEngine;
 using TWD.Combat;
 using TWD.Enemies;
@@ -21,6 +22,9 @@ namespace TWD.Utilities
     /// </summary>
     public static class RuntimeSceneResolver
     {
+        private static readonly Dictionary<string, ItemData> RuntimeItems =
+            new Dictionary<string, ItemData>(StringComparer.OrdinalIgnoreCase);
+
         public static LayerMask MaskFromLayers(params string[] layerNames)
         {
             int mask = 0;
@@ -103,6 +107,57 @@ namespace TWD.Utilities
             return fallback;
         }
 
+        public static WeaponData InferWeaponFromObjectName(string objectName)
+        {
+            if (string.IsNullOrWhiteSpace(objectName))
+                return null;
+
+            string name = objectName.ToLowerInvariant();
+
+            if (name.Contains("shotgun"))
+                return FindWeaponById("weapon_shotgun") ?? FindWeaponByType(WeaponType.Shotgun, "shotgun");
+
+            if (name.Contains("wrench"))
+                return FindWeaponById("weapon_wrench") ?? FindWeaponByType(WeaponType.Melee, "wrench");
+
+            return null;
+        }
+
+        public static string InferRequiredItemIdFromObjectName(string objectName)
+        {
+            if (string.IsNullOrWhiteSpace(objectName))
+                return null;
+
+            string name = objectName.ToLowerInvariant();
+
+            if (name.Contains("fusebox") || name.Contains("pickup_fuse") || name == "fuse")
+                return "puzzle_fuse";
+
+            if (name.Contains("gate_exit") || name.Contains("gatevalvehandle") || name.Contains("valve handle"))
+                return "puzzle_valve_handle";
+
+            return null;
+        }
+
+        public static ItemData FindOrCreateItemById(string itemId)
+        {
+            if (string.IsNullOrWhiteSpace(itemId))
+                return null;
+
+            ItemData resourceItem = FindItem(item => string.Equals(item.itemId, itemId, StringComparison.OrdinalIgnoreCase));
+            if (resourceItem != null)
+                return resourceItem;
+
+            if (RuntimeItems.TryGetValue(itemId, out ItemData runtimeItem))
+                return runtimeItem;
+
+            runtimeItem = CreateRuntimeItem(itemId);
+            if (runtimeItem != null)
+                RuntimeItems[itemId] = runtimeItem;
+
+            return runtimeItem;
+        }
+
         public static ItemData InferItemDataFromObjectName(string objectName)
         {
             if (string.IsNullOrWhiteSpace(objectName))
@@ -128,6 +183,15 @@ namespace TWD.Utilities
             if (name.Contains("hospitalkey") || name.Contains("hospital_key") || name.Contains("keycard") || name.Contains("hospital key"))
                 return FindItem(item => string.Equals(item.itemId, "key_hospital", StringComparison.OrdinalIgnoreCase));
 
+            if (name.Contains("sewermap") || name.Contains("sewer_map") || name.Contains("sewer map"))
+                return FindOrCreateItemById("doc_sewer_map");
+
+            if (name.Contains("fuse"))
+                return FindOrCreateItemById("puzzle_fuse");
+
+            if (name.Contains("valvehandle") || name.Contains("valve_handle") || name.Contains("valve handle"))
+                return FindOrCreateItemById("puzzle_valve_handle");
+
             return null;
         }
 
@@ -141,7 +205,61 @@ namespace TWD.Utilities
                     return item;
             }
 
+            foreach (ItemData item in RuntimeItems.Values)
+            {
+                if (item != null && predicate(item))
+                    return item;
+            }
+
             return null;
+        }
+
+        private static ItemData CreateRuntimeItem(string itemId)
+        {
+            if (string.IsNullOrWhiteSpace(itemId))
+                return null;
+
+            switch (itemId.ToLowerInvariant())
+            {
+                case "doc_sewer_map":
+                    return CreateRuntimeItemData(
+                        itemId,
+                        "Sewer Map",
+                        "A hand-drawn map showing the safest route through the underground tunnels.",
+                        ItemType.Document);
+
+                case "puzzle_fuse":
+                    return CreateRuntimeItemData(
+                        itemId,
+                        "Fuse",
+                        "A replacement fuse for an electrical panel or fuse box.",
+                        ItemType.Puzzle);
+
+                case "puzzle_valve_handle":
+                    return CreateRuntimeItemData(
+                        itemId,
+                        "Gate Valve Handle",
+                        "A detachable valve handle that looks like it fits a large exit gate mechanism.",
+                        ItemType.Puzzle);
+            }
+
+            return null;
+        }
+
+        private static ItemData CreateRuntimeItemData(string itemId, string itemName, string description, ItemType itemType)
+        {
+            ItemData item = ScriptableObject.CreateInstance<ItemData>();
+            item.name = $"Runtime_{itemId}";
+            item.itemId = itemId;
+            item.itemName = itemName;
+            item.description = description;
+            item.itemType = itemType;
+            item.isStackable = false;
+            item.maxStack = 1;
+            item.isUsable = false;
+            item.isCombinable = false;
+            item.isKeyItem = true;
+            return item;
         }
     }
 }

@@ -122,6 +122,9 @@ namespace TWD.Environment
             if (string.IsNullOrEmpty(_doorId))
                 _doorId = gameObject.name.Replace(" ", "_").ToLowerInvariant();
 
+            if (string.IsNullOrWhiteSpace(_requiredKeyId))
+                _requiredKeyId = RuntimeSceneResolver.InferRequiredItemIdFromObjectName(gameObject.name);
+
             // Prevent half-configured scenes from shipping permanently locked doors.
             if (_currentState == DoorState.Locked && string.IsNullOrWhiteSpace(_requiredKeyId))
             {

@@ -365,7 +365,7 @@ namespace TWD.Core
 
             if (Inventory.InventoryManager.IsInitialized)
             {
-                Inventory.InventoryManager.Instance.LoadFromSaveData(data.inventoryItems, BuildItemLookup());
+                Inventory.InventoryManager.Instance.LoadFromSaveData(data.inventoryItems, BuildItemLookup(data.inventoryItems));
             }
 
             if (player.TryGetComponent<Player.PlayerCombat>(out var combat))
@@ -377,7 +377,7 @@ namespace TWD.Core
             Debug.Log("[SaveManager] Save data applied after scene load.");
         }
 
-        private Dictionary<string, Inventory.ItemData> BuildItemLookup()
+        private Dictionary<string, Inventory.ItemData> BuildItemLookup(List<SavedItem> savedItems = null)
         {
             var lookup = new Dictionary<string, Inventory.ItemData>();
             Inventory.ItemData[] allItems = Resources.FindObjectsOfTypeAll<Inventory.ItemData>();
@@ -391,6 +391,24 @@ namespace TWD.Core
                 }
 
                 lookup.Add(item.itemId, item);
+            }
+
+            if (savedItems != null)
+            {
+                for (int i = 0; i < savedItems.Count; i++)
+                {
+                    SavedItem savedItem = savedItems[i];
+                    if (savedItem == null || string.IsNullOrEmpty(savedItem.itemId) || lookup.ContainsKey(savedItem.itemId))
+                    {
+                        continue;
+                    }
+
+                    Inventory.ItemData runtimeItem = RuntimeSceneResolver.FindOrCreateItemById(savedItem.itemId);
+                    if (runtimeItem != null)
+                    {
+                        lookup.Add(savedItem.itemId, runtimeItem);
+                    }
+                }
             }
 
             return lookup;

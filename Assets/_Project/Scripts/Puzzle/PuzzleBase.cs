@@ -72,7 +72,7 @@ namespace TWD.Puzzle
         {
             _audioSource = GetComponent<AudioSource>();
             if (string.IsNullOrEmpty(_puzzleId))
-                _puzzleId = $"puzzle_{gameObject.GetInstanceID()}";
+                _puzzleId = gameObject.name.Replace(" ", "_").ToLowerInvariant();
         }
 
         #endregion

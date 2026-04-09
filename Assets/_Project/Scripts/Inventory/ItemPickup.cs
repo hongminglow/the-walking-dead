@@ -9,7 +9,9 @@
 
 using UnityEngine;
 using TWD.Core;
+using TWD.Combat;
 using TWD.Environment;
+using TWD.Player;
 using TWD.Utilities;
 
 namespace TWD.Inventory
@@ -24,6 +26,7 @@ namespace TWD.Inventory
 
         [Header("Item")]
         [SerializeField] private ItemData _itemData;
+        [SerializeField] private WeaponData _weaponData;
         [SerializeField] private int _quantity = 1;
 
         [Header("Pickup Settings")]
@@ -47,32 +50,42 @@ namespace TWD.Inventory
 
         #region IInteractable
 
-        public string InteractPrompt => $"[E] Pick Up {_itemData?.itemName ?? "Item"}";
-        public bool CanInteract => !_hasBeenPickedUp && _itemData != null;
+        public string InteractPrompt => $"[E] Pick Up {GetDisplayName()}";
+        public bool CanInteract => !_hasBeenPickedUp && (_itemData != null || _weaponData != null);
 
         public void Interact()
         {
             if (_hasBeenPickedUp) return;
 
-            if (InventoryManager.Instance.AddItem(_itemData, _quantity))
+            if (_itemData != null)
             {
-                _hasBeenPickedUp = true;
-
-                Debug.Log($"[ItemPickup] Picked up: {_itemData.itemName} x{_quantity}");
-
-                if (_destroyOnPickup)
+                if (InventoryManager.Instance.AddItem(_itemData, _quantity))
                 {
-                    Destroy(gameObject);
+                    Debug.Log($"[ItemPickup] Picked up: {_itemData.itemName} x{_quantity}");
+                    CompletePickup();
                 }
                 else
                 {
-                    gameObject.SetActive(false);
+                    Debug.Log("[ItemPickup] Inventory full!");
+                    // TODO: Show "Inventory Full" message on HUD
                 }
+
+                return;
             }
-            else
+
+            if (_weaponData != null)
             {
-                Debug.Log("[ItemPickup] Inventory full!");
-                // TODO: Show "Inventory Full" message on HUD
+                var player = GameObject.FindWithTag(Constants.Tags.PLAYER);
+                if (player != null && player.TryGetComponent<PlayerCombat>(out var combat))
+                {
+                    combat.EquipWeapon(_weaponData);
+                    Debug.Log($"[ItemPickup] Equipped weapon pickup: {_weaponData.weaponName}");
+                    CompletePickup();
+                }
+                else
+                {
+                    Debug.LogWarning($"[ItemPickup] Could not equip weapon pickup '{_weaponData.weaponName}' because PlayerCombat was not found.");
+                }
             }
         }
 
@@ -96,10 +109,16 @@ namespace TWD.Inventory
             if (_itemData == null)
             {
                 _itemData = RuntimeSceneResolver.InferItemDataFromObjectName(gameObject.name);
-                if (_itemData == null)
-                {
-                    Debug.LogWarning($"[ItemPickup] Could not infer item data for pickup '{gameObject.name}'.");
-                }
+            }
+
+            if (_itemData == null && _weaponData == null)
+            {
+                _weaponData = RuntimeSceneResolver.InferWeaponFromObjectName(gameObject.name);
+            }
+
+            if (_itemData == null && _weaponData == null)
+            {
+                Debug.LogWarning($"[ItemPickup] Could not infer item or weapon data for pickup '{gameObject.name}'.");
             }
 
             _startPosition = transform.position;
@@ -127,6 +146,31 @@ namespace TWD.Inventory
 
         /// <summary>The item data for this pickup.</summary>
         public ItemData Item => _itemData;
+
+        private string GetDisplayName()
+        {
+            if (_itemData != null)
+                return _itemData.itemName;
+
+            if (_weaponData != null)
+                return _weaponData.weaponName;
+
+            return "Item";
+        }
+
+        private void CompletePickup()
+        {
+            _hasBeenPickedUp = true;
+
+            if (_destroyOnPickup)
+            {
+                Destroy(gameObject);
+            }
+            else
+            {
+                gameObject.SetActive(false);
+            }
+        }
 
         #endregion
     }
