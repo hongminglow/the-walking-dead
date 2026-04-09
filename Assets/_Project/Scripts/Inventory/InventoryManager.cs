@@ -274,6 +274,50 @@ namespace TWD.Inventory
             return items;
         }
 
+        /// <summary>Restores inventory contents from save data using an item lookup table.</summary>
+        public void LoadFromSaveData(List<SavedItem> savedItems, IDictionary<string, ItemData> itemLookup)
+        {
+            ClearAll();
+
+            if (savedItems == null || savedItems.Count == 0 || itemLookup == null)
+            {
+                return;
+            }
+
+            for (int i = 0; i < savedItems.Count; i++)
+            {
+                SavedItem savedItem = savedItems[i];
+                if (savedItem == null || string.IsNullOrEmpty(savedItem.itemId))
+                {
+                    continue;
+                }
+
+                if (!itemLookup.TryGetValue(savedItem.itemId, out ItemData itemData) || itemData == null)
+                {
+                    Debug.LogWarning($"[Inventory] Could not restore item '{savedItem.itemId}' from save.");
+                    continue;
+                }
+
+                int quantity = Mathf.Max(1, savedItem.quantity);
+                int slotIndex = Mathf.Clamp(savedItem.slotIndex, 0, _slots.Length - 1);
+
+                if (_slots[slotIndex].IsEmpty)
+                {
+                    _slots[slotIndex].SetItem(itemData, quantity);
+                    continue;
+                }
+
+                for (int slot = 0; slot < _slots.Length; slot++)
+                {
+                    if (_slots[slot].IsEmpty)
+                    {
+                        _slots[slot].SetItem(itemData, quantity);
+                        break;
+                    }
+                }
+            }
+        }
+
         #endregion
     }
 }

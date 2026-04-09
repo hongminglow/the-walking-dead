@@ -11,6 +11,7 @@
 // ============================================================
 
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using TWD.Utilities;
 
 namespace TWD.Core
@@ -26,7 +27,10 @@ namespace TWD.Core
         #region Private Fields
 
         private AudioClip _gunshot;
-        private AudioClip _footstep;
+        private AudioClip _footstepConcrete;
+        private AudioClip _footstepWood;
+        private AudioClip _footstepMetal;
+        private AudioClip _footstepWet;
         private AudioClip _hit;
         private AudioClip _zombieGroan;
         private AudioClip _doorOpen;
@@ -52,15 +56,15 @@ namespace TWD.Core
 
         private void Start()
         {
-            var player = GameObject.FindWithTag(Constants.Tags.PLAYER);
-            if (player != null) _playerTransform = player.transform;
-
+            RefreshPlayerReference();
             SubscribeEvents();
+            SceneManager.sceneLoaded += OnSceneLoaded;
         }
 
         private void OnDestroy()
         {
             UnsubscribeEvents();
+            SceneManager.sceneLoaded -= OnSceneLoaded;
         }
 
         private void Update()
@@ -74,13 +78,21 @@ namespace TWD.Core
 
         private void SubscribeEvents()
         {
+            UnsubscribeEvents();
             EventBus.OnWeaponFired += OnWeaponFired;
             EventBus.OnWeaponReloaded += OnReload;
             EventBus.OnPlayerDamaged += OnPlayerHurt;
             EventBus.OnItemPickedUp += OnItemPickup;
+            EventBus.OnItemUsed += OnItemUsed;
+            EventBus.OnItemDropped += OnItemDropped;
             EventBus.OnEnemyAlerted += OnZombieAlert;
             EventBus.OnEnemyKilled += OnEnemyKilled;
             EventBus.OnDoorUnlocked += OnDoorUnlocked;
+            EventBus.OnPauseToggle += OnPauseToggled;
+            EventBus.OnGameSaved += OnGameSaved;
+            EventBus.OnGameLoaded += OnGameLoaded;
+            EventBus.OnCutsceneStarted += OnCutsceneStarted;
+            EventBus.OnCutsceneEnded += OnCutsceneEnded;
         }
 
         private void UnsubscribeEvents()
@@ -89,9 +101,16 @@ namespace TWD.Core
             EventBus.OnWeaponReloaded -= OnReload;
             EventBus.OnPlayerDamaged -= OnPlayerHurt;
             EventBus.OnItemPickedUp -= OnItemPickup;
+            EventBus.OnItemUsed -= OnItemUsed;
+            EventBus.OnItemDropped -= OnItemDropped;
             EventBus.OnEnemyAlerted -= OnZombieAlert;
             EventBus.OnEnemyKilled -= OnEnemyKilled;
             EventBus.OnDoorUnlocked -= OnDoorUnlocked;
+            EventBus.OnPauseToggle -= OnPauseToggled;
+            EventBus.OnGameSaved -= OnGameSaved;
+            EventBus.OnGameLoaded -= OnGameLoaded;
+            EventBus.OnCutsceneStarted -= OnCutsceneStarted;
+            EventBus.OnCutsceneEnded -= OnCutsceneEnded;
         }
 
         #endregion
@@ -118,6 +137,16 @@ namespace TWD.Core
             AudioManager.Instance.PlaySFX(_pickup);
         }
 
+        private void OnItemUsed(string itemName)
+        {
+            AudioManager.Instance.PlaySFX(_pickup);
+        }
+
+        private void OnItemDropped(string itemName)
+        {
+            AudioManager.Instance.PlaySFX(_uiClick);
+        }
+
         private void OnZombieAlert(string enemyId)
         {
             AudioManager.Instance.PlaySFX(_zombieGroan);
@@ -131,6 +160,31 @@ namespace TWD.Core
         private void OnDoorUnlocked(string doorId)
         {
             AudioManager.Instance.PlaySFX(_doorOpen);
+        }
+
+        private void OnPauseToggled(bool isPaused)
+        {
+            AudioManager.Instance.PlayUI(_uiClick);
+        }
+
+        private void OnGameSaved(int slot)
+        {
+            AudioManager.Instance.PlayUI(_pickup);
+        }
+
+        private void OnGameLoaded(int slot)
+        {
+            AudioManager.Instance.PlayUI(_reload);
+        }
+
+        private void OnCutsceneStarted(string cutsceneId)
+        {
+            AudioManager.Instance.PlayUI(_uiClick);
+        }
+
+        private void OnCutsceneEnded(string cutsceneId)
+        {
+            AudioManager.Instance.PlayUI(_uiClick);
         }
 
         #endregion
@@ -151,20 +205,7 @@ namespace TWD.Core
                 {
                     float interval = controller.IsSprinting ? 0.3f : 0.5f;
                     _footstepTimer = interval;
-
-                    // Vary pitch slightly for natural feel
-                    var sfxSource = AudioManager.Instance.GetComponent<AudioSource>();
-                    if (sfxSource == null)
-                    {
-                        AudioManager.Instance.PlaySFX(_footstep);
-                    }
-                    else
-                    {
-                        float origPitch = sfxSource.pitch;
-                        sfxSource.pitch = Random.Range(0.85f, 1.15f);
-                        AudioManager.Instance.PlaySFX(_footstep);
-                        sfxSource.pitch = origPitch;
-                    }
+                    AudioManager.Instance.PlaySFX(GetFootstepClipForSurface(controller.transform.position));
                 }
             }
             else
@@ -180,7 +221,10 @@ namespace TWD.Core
         private void GenerateAllClips()
         {
             _gunshot = GenerateGunshot();
-            _footstep = GenerateFootstep();
+            _footstepConcrete = GenerateFootstep(60f, 0.3f, "Footstep_Concrete");
+            _footstepWood = GenerateFootstep(95f, 0.25f, "Footstep_Wood");
+            _footstepMetal = GenerateFootstep(150f, 0.2f, "Footstep_Metal");
+            _footstepWet = GenerateFootstep(45f, 0.35f, "Footstep_Wet");
             _hit = GenerateHit();
             _zombieGroan = GenerateZombieGroan();
             _doorOpen = GenerateDoorOpen();
@@ -215,11 +259,11 @@ namespace TWD.Core
         }
 
         /// <summary>Soft thud — footstep on concrete.</summary>
-        private AudioClip GenerateFootstep()
+        private AudioClip GenerateFootstep(float thudFrequency, float noiseMix, string clipName)
         {
             int sampleRate = 44100;
             int samples = sampleRate / 10; // 0.1 seconds
-            var clip = AudioClip.Create("Footstep", samples, 1, sampleRate, false);
+            var clip = AudioClip.Create(clipName, samples, 1, sampleRate, false);
             float[] data = new float[samples];
 
             for (int i = 0; i < samples; i++)
@@ -227,8 +271,8 @@ namespace TWD.Core
                 float t = (float)i / samples;
                 float envelope = Mathf.Exp(-t * 30f);
                 float noise = Random.Range(-1f, 1f);
-                float thud = Mathf.Sin(2f * Mathf.PI * 60f * t);
-                data[i] = (noise * 0.3f + thud * 0.7f) * envelope * 0.3f;
+                float thud = Mathf.Sin(2f * Mathf.PI * thudFrequency * t);
+                data[i] = (noise * noiseMix + thud * (1f - noiseMix)) * envelope * 0.3f;
             }
 
             clip.SetData(data, 0);
@@ -465,7 +509,7 @@ namespace TWD.Core
             return name.ToLower() switch
             {
                 "gunshot" => _gunshot,
-                "footstep" => _footstep,
+                "footstep" => _footstepConcrete,
                 "hit" => _hit,
                 "zombie" or "groan" => _zombieGroan,
                 "door" or "dooropen" => _doorOpen,
@@ -484,6 +528,53 @@ namespace TWD.Core
         public void StartAmbientWind()
         {
             AudioManager.Instance.PlayAmbient(_ambientWind);
+        }
+
+        private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
+        {
+            RefreshPlayerReference();
+            SubscribeEvents();
+        }
+
+        private void RefreshPlayerReference()
+        {
+            var player = GameObject.FindWithTag(Constants.Tags.PLAYER);
+            _playerTransform = player != null ? player.transform : null;
+        }
+
+        private AudioClip GetFootstepClipForSurface(Vector3 position)
+        {
+            if (!Physics.Raycast(position + Vector3.up * 0.25f, Vector3.down, out RaycastHit hit, 2f))
+            {
+                return _footstepConcrete;
+            }
+
+            string materialName = hit.collider.sharedMaterial != null
+                ? hit.collider.sharedMaterial.name.ToLowerInvariant()
+                : string.Empty;
+            string objectName = hit.collider.name.ToLowerInvariant();
+
+            if (materialName.Contains("metal") || objectName.Contains("metal"))
+            {
+                return _footstepMetal;
+            }
+
+            if (materialName.Contains("wood") || objectName.Contains("wood"))
+            {
+                return _footstepWood;
+            }
+
+            if (materialName.Contains("water") || objectName.Contains("water") || objectName.Contains("sewer"))
+            {
+                return _footstepWet;
+            }
+
+            if (materialName.Contains("tile") || objectName.Contains("hospital"))
+            {
+                return _footstepMetal;
+            }
+
+            return _footstepConcrete;
         }
 
         #endregion

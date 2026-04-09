@@ -39,8 +39,8 @@ namespace TWD.UI
             // Disable Continue button if no saves exist
             if (_continueButton != null)
             {
-                // TODO: Check SaveManager for save files
-                // _continueButton.interactable = SaveManager.Instance.HasAnySave();
+                _continueButton.interactable = SaveManager.IsInitialized &&
+                                               SaveManager.Instance.HasAnySave();
             }
         }
 
@@ -57,8 +57,16 @@ namespace TWD.UI
         /// <summary>Continues from last save.</summary>
         public void OnContinue()
         {
-            // SaveManager.Instance.LoadLatest();
-            Debug.Log("[MainMenu] Continue — load latest save.");
+            if (!SaveManager.IsInitialized)
+            {
+                Debug.LogWarning("[MainMenu] SaveManager not available. Cannot continue.");
+                return;
+            }
+
+            if (!SaveManager.Instance.LoadLatest())
+            {
+                Debug.LogWarning("[MainMenu] No valid save found to continue.");
+            }
         }
 
         /// <summary>Opens load game panel.</summary>

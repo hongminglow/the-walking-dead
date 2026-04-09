@@ -5,7 +5,7 @@
 > - Update this file after each work session.
 > - When resuming with AI, say: _"Continue from Stage X, Step Y"_
 
-> **LAST UPDATED**: 2026-03-31 (Session 8)
+> **LAST UPDATED**: 2026-04-09 (Session 8)
 > **CURRENT STAGE**: Stage 6 — Polish 🚧
 
 ---
@@ -20,7 +20,7 @@
 | 3 | Phase 2: Combat | ✅ COMPLETE | Zombie + HUD + weapons wired, input fixed |
 | 4 | Phase 3: Systems | ✅ COMPLETE | Inventory UI + Save/Load + Pause + direct input |
 | 5 | Phase 4: Content | ✅ COMPLETE | 5 levels + MainMenu + Loading + Build Settings |
-| 6 | Phase 5: Polish | 🚧 IN PROGRESS | URP materials, post-proc, lighting, UI styled |
+| 6 | Phase 5: Polish | 🚧 IN PROGRESS | Visual polish done, runtime audio/loading/cutscene systems improved |
 | 7 | Phase 6: Testing & Ship | 🔲 Not started | Bug fixes + build |
 
 ---
@@ -321,12 +321,12 @@ Main Camera also has **ThirdPersonCamera** script targeting `CameraTarget`.
 | 6.1 | Replace greybox with URP materials | ✅ DONE | 8 URP Lit materials (ground, walls, door, key, player, zombie, exit, floor). Applied to all 5 levels |
 | 6.2 | Lighting passes on all levels | ✅ DONE | Moonlight + room-specific point lights per level, dark fog, horror atmosphere |
 | 6.3 | Post-processing setup (URP Volume) | ✅ DONE | ACES tonemapping, bloom, vignette, film grain, chromatic aberration, desaturation. All levels have Global Volume |
-| 6.4 | All player animations integrated | 🔲 | Locomotion, combat, interaction |
+| 6.4 | All player animations integrated | 🚧 | Animator state sync wired for sprint/crouch/aim + combat triggers. Final controller hookup still needed in Unity |
 | 6.5 | All enemy animations integrated | 🔲 | Walk, attack, death, stagger |
-| 6.6 | Full SFX implementation | 🔲 | Surface footsteps, spatial audio |
-| 6.7 | Music tracks per area | 🔲 | Ambient, combat, boss |
+| 6.6 | Full SFX implementation | 🚧 | Procedural SFX expanded: surface-aware footsteps, pause/save/load/item feedback, scene-safe resubscribe after EventBus resets |
+| 6.7 | Music tracks per area | 🚧 | Auto-bootstrapped procedural music/ambient director for menu, level moods, combat, boss |
 | 6.8 | UI polish (HUD + menus) | ✅ DONE | Crosshair, health bar, ammo text, dark overlays for pause/inventory/gameover |
-| 6.9 | Cutscenes (intro + ending) | 🔲 | Timeline sequences |
+| 6.9 | Cutscenes (intro + ending) | 🚧 | Reusable Timeline cutscene controller added with skip, one-shot playback, scene handoff |
 | 6.10 | **TEST**: Full visual/audio experience ✅ | 🔲 | Feels like a complete game |
 
 ---
@@ -648,6 +648,7 @@ This is fine for solo dev. CI is more important for teams.
 | 2026-03-29 | Session 5 | Created 12 ScriptableObject .asset files (4 weapons, 3 enemies, 5 items) with correct GUIDs and values | Start Step 1.7 (Build Manager Prefab) |
 | 2026-03-30 | Session 6 | Stage 2-4 completed in _TestScene. All systems wired (player, combat, inventory, HUD, pause, save/load). Fixed pink materials → URP Lit. Fixed GameManager starting in MainMenu → Playing. Rewrote all input to direct polling (Keyboard/Mouse.current). | Test gameplay loop |
 | 2026-03-31 | Session 7 | Stage 6 partial: 8 URP materials, post-processing volume, horror lighting, UI polish. Camera sensitivity fixed. Starting Stage 5 content. | Build Level 1-5 |
+| 2026-04-09 | Session 8 | Stage 6 systems polish: player animator state sync, best-effort save/load scene handoff, menu continue flow, upgraded procedural SFX, procedural scene music, runtime loading overlay, reusable Timeline cutscene controller | Hook new systems in Unity and finish final animation/cutscene content |
 
 ---
 

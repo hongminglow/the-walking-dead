@@ -347,6 +347,83 @@ namespace TWD.Player
             Debug.Log($"[PlayerCombat] Added {amount} reserve ammo. Total reserve: {_reserveAmmo}");
         }
 
+        /// <summary>Writes the current weapon/ammo state into SaveData.</summary>
+        public void WriteSaveData(SaveData data)
+        {
+            if (data == null || _currentWeaponData == null)
+            {
+                return;
+            }
+
+            data.equippedWeaponId = _currentWeaponData.weaponId;
+
+            if (_currentWeaponData.UsesAmmo)
+            {
+                data.ammoCounts.Set(GetReserveAmmoKey(_currentWeaponData.ammoType), Mathf.Max(0, _reserveAmmo));
+                data.ammoCounts.Set(GetClipAmmoKey(_currentWeaponData.weaponId), Mathf.Clamp(_currentAmmoInClip, 0, _currentWeaponData.magazineSize));
+            }
+        }
+
+        /// <summary>Restores weapon/ammo state from SaveData using a best-effort weapon lookup.</summary>
+        public void ApplySaveData(SaveData data, System.Collections.Generic.IDictionary<string, WeaponData> weaponLookup)
+        {
+            if (data == null)
+            {
+                return;
+            }
+
+            WeaponData savedWeapon = null;
+
+            if (!string.IsNullOrEmpty(data.equippedWeaponId))
+            {
+                if (weaponLookup != null)
+                {
+                    weaponLookup.TryGetValue(data.equippedWeaponId, out savedWeapon);
+                }
+
+                if (savedWeapon == null &&
+                    _currentWeaponData != null &&
+                    _currentWeaponData.weaponId == data.equippedWeaponId)
+                {
+                    savedWeapon = _currentWeaponData;
+                }
+            }
+
+            if (savedWeapon != null)
+            {
+                _currentWeaponData = savedWeapon;
+            }
+
+            if (_currentWeaponData != null && _currentWeaponData.UsesAmmo)
+            {
+                _currentAmmoInClip = Mathf.Clamp(
+                    data.ammoCounts.Get(GetClipAmmoKey(_currentWeaponData.weaponId), _currentWeaponData.magazineSize),
+                    0,
+                    _currentWeaponData.magazineSize);
+
+                _reserveAmmo = Mathf.Max(
+                    0,
+                    data.ammoCounts.Get(GetReserveAmmoKey(_currentWeaponData.ammoType), 0));
+            }
+            else if (_currentWeaponData != null)
+            {
+                _currentAmmoInClip = _currentWeaponData.magazineSize;
+                _reserveAmmo = 0;
+            }
+
+            _isReloading = false;
+            _canFire = true;
+            _reloadTimer = 0f;
+            _fireTimer = 0f;
+
+            UpdateAmmoUI();
+
+            if (_currentWeaponData != null)
+            {
+                EventBus.WeaponSwitched(_currentWeaponData.weaponName);
+            }
+        }
+
         #endregion
 
         #region Helpers
@@ -365,6 +442,16 @@ namespace TWD.Player
             {
                 _audioSource.PlayOneShot(clip);
             }
+        }
+
+        private static string GetReserveAmmoKey(AmmoType ammoType)
+        {
+            return $"reserve::{ammoType}";
+        }
+
+        private static string GetClipAmmoKey(string weaponId)
+        {
+            return $"clip::{weaponId}";
         }
 
         #endregion

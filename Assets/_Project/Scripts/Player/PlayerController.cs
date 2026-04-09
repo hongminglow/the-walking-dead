@@ -131,6 +131,7 @@ namespace TWD.Player
             HandleMovement();
             HandleStamina();
             ApplyGravity();
+            SyncAnimatorState();
         }
 
         #endregion
@@ -304,6 +305,21 @@ namespace TWD.Player
             EventBus.PlayerStaminaChanged(_currentStamina);
         }
 
+        private void SyncAnimatorState()
+        {
+            if (_playerAnimator == null) return;
+
+            bool isActivelySprinting = _isSprinting &&
+                                       !_isAiming &&
+                                       !_isCrouching &&
+                                       _moveInput.sqrMagnitude > 0.01f &&
+                                       _currentStamina > 0f;
+
+            _playerAnimator.SetSprinting(isActivelySprinting);
+            _playerAnimator.SetCrouching(_isCrouching);
+            _playerAnimator.SetAiming(_isAiming);
+        }
+
         #endregion
 
         #region Public Methods
@@ -316,8 +332,11 @@ namespace TWD.Player
             {
                 _moveInput = Vector2.zero;
                 _isSprinting = false;
+                _isAiming = false;
                 MoveAmount = 0f;
             }
+
+            SyncAnimatorState();
         }
 
         /// <summary>Forces the player to stop all movement.</summary>
@@ -327,6 +346,16 @@ namespace TWD.Player
             _isSprinting = false;
             MoveAmount = 0f;
             _playerAnimator?.SetMovement(0f);
+            SyncAnimatorState();
+        }
+
+        /// <summary>Applies a stamina value from save/load or scripted events.</summary>
+        public void SetStamina(float stamina)
+        {
+            _currentStamina = Mathf.Clamp(stamina, 0f, _maxStamina);
+            _staminaRegenTimer = _staminaRegenDelay;
+            EventBus.PlayerStaminaChanged(_currentStamina);
+            SyncAnimatorState();
         }
 
         #endregion

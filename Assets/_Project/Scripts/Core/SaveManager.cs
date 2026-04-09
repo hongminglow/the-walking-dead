@@ -8,8 +8,10 @@
 // ============================================================
 
 using System;
+using System.Collections.Generic;
 using System.IO;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using TWD.Utilities;
 
 namespace TWD.Core
@@ -36,6 +38,12 @@ namespace TWD.Core
 
         #endregion
 
+        #region Private Fields
+
+        private SaveData _pendingLoadData;
+
+        #endregion
+
         #region Lifecycle
 
         protected override void OnSingletonAwake()
@@ -45,6 +53,14 @@ namespace TWD.Core
             {
                 Directory.CreateDirectory(SaveDirectory);
             }
+
+            SceneManager.sceneLoaded += OnSceneLoaded;
+        }
+
+        protected override void OnDestroy()
+        {
+            SceneManager.sceneLoaded -= OnSceneLoaded;
+            base.OnDestroy();
         }
 
         #endregion
@@ -233,6 +249,16 @@ namespace TWD.Core
                 {
                     data.playerHealth = health.CurrentHealth;
                 }
+
+                if (player.TryGetComponent<Player.PlayerController>(out var controller))
+                {
+                    data.playerStamina = controller.CurrentStamina;
+                }
+
+                if (player.TryGetComponent<Player.PlayerCombat>(out var combat))
+                {
+                    combat.WriteSaveData(data);
+                }
             }
 
             // Current scene
@@ -249,12 +275,17 @@ namespace TWD.Core
 
         private void ApplySaveData(SaveData data)
         {
-            // Load the scene first, then apply data after loading
+            _pendingLoadData = data;
+
+            if (SceneLoader.Instance.CurrentSceneName == data.currentScene)
+            {
+                StartCoroutine(ApplySaveDataNextFrame());
+                return;
+            }
+
             GameManager.Instance.SetState(GameState.Loading);
             SceneLoader.Instance.LoadScene(data.currentScene);
 
-            // TODO: Register for scene loaded event to apply player position,
-            // health, inventory, etc. after the scene is ready.
             Debug.Log($"[SaveManager] Loading scene: {data.currentScene}. " +
                       $"HP: {data.playerHealth}, PlayTime: {data.totalPlayTime:F1}s");
         }
@@ -281,6 +312,107 @@ namespace TWD.Core
         {
             return Path.Combine(SaveDirectory,
                 $"{Constants.Save.SAVE_FILE_PREFIX}{slot}{Constants.Save.SAVE_FILE_EXTENSION}");
+        }
+
+        private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
+        {
+            if (_pendingLoadData == null)
+            {
+                return;
+            }
+
+            if (!string.Equals(scene.name, _pendingLoadData.currentScene, StringComparison.Ordinal))
+            {
+                return;
+            }
+
+            StartCoroutine(ApplySaveDataNextFrame());
+        }
+
+        private System.Collections.IEnumerator ApplySaveDataNextFrame()
+        {
+            yield return null;
+            yield return null;
+
+            if (_pendingLoadData == null)
+            {
+                yield break;
+            }
+
+            SaveData data = _pendingLoadData;
+            _pendingLoadData = null;
+
+            var player = GameObject.FindWithTag(Constants.Tags.PLAYER);
+            if (player == null)
+            {
+                Debug.LogWarning("[SaveManager] Could not find player after scene load. Save application aborted.");
+                yield break;
+            }
+
+            player.transform.SetPositionAndRotation(
+                data.playerPosition != null ? data.playerPosition.ToVector3() : player.transform.position,
+                data.playerRotation != null ? data.playerRotation.ToQuaternion() : player.transform.rotation);
+
+            if (player.TryGetComponent<Player.PlayerHealth>(out var health))
+            {
+                health.SetHealth(data.playerHealth > 0f ? data.playerHealth : health.MaxHealth);
+            }
+
+            if (player.TryGetComponent<Player.PlayerController>(out var controller))
+            {
+                controller.SetStamina(data.playerStamina > 0f ? data.playerStamina : Constants.Player.MAX_STAMINA);
+            }
+
+            if (Inventory.InventoryManager.IsInitialized)
+            {
+                Inventory.InventoryManager.Instance.LoadFromSaveData(data.inventoryItems, BuildItemLookup());
+            }
+
+            if (player.TryGetComponent<Player.PlayerCombat>(out var combat))
+            {
+                combat.ApplySaveData(data, BuildWeaponLookup());
+            }
+
+            GameManager.Instance.SetState(GameState.Playing);
+            Debug.Log("[SaveManager] Save data applied after scene load.");
+        }
+
+        private Dictionary<string, Inventory.ItemData> BuildItemLookup()
+        {
+            var lookup = new Dictionary<string, Inventory.ItemData>();
+            Inventory.ItemData[] allItems = Resources.FindObjectsOfTypeAll<Inventory.ItemData>();
+
+            for (int i = 0; i < allItems.Length; i++)
+            {
+                Inventory.ItemData item = allItems[i];
+                if (item == null || string.IsNullOrEmpty(item.itemId) || lookup.ContainsKey(item.itemId))
+                {
+                    continue;
+                }
+
+                lookup.Add(item.itemId, item);
+            }
+
+            return lookup;
+        }
+
+        private Dictionary<string, Combat.WeaponData> BuildWeaponLookup()
+        {
+            var lookup = new Dictionary<string, Combat.WeaponData>();
+            Combat.WeaponData[] allWeapons = Resources.FindObjectsOfTypeAll<Combat.WeaponData>();
+
+            for (int i = 0; i < allWeapons.Length; i++)
+            {
+                Combat.WeaponData weapon = allWeapons[i];
+                if (weapon == null || string.IsNullOrEmpty(weapon.weaponId) || lookup.ContainsKey(weapon.weaponId))
+                {
+                    continue;
+                }
+
+                lookup.Add(weapon.weaponId, weapon);
+            }
+
+            return lookup;
         }
 
         #endregion
