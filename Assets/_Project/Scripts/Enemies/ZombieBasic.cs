@@ -38,7 +38,8 @@ namespace TWD.Enemies
         private void PerformGrab()
         {
             // Grab attack — more damage, longer animation
-            _animator?.SetTrigger("GrabAttack");
+            if (_animator != null)
+                _animator.SetTrigger("GrabAttack");
 
             if (_playerTransform == null) return;
             float dist = Vector3.Distance(transform.position, _playerTransform.position);

@@ -227,7 +227,8 @@ namespace TWD.Enemies
                     if (HasActiveNavMeshAgent())
                         _agent.ResetPath();
                     _stateTimer = 1f;
-                    _animator?.SetTrigger(Constants.AnimParams.STAGGER);
+                    if (_animator != null)
+                        _animator.SetTrigger(Constants.AnimParams.STAGGER);
                     break;
 
                 case EnemyState.Dead:
@@ -437,7 +438,8 @@ namespace TWD.Enemies
 
         protected virtual void PerformAttack()
         {
-            _animator?.SetTrigger(Constants.AnimParams.ATTACK);
+            if (_animator != null)
+                _animator.SetTrigger(Constants.AnimParams.ATTACK);
             PlaySound(_data.attackSound);
 
             // Damage the player if still in range and visible
@@ -490,7 +492,8 @@ namespace TWD.Enemies
         {
             SetState(EnemyState.Dead);
 
-            _animator?.SetBool(Constants.AnimParams.IS_DEAD, true);
+            if (_animator != null)
+                _animator.SetBool(Constants.AnimParams.IS_DEAD, true);
             PlaySound(_data.deathSound);
 
             // Disable collider so player can walk through

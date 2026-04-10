@@ -41,7 +41,8 @@ namespace TWD.Enemies
 
         protected override void PerformAttack()
         {
-            _animator?.SetTrigger("CrawlAttack");
+            if (_animator != null)
+                _animator.SetTrigger("CrawlAttack");
             PlaySound(_data.attackSound);
 
             if (_playerTransform == null) return;

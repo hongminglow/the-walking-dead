@@ -89,7 +89,8 @@ namespace TWD.Enemies
             _chargeTimer = _chargeCooldown;
             _agent.speed = _chargeSpeed;
 
-            _animator?.SetTrigger("Charge");
+            if (_animator != null)
+                _animator.SetTrigger("Charge");
 
             Debug.Log("[ZombieBrute] CHARGE!");
 
@@ -125,7 +126,8 @@ namespace TWD.Enemies
 
         private void PerformSmash()
         {
-            _animator?.SetTrigger("Smash");
+            if (_animator != null)
+                _animator.SetTrigger("Smash");
             PlaySound(_data.attackSound);
 
             Debug.Log("[ZombieBrute] SMASH!");
@@ -148,7 +150,8 @@ namespace TWD.Enemies
         protected override void Die()
         {
             // Brute has special death animation with roar
-            _animator?.SetTrigger("Roar");
+            if (_animator != null)
+                _animator.SetTrigger("Roar");
             base.Die();
         }
 
