@@ -21,7 +21,7 @@ namespace TWD.EditorTools
     {
         public static void BuildWindowsCandidate()
         {
-            string outputPath = Environment.GetEnvironmentVariable("CODEX_BUILD_OUTPUT");
+            string outputPath = System.Environment.GetEnvironmentVariable("CODEX_BUILD_OUTPUT");
             if (string.IsNullOrWhiteSpace(outputPath))
                 throw new InvalidOperationException("Missing CODEX_BUILD_OUTPUT environment variable.");
 

@@ -111,6 +111,21 @@ namespace TWD.Core
             }
 
             _isLoading = false;
+
+            if (GameManager.Instance != null)
+            {
+                string activeScene = SceneManager.GetActiveScene().name;
+                if (string.Equals(activeScene, Constants.Scenes.MAIN_MENU, StringComparison.Ordinal))
+                {
+                    GameManager.Instance.SetState(GameState.MainMenu);
+                }
+                else if (!string.Equals(activeScene, _loadingSceneName, StringComparison.Ordinal) &&
+                         GameManager.Instance.CurrentState == GameState.Loading)
+                {
+                    GameManager.Instance.SetState(GameState.Playing);
+                }
+            }
+
             OnLoadComplete?.Invoke();
             Debug.Log($"[SceneLoader] Loaded scene: {sceneName}");
         }

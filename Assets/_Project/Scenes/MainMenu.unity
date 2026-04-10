@@ -638,6 +638,8 @@ GameObject:
   - component: {fileID: 560759198}
   - component: {fileID: 560759197}
   - component: {fileID: 560759196}
+  - component: {fileID: 560759201}
+  - component: {fileID: 560759200}
   m_Layer: 0
   m_Name: '[Managers]'
   m_TagString: Untagged
@@ -711,6 +713,32 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &560759200
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 560759195}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 09c56bca34896bd46bdff60c44c9ffc8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TWD.Inventory.InventoryManager
+--- !u!114 &560759201
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 560759195}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8755650d685dd904f9671c46cfbf76e3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TWD.Core.SaveManager
+  _encryptSaves: 1
+  _encryptionKey: TWD_SAVE_2026
 --- !u!1 &568409670
 GameObject:
   m_ObjectHideFlags: 0
@@ -1039,7 +1067,7 @@ MonoBehaviour:
     m_FontStyle: 1
     m_BestFit: 0
     m_MinSize: 10
-    m_MaxSize: 40
+    m_MaxSize: 72
     m_Alignment: 4
     m_AlignByGeometry: 0
     m_RichText: 1
@@ -1289,7 +1317,7 @@ MonoBehaviour:
     m_FontStyle: 0
     m_BestFit: 0
     m_MinSize: 10
-    m_MaxSize: 40
+    m_MaxSize: 48
     m_Alignment: 4
     m_AlignByGeometry: 0
     m_RichText: 1
@@ -2027,8 +2055,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TWD.UI.MainMenuUI
   _mainPanel: {fileID: 77738140}
-  _settingsPanel: {fileID: 0}
-  _loadGamePanel: {fileID: 0}
+  _settingsPanel: {fileID: 2121727355}
+  _loadGamePanel: {fileID: 1632980234}
   _continueButton: {fileID: 266526889}
 --- !u!4 &2084510377
 Transform:

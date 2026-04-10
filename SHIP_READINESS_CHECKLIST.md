@@ -1,13 +1,13 @@
 # Ship Readiness Checklist
 
 > Purpose: move the project from stabilized scenes to a release candidate by validating the full campaign loop, failure recovery, and build output.
-> Automated status: Level 1-5 scene smoke is green via [CAMPAIGN_SMOKE_REPORT.md](D:/Game%20Project/The%20Walking%20Dead/CAMPAIGN_SMOKE_REPORT.md), and a Windows candidate build has been produced and briefly boot-smoked outside the editor.
+> Automated status: Level 1-5 scene smoke is green via [CAMPAIGN_SMOKE_REPORT.md](D:/Game%20Project/The%20Walking%20Dead/CAMPAIGN_SMOKE_REPORT.md), editor-side menu/save/continue flow is validated, and a Windows candidate build has been produced and briefly boot-smoked outside the editor.
 
 ---
 
 ## 1. Full Campaign Regression
 
-- [ ] Launch from `MainMenu` into `Level_01_House`
+- [x] Launch from `MainMenu` into `Level_01_House`
 - [ ] Complete `Level_01_House` key-door tutorial without blockers
 - [ ] Transition cleanly into `Level_02_Streets`
 - [ ] Confirm core street combat, pickups, and hospital-route readability
@@ -29,8 +29,8 @@
 
 ## 3. Save/Load Regression
 
-- [ ] Create a manual save in a campaign scene
-- [ ] Quit to menu and load that save
+- [x] Create a manual save in a campaign scene
+- [x] Quit to menu and load that save
 - [ ] Confirm current scene, inventory, ammo, and progression state are restored
 - [ ] Confirm generated progression items still deserialize correctly
 - [ ] Confirm level-transition auto-save still works
