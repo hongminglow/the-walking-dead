@@ -1,6 +1,7 @@
 # Ship Readiness Checklist
 
 > Purpose: move the project from stabilized scenes to a release candidate by validating the full campaign loop, failure recovery, and build output.
+> Automated status: Level 1-5 scene smoke is green via [CAMPAIGN_SMOKE_REPORT.md](D:/Game%20Project/The%20Walking%20Dead/CAMPAIGN_SMOKE_REPORT.md), and a Windows candidate build has been produced and briefly boot-smoked outside the editor.
 
 ---
 
@@ -43,8 +44,8 @@
 
 ## 5. Build Candidate
 
-- [ ] Produce a fresh Windows build from Unity
-- [ ] Launch the built executable outside the editor
+- [x] Produce a fresh Windows build from Unity
+- [x] Launch the built executable outside the editor
 - [ ] Verify menu boot, scene transitions, save path, and audio startup in build
 - [ ] Record final blocker bugs before tagging a release candidate
 

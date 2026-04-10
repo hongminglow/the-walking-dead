@@ -5,8 +5,8 @@
 > - Update this file after each work session.
 > - When resuming with AI, say: _"Continue from Stage X, Step Y"_
 
-> **LAST UPDATED**: 2026-04-10 (Session 19)
-> **CURRENT STAGE**: Stage 6 — Polish 🚧
+> **LAST UPDATED**: 2026-04-10 (Session 20)
+> **CURRENT STAGE**: Stage 7 — Testing & Ship 🚧
 
 ---
 
@@ -21,7 +21,7 @@
 | 4 | Phase 3: Systems | ✅ COMPLETE | Inventory UI + Save/Load + Pause + direct input |
 | 5 | Phase 4: Content | ✅ COMPLETE | 5 levels + MainMenu + Loading + Build Settings |
 | 6 | Phase 5: Polish | 🚧 IN PROGRESS | Runtime polish active; campaign scene stabilization is now in a much healthier place across Level 1-5, with final manual presentation/cutscene swaps still remaining |
-| 7 | Phase 6: Testing & Ship | 🚧 NEXT UP | Full campaign regression, save/death/retry validation, and Windows build smoke are the next priority |
+| 7 | Phase 6: Testing & Ship | 🚧 IN PROGRESS | Automated Level 1-5 smoke is green, a Windows candidate build exists and boots, and the next priority is manual progression/save/death validation in build |
 
 ---
 
@@ -661,6 +661,7 @@ This is fine for solo dev. CI is more important for teams.
 | 2026-04-10 | Session 17 | Level 4 Underground recovery pass: baked sewer navigation, made the exit gate explicitly require the `Gate Valve Handle`, moved the spawn to face the tunnel route, retuned sewer lighting/fog while disabling point-light shadows, and runtime-verified that all 8 enemies are back on navmesh with the valve pickup and gate progression working cleanly | Manually play Level 4 for encounter tension/readability, then continue with Level 5 finale polish |
 | 2026-04-10 | Session 18 | Level 5 Finale recovery pass: added a finale boss-exit controller so the escape trigger stays locked until the Zombie Brute dies, baked a fresh finale `NavMeshSurface`, moved the spawn closer to the arena, retuned the boss-arena fire-barrel lighting/fog, hardened enemy animator safety for placeholder enemies, and runtime-verified that all 5 enemies are back on navmesh with the exit unlocking cleanly after the boss death | Manually play Level 5 for boss pacing and then do a full Level 1-5 progression sweep |
 | 2026-04-10 | Session 19 | Level 5 visual material pass: replaced the finale scene's anonymous default URP materials with a dedicated palette for dirt, asphalt, concrete, barricades, rusted barrels, gate metal, and varied wrecked cars, then re-verified the boss death and escape-unlock flow in play mode | Continue Stage 7 full-campaign regression and build-candidate validation |
+| 2026-04-10 | Session 20 | Stage 7 kickoff: added reusable campaign-smoke and Windows-build tooling, ran automated Level 1-5 smoke successfully, generated `CAMPAIGN_SMOKE_REPORT.md`, produced a Windows candidate build that boots outside the editor, and ignored generated build-test artifacts that were polluting Git | Manually validate menu/save/death flows in the Windows build and record any final release blockers |
 
 ---
 

@@ -104,3 +104,8 @@ ignore.conf
 # Embedded local MCP package source copied into Packages/.
 # The project already resolves this via manifest/registry on each machine.
 Packages/com.ivanmurzak.unity.mcp/
+Assets/packages-merged-link/
+Assets/Resources/PerformanceTestRunInfo.json
+Assets/Resources/PerformanceTestRunInfo.json.meta
+Assets/Resources/PerformanceTestRunSettings.json
+Assets/Resources/PerformanceTestRunSettings.json.meta
