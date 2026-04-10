@@ -20,8 +20,8 @@
 | 3 | Phase 2: Combat | ✅ COMPLETE | Zombie + HUD + weapons wired, input fixed |
 | 4 | Phase 3: Systems | ✅ COMPLETE | Inventory UI + Save/Load + Pause + direct input |
 | 5 | Phase 4: Content | ✅ COMPLETE | 5 levels + MainMenu + Loading + Build Settings |
-| 6 | Phase 5: Polish | 🚧 IN PROGRESS | Runtime polish active; Level 1 intro/tutorial pass retuned, Level 2 Streets combat/readability restored, Level 3 Hospital combat/progression restored, Level 4 Underground combat/progression restored, Level 5 finale combat/escape flow restored |
-| 7 | Phase 6: Testing & Ship | 🔲 Not started | Bug fixes + build |
+| 6 | Phase 5: Polish | 🚧 IN PROGRESS | Runtime polish active; campaign scene stabilization is now in a much healthier place across Level 1-5, with final manual presentation/cutscene swaps still remaining |
+| 7 | Phase 6: Testing & Ship | 🚧 NEXT UP | Full campaign regression, save/death/retry validation, and Windows build smoke are the next priority |
 
 ---
 
@@ -334,6 +334,7 @@ Main Camera also has **ThirdPersonCamera** script targeting `CameraTarget`.
 ## STAGE 7: PHASE 6 TESTING & SHIP 🔲
 
 > **MILESTONE**: v1.0 release build
+> **NEXT MOVE**: Run a full Level 1 → Level 5 progression sweep, validate save/load + retry/continue handoff, then produce a fresh Windows build candidate.
 
 | # | Task | Status | Details |
 |---|------|--------|---------|

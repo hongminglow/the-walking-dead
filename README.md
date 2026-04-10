@@ -229,14 +229,13 @@ namespace TWD.Player          // Namespace: TWD.<Subsystem>
 ### Current Prototype Status
 
 - Core gameplay systems are implemented: movement, interaction, combat, inventory, pause, save/load, scene transitions, and basic cutscene/loading/audio polish.
-- `_TestScene` is still the most fully wired validation scene, while authored campaign scenes are being stabilized and corrected scene-by-scene.
-- `Level_01_House` has now been repaired for the core first-loop references: player camera/combat setup, key + locked door flow, zombie AI data, HUD hookups, and pickup assignments.
-- Current scene audit priority is `Level_04_Underground` first, then `Level_03_Hospital`, then `Level_02_Streets`, with `Level_05_Finale` behind those and `Level_01_House` now in much healthier shape.
+- `_TestScene` remains the fastest sandbox for isolated checks, but the authored campaign scenes have now gone through scene-by-scene recovery and are in a much healthier runtime state.
+- `Level_01_House` through `Level_05_Finale` have all received targeted stabilization for camera/player wiring, pickups, doors/puzzles, navmesh recovery, combat readability, and finale escape flow.
 - Shared runtime fallbacks now recover common fast-authored scene gaps: missing player camera/combat references, HUD wiring, enemy data, pickup item inference, and blank locked-door config.
 - Shared runtime progression support now also covers missing-authored pickups such as `PipeWrench`, `Shotgun`, `SewerMap`, `Fuse`, and `GateValveHandle`, so those objects can behave as real pickups before final asset authoring.
-- The remaining manual content gaps are now mostly presentation and authored progression wiring: placeholder zombie visuals/audio, final lighting, and any level-specific blockers that need bespoke setup rather than generic recovery.
+- The remaining manual content gaps are now mostly presentation and authored content: placeholder zombie visuals/audio, final animation/VFX swaps, bespoke cutscene authoring, and playtest-driven difficulty tuning.
 - Several campaign scenes still use greybox enemy presentation and placeholder art/audio, so behavior is ahead of final presentation.
-- Current focus is Stage 6 stabilization: fix remaining scene wiring gaps, then swap placeholder visuals, VFX, animation, and authored cutscene content.
+- Current focus is shifting from Stage 6 stabilization into Stage 7 ship-readiness: full Level 1-5 regression, save/load and death-flow validation, then a Windows build candidate.
 
 <br>
 
