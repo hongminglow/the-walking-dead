@@ -37,7 +37,7 @@ namespace TWD.Camera
         [SerializeField] private float _aimFOV = 45f;
 
         [Header("Sensitivity")]
-        [SerializeField] private float _mouseSensitivity = 0.15f;
+        [SerializeField] private float _mouseSensitivity = 0.55f;
         [SerializeField] private float _gamepadSensitivity = 100f;
         [SerializeField] private float _verticalClampMin = -40f;
         [SerializeField] private float _verticalClampMax = 70f;
@@ -45,6 +45,8 @@ namespace TWD.Camera
 
         [Header("Collision")]
         [SerializeField] private float _collisionRadius = 0.3f;
+        [SerializeField] private float _collisionPadding = 0.15f;
+        [SerializeField] private float _minimumCollisionDistance = 0.45f;
         [SerializeField] private LayerMask _collisionLayers;
 
         [Header("Smoothing")]
@@ -99,8 +101,11 @@ namespace TWD.Camera
                 }
             }
 
-            if (_collisionLayers.value == 0)
-                _collisionLayers = RuntimeSceneResolver.MaskFromLayers(Constants.Layers.GROUND, Constants.Layers.OBSTACLE);
+            _collisionLayers = RuntimeSceneResolver.MaskFromLayers(
+                Constants.Layers.DEFAULT,
+                Constants.Layers.GROUND,
+                Constants.Layers.OBSTACLE
+            );
 
             // Seed the opening camera from the follow target so the first frame
             // matches the authored player facing direction rather than stale editor camera data.
@@ -154,24 +159,22 @@ namespace TWD.Camera
                 return;
             }
 
+            Vector2 lookThisFrame = _lookInput;
+            bool usingMouseLook = false;
             var mouse = Mouse.current;
-            if (mouse != null)
+            if (mouse != null && Cursor.lockState == CursorLockMode.Locked)
             {
-                bool hasMouseLookIntent =
-                    mouse.rightButton.isPressed ||
-                    mouse.leftButton.isPressed ||
-                    mouse.middleButton.isPressed;
-
-                _lookInput = hasMouseLookIntent ? mouse.delta.ReadValue() : Vector2.zero;
+                lookThisFrame = mouse.delta.ReadValue();
+                usingMouseLook = true;
                 _isAiming = mouse.rightButton.isPressed;
             }
 
-            // Determine sensitivity (mouse vs gamepad based on input magnitude)
-            float sensitivity = _lookInput.magnitude > 2f ? _gamepadSensitivity * Time.deltaTime
-                                                          : _mouseSensitivity;
+            float sensitivity = usingMouseLook
+                ? _mouseSensitivity
+                : _gamepadSensitivity * Time.deltaTime;
 
-            _yaw += _lookInput.x * sensitivity;
-            _pitch -= _lookInput.y * sensitivity;
+            _yaw += lookThisFrame.x * sensitivity;
+            _pitch -= lookThisFrame.y * sensitivity;
             _pitch = Mathf.Clamp(_pitch, _verticalClampMin, _verticalClampMax);
         }
 
@@ -189,8 +192,10 @@ namespace TWD.Camera
             Vector3 pivotPosition = GetPivotPosition();
             Vector3 orbitOffset = new Vector3(_currentOffset.x, 0f, _currentOffset.z);
 
-            // Calculate desired position
-            Vector3 targetPosition = pivotPosition + rotation * orbitOffset;
+            // Calculate desired position and clamp it against room geometry so the
+            // camera does not leak outside the shell on sharp turns.
+            Vector3 desiredPosition = pivotPosition + rotation * orbitOffset;
+            Vector3 targetPosition = ResolveCollision(pivotPosition, desiredPosition);
 
             // Smooth follow
             transform.position = Vector3.Lerp(transform.position, targetPosition, Time.deltaTime * _followSpeed);
@@ -199,20 +204,33 @@ namespace TWD.Camera
 
         private void HandleCollision()
         {
-            // Raycast from target to camera to prevent going through walls
-            Vector3 pivotPosition = GetPivotPosition();
-            Vector3 direction = transform.position - pivotPosition;
+            // Re-run collision against the smoothed position so we never lerp
+            // through a wall for a frame when the player turns quickly.
+            transform.position = ResolveCollision(GetPivotPosition(), transform.position);
+        }
+
+        private Vector3 ResolveCollision(Vector3 pivotPosition, Vector3 desiredPosition)
+        {
+            Vector3 direction = desiredPosition - pivotPosition;
             float desiredDistance = direction.magnitude;
 
             if (desiredDistance <= Mathf.Epsilon)
-                return;
+                return desiredPosition;
 
-            if (Physics.SphereCast(pivotPosition, _collisionRadius, direction.normalized,
-                out RaycastHit hit, desiredDistance, _collisionLayers))
+            if (Physics.SphereCast(
+                    pivotPosition,
+                    _collisionRadius,
+                    direction.normalized,
+                    out RaycastHit hit,
+                    desiredDistance,
+                    _collisionLayers,
+                    QueryTriggerInteraction.Ignore))
             {
-                // Move camera in front of the wall
-                transform.position = hit.point + hit.normal * _collisionRadius;
+                float safeDistance = Mathf.Max(_minimumCollisionDistance, hit.distance - _collisionPadding);
+                return pivotPosition + direction.normalized * safeDistance;
             }
+
+            return desiredPosition;
         }
 
         private Vector3 GetPivotPosition()

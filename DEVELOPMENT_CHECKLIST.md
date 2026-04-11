@@ -5,7 +5,7 @@
 > - Update this file after each work session.
 > - When resuming with AI, say: _"Continue from Stage X, Step Y"_
 
-> **LAST UPDATED**: 2026-04-11 (Session 23)
+> **LAST UPDATED**: 2026-04-11 (Session 25)
 > **CURRENT STAGE**: Stage 7 — Testing & Ship 🚧
 
 ---
@@ -665,6 +665,8 @@ This is fine for solo dev. CI is more important for teams.
 | 2026-04-10 | Session 21 | Stage 7 menu-flow validation pass: repaired `MainMenu` panel references, upgraded `PauseMenu` with a runtime fallback scaffold for incomplete gameplay scenes, added an audio listener to `Loading`, and verified `New Game` -> `Level_01_House` -> manual save -> return to `MainMenu` -> `Continue` -> `Level_01_House` all work in-editor without the previous pause/menu blockers | Validate death/retry and the same menu/save flow in the Windows build, then record final release blockers |
 | 2026-04-11 | Session 22 | Stage 7 launch-readiness cleanup: identified that the main package startup exception was coming from the unused `com.coplaydev.coplay` dependency, removed it from `Packages/manifest.json` and `Packages/packages-lock.json`, and prepared the project for the first real-user Level 1 playtest handoff | Reopen Unity once to let Package Manager re-resolve, then do a human playtest of `Level_01_House` and collect feedback on readability, pacing, prompts, and progression friction |
 | 2026-04-11 | Session 23 | Post-restart verification pass: confirmed the old Coplay startup exception no longer appears in fresh smoke output, revalidated `Level_01_House` runtime boot with live player/camera/key/door references, hardened singleton/pause-menu scaffolding for editor stop-start cycles, and documented that the remaining automation noise is coming from the MCP tooling/project-path/save-path environment rather than a new gameplay package blocker | Start the first human `Level_01_House` playtest and capture feedback on onboarding clarity, door/key readability, pause/save feel, combat tension, and any confusion points |
+| 2026-04-11 | Session 24 | Level 1 first-impression polish pass: brightened `Level_01_House` fog/light balance for clearer navigation, removed the mouse-button requirement from free-look camera rotation, upgraded pickup presentation so placeholder items can render as stylized runtime props (including a proper brass key silhouette for the house key), and trimmed the pause bootstrap so the duplicate `EventSystem` warning no longer shows in the Level 1 runtime smoke | Re-test `Level_01_House` manually for readability, mouse-look feel, pickup readability, and whether the opening route now feels comfortably playable without losing the horror tone |
+| 2026-04-11 | Session 25 | Level 1 comfort pass from first user feedback: reduced serialized mouse sensitivity, brightened ambient/fog/interior light values again for easier room readability, and hardened third-person camera collision so the house shell blocks the camera more reliably instead of exposing the empty outside when turning near walls/ceiling | Re-test `Level_01_House` manually for camera comfort, room visibility, and whether outside-world peeking is now gone or at least meaningfully reduced |
 
 ---
 

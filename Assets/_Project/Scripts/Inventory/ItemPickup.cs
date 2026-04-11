@@ -22,6 +22,8 @@ namespace TWD.Inventory
     /// </summary>
     public class ItemPickup : MonoBehaviour, IInteractable
     {
+        private const string RuntimeVisualRootName = "[PickupVisual]";
+
         #region Serialized Fields
 
         [Header("Item")]
@@ -45,6 +47,7 @@ namespace TWD.Inventory
 
         private Vector3 _startPosition;
         private bool _hasBeenPickedUp;
+        private Transform _runtimeVisualRoot;
 
         #endregion
 
@@ -125,6 +128,8 @@ namespace TWD.Inventory
 
             if (string.IsNullOrEmpty(_pickupId))
                 _pickupId = gameObject.name.Replace(" ", "_").ToLowerInvariant();
+
+            EnsurePickupPresentation();
         }
 
         private void Update()
@@ -170,6 +175,184 @@ namespace TWD.Inventory
             {
                 gameObject.SetActive(false);
             }
+        }
+
+        private void EnsurePickupPresentation()
+        {
+            Transform existingVisual = transform.Find(RuntimeVisualRootName);
+            if (existingVisual != null)
+            {
+                _runtimeVisualRoot = existingVisual;
+                return;
+            }
+
+            _runtimeVisualRoot = new GameObject(RuntimeVisualRootName).transform;
+            _runtimeVisualRoot.SetParent(transform, false);
+
+            switch (GetVisualKind())
+            {
+                case "key":
+                    CreateKeyVisual(_runtimeVisualRoot);
+                    break;
+                case "health":
+                    CreateHealthVisual(_runtimeVisualRoot);
+                    break;
+                case "ammo":
+                    CreateAmmoVisual(_runtimeVisualRoot);
+                    break;
+                case "weapon":
+                    CreateWeaponVisual(_runtimeVisualRoot);
+                    break;
+                default:
+                    CreateGenericPickupVisual(_runtimeVisualRoot);
+                    break;
+            }
+
+            Renderer rootRenderer = GetComponent<Renderer>();
+            if (rootRenderer != null)
+            {
+                rootRenderer.enabled = false;
+            }
+        }
+
+        private string GetVisualKind()
+        {
+            if (_weaponData != null)
+            {
+                return "weapon";
+            }
+
+            if (_itemData == null)
+            {
+                return "generic";
+            }
+
+            string itemId = (_itemData.itemId ?? string.Empty).ToLowerInvariant();
+            string itemName = (_itemData.itemName ?? string.Empty).ToLowerInvariant();
+
+            if (_itemData.isKeyItem || itemId.Contains("key") || itemName.Contains("key"))
+            {
+                return "key";
+            }
+
+            if (itemId.Contains("health") || itemName.Contains("health") || itemName.Contains("med"))
+            {
+                return "health";
+            }
+
+            if (itemId.Contains("ammo") || itemName.Contains("ammo") || itemName.Contains("shell"))
+            {
+                return "ammo";
+            }
+
+            return "generic";
+        }
+
+        private void CreateKeyVisual(Transform parent)
+        {
+            Material brass = CreateLitMaterial(new Color(0.77f, 0.62f, 0.24f, 1f));
+            Material accent = CreateLitMaterial(new Color(0.43f, 0.29f, 0.08f, 1f));
+
+            CreateVisualPart("BowTop", PrimitiveType.Cube, parent, new Vector3(-0.28f, 0.16f, 0f), Quaternion.identity, new Vector3(0.34f, 0.08f, 0.08f), brass);
+            CreateVisualPart("BowBottom", PrimitiveType.Cube, parent, new Vector3(-0.28f, -0.16f, 0f), Quaternion.identity, new Vector3(0.34f, 0.08f, 0.08f), brass);
+            CreateVisualPart("BowLeft", PrimitiveType.Cube, parent, new Vector3(-0.43f, 0f, 0f), Quaternion.identity, new Vector3(0.08f, 0.32f, 0.08f), brass);
+            CreateVisualPart("BowRight", PrimitiveType.Cube, parent, new Vector3(-0.13f, 0f, 0f), Quaternion.identity, new Vector3(0.08f, 0.32f, 0.08f), brass);
+            CreateVisualPart("Stem", PrimitiveType.Cube, parent, new Vector3(0.18f, 0f, 0f), Quaternion.identity, new Vector3(0.6f, 0.08f, 0.08f), brass);
+            CreateVisualPart("ToothA", PrimitiveType.Cube, parent, new Vector3(0.42f, -0.1f, 0f), Quaternion.identity, new Vector3(0.1f, 0.16f, 0.08f), accent);
+            CreateVisualPart("ToothB", PrimitiveType.Cube, parent, new Vector3(0.58f, -0.06f, 0f), Quaternion.identity, new Vector3(0.12f, 0.2f, 0.08f), accent);
+            parent.localScale = new Vector3(0.8f, 0.8f, 0.8f);
+        }
+
+        private void CreateHealthVisual(Transform parent)
+        {
+            Material body = CreateLitMaterial(new Color(0.74f, 0.74f, 0.7f, 1f));
+            Material cross = CreateLitMaterial(new Color(0.72f, 0.08f, 0.08f, 1f));
+
+            CreateVisualPart("Case", PrimitiveType.Cube, parent, new Vector3(0f, 0f, 0f), Quaternion.identity, new Vector3(0.5f, 0.34f, 0.22f), body);
+            CreateVisualPart("CrossV", PrimitiveType.Cube, parent, new Vector3(0f, 0f, 0.12f), Quaternion.identity, new Vector3(0.08f, 0.22f, 0.03f), cross);
+            CreateVisualPart("CrossH", PrimitiveType.Cube, parent, new Vector3(0f, 0f, 0.12f), Quaternion.identity, new Vector3(0.22f, 0.08f, 0.03f), cross);
+        }
+
+        private void CreateAmmoVisual(Transform parent)
+        {
+            Material crate = CreateLitMaterial(new Color(0.18f, 0.22f, 0.18f, 1f));
+            Material brass = CreateLitMaterial(new Color(0.72f, 0.58f, 0.22f, 1f));
+
+            CreateVisualPart("AmmoBox", PrimitiveType.Cube, parent, new Vector3(0f, -0.02f, 0f), Quaternion.identity, new Vector3(0.42f, 0.24f, 0.24f), crate);
+            CreateVisualPart("RoundA", PrimitiveType.Cylinder, parent, new Vector3(-0.1f, 0.15f, 0f), Quaternion.Euler(90f, 0f, 0f), new Vector3(0.06f, 0.14f, 0.06f), brass);
+            CreateVisualPart("RoundB", PrimitiveType.Cylinder, parent, new Vector3(0f, 0.15f, 0f), Quaternion.Euler(90f, 0f, 0f), new Vector3(0.06f, 0.14f, 0.06f), brass);
+            CreateVisualPart("RoundC", PrimitiveType.Cylinder, parent, new Vector3(0.1f, 0.15f, 0f), Quaternion.Euler(90f, 0f, 0f), new Vector3(0.06f, 0.14f, 0.06f), brass);
+        }
+
+        private void CreateWeaponVisual(Transform parent)
+        {
+            Material metal = CreateLitMaterial(new Color(0.24f, 0.24f, 0.26f, 1f));
+            Material grip = CreateLitMaterial(new Color(0.14f, 0.1f, 0.08f, 1f));
+
+            CreateVisualPart("Body", PrimitiveType.Cube, parent, new Vector3(0.08f, 0.04f, 0f), Quaternion.identity, new Vector3(0.52f, 0.12f, 0.12f), metal);
+            CreateVisualPart("Barrel", PrimitiveType.Cube, parent, new Vector3(0.32f, 0.12f, 0f), Quaternion.identity, new Vector3(0.24f, 0.07f, 0.07f), metal);
+            CreateVisualPart("Grip", PrimitiveType.Cube, parent, new Vector3(-0.1f, -0.16f, 0f), Quaternion.Euler(0f, 0f, 22f), new Vector3(0.12f, 0.26f, 0.1f), grip);
+            parent.localScale = new Vector3(0.9f, 0.9f, 0.9f);
+        }
+
+        private void CreateGenericPickupVisual(Transform parent)
+        {
+            Material body = CreateLitMaterial(new Color(0.72f, 0.72f, 0.78f, 1f));
+            CreateVisualPart("Core", PrimitiveType.Sphere, parent, Vector3.zero, Quaternion.identity, new Vector3(0.28f, 0.28f, 0.28f), body);
+        }
+
+        private void CreateVisualPart(string name, PrimitiveType primitiveType, Transform parent, Vector3 localPosition, Quaternion localRotation, Vector3 localScale, Material material)
+        {
+            GameObject part = GameObject.CreatePrimitive(primitiveType);
+            part.name = name;
+            part.transform.SetParent(parent, false);
+            part.transform.localPosition = localPosition;
+            part.transform.localRotation = localRotation;
+            part.transform.localScale = localScale;
+            part.layer = gameObject.layer;
+
+            Collider collider = part.GetComponent<Collider>();
+            if (collider != null)
+            {
+                Destroy(collider);
+            }
+
+            Renderer renderer = part.GetComponent<Renderer>();
+            if (renderer != null)
+            {
+                renderer.sharedMaterial = material;
+                renderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.On;
+                renderer.receiveShadows = true;
+            }
+        }
+
+        private Material CreateLitMaterial(Color baseColor)
+        {
+            Shader shader = Shader.Find("Universal Render Pipeline/Lit");
+            if (shader == null)
+            {
+                shader = Shader.Find("Standard");
+            }
+
+            Material material = new Material(shader);
+            material.color = baseColor;
+
+            if (material.HasProperty("_BaseColor"))
+            {
+                material.SetColor("_BaseColor", baseColor);
+            }
+
+            if (material.HasProperty("_Smoothness"))
+            {
+                material.SetFloat("_Smoothness", 0.35f);
+            }
+
+            if (material.HasProperty("_Metallic"))
+            {
+                material.SetFloat("_Metallic", 0.2f);
+            }
+
+            return material;
         }
 
         #endregion

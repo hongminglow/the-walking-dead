@@ -43,7 +43,6 @@ namespace TWD.UI
         {
             SceneManager.sceneLoaded -= OnSceneLoaded;
             SceneManager.sceneLoaded += OnSceneLoaded;
-            EnsurePauseMenuForScene(SceneManager.GetActiveScene());
         }
 
         private static void OnSceneLoaded(Scene scene, LoadSceneMode mode)
