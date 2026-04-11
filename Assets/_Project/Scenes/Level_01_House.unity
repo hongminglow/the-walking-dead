@@ -2643,7 +2643,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 285d9b6b18795394cb282d71469db183, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TWD.UI.HUDController
-  _healthBar: {fileID: 2105151108}
+  _healthBar: {fileID: 0}
   _healthBarFill: {fileID: 0}
   _healthColorFine: {r: 0.545, g: 0, b: 0, a: 1}
   _healthColorLow: {r: 1, g: 0.267, b: 0.267, a: 1}
@@ -4743,7 +4743,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &1250502344
 RectTransform:
   m_ObjectHideFlags: 0
@@ -8317,7 +8317,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &2118562037
 RectTransform:
   m_ObjectHideFlags: 0

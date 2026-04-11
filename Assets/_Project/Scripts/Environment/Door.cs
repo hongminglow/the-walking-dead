@@ -50,7 +50,9 @@ namespace TWD.Environment
 
         private DoorState _currentState;
         private AudioSource _audioSource;
+        private Collider _doorCollider;
         private bool _isAnimating;
+        private bool _doorWasTrigger;
         private Quaternion _closedRotation;
         private Quaternion _openRotation;
 
@@ -115,9 +117,12 @@ namespace TWD.Environment
         private void Awake()
         {
             _audioSource = GetComponent<AudioSource>();
+            _doorCollider = GetComponent<Collider>();
             _currentState = _initialState;
             _closedRotation = transform.rotation;
             _openRotation = _closedRotation * Quaternion.Euler(0f, _openAngle, 0f);
+            if (_doorCollider != null)
+                _doorWasTrigger = _doorCollider.isTrigger;
 
             if (string.IsNullOrEmpty(_doorId))
                 _doorId = gameObject.name.Replace(" ", "_").ToLowerInvariant();
@@ -177,6 +182,7 @@ namespace TWD.Environment
         {
             _currentState = DoorState.Open;
             _isAnimating = true;
+            SetPassageBlocked(false);
 
             PlaySound(_openSound);
 
@@ -197,6 +203,7 @@ namespace TWD.Environment
         {
             _currentState = DoorState.Unlocked;
             _isAnimating = true;
+            SetPassageBlocked(true);
 
             PlaySound(_closeSound);
 
@@ -247,6 +254,14 @@ namespace TWD.Environment
             {
                 _audioSource.PlayOneShot(clip);
             }
+        }
+
+        private void SetPassageBlocked(bool blocked)
+        {
+            if (_doorCollider == null)
+                return;
+
+            _doorCollider.isTrigger = !blocked ? true : _doorWasTrigger;
         }
 
         #endregion

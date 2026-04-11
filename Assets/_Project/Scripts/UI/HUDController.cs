@@ -352,22 +352,28 @@ namespace TWD.UI
 
         private void ResolveRuntimeReferences()
         {
-            if (_healthBar == null) _healthBar = FindNamedComponentInChildren<Slider>("HealthBar");
+            RectTransform vitalsPanel = FindNamedComponentInChildren<RectTransform>("VitalsPanel");
+            RectTransform weaponPanel = FindNamedComponentInChildren<RectTransform>("WeaponPanel");
+            RectTransform objectivePanel = FindNamedComponentInChildren<RectTransform>("ObjectivePanel");
+
+            Slider runtimeHealthBar = FindNamedComponentInChildren<Slider>("HealthBar", vitalsPanel);
+            if (runtimeHealthBar != null) _healthBar = runtimeHealthBar;
+            else if (_healthBar == null) _healthBar = FindNamedComponentInChildren<Slider>("HealthBar");
             if (_healthBarFill == null && _healthBar != null && _healthBar.fillRect != null) _healthBarFill = _healthBar.fillRect.GetComponent<Image>();
-            if (_healthStatusText == null) _healthStatusText = FindNamedComponentInChildren<Text>("HealthStatusText");
-            if (_healthStatusTmpText == null) _healthStatusTmpText = FindNamedComponentInChildren<TMP_Text>("HealthStatusText");
-            if (_healthValueText == null) _healthValueText = FindNamedComponentInChildren<Text>("HealthValueText");
-            if (_healthValueTmpText == null) _healthValueTmpText = FindNamedComponentInChildren<TMP_Text>("HealthValueText");
-            if (_ammoText == null) _ammoText = FindNamedComponentInChildren<Text>("WeaponAmmoText") ?? FindNamedComponentInChildren<Text>("AmmoText");
-            if (_ammoTmpText == null) _ammoTmpText = FindNamedComponentInChildren<TMP_Text>("WeaponAmmoText") ?? FindNamedComponentInChildren<TMP_Text>("AmmoText");
-            if (_ammoReserveText == null) _ammoReserveText = FindNamedComponentInChildren<Text>("WeaponReserveText");
-            if (_ammoReserveTmpText == null) _ammoReserveTmpText = FindNamedComponentInChildren<TMP_Text>("WeaponReserveText");
-            if (_weaponNameText == null) _weaponNameText = FindNamedComponentInChildren<Text>("WeaponNameText");
-            if (_weaponNameTmpText == null) _weaponNameTmpText = FindNamedComponentInChildren<TMP_Text>("WeaponNameText");
-            if (_inventoryStatusText == null) _inventoryStatusText = FindNamedComponentInChildren<Text>("InventoryStatusText");
-            if (_inventoryStatusTmpText == null) _inventoryStatusTmpText = FindNamedComponentInChildren<TMP_Text>("InventoryStatusText");
-            if (_objectiveText == null) _objectiveText = FindNamedComponentInChildren<Text>("ObjectiveText");
-            if (_objectiveTmpText == null) _objectiveTmpText = FindNamedComponentInChildren<TMP_Text>("ObjectiveText");
+            if (_healthStatusText == null) _healthStatusText = FindNamedComponentInChildren<Text>("HealthStatusText", vitalsPanel);
+            if (_healthStatusTmpText == null) _healthStatusTmpText = FindNamedComponentInChildren<TMP_Text>("HealthStatusText", vitalsPanel);
+            if (_healthValueText == null) _healthValueText = FindNamedComponentInChildren<Text>("HealthValueText", vitalsPanel);
+            if (_healthValueTmpText == null) _healthValueTmpText = FindNamedComponentInChildren<TMP_Text>("HealthValueText", vitalsPanel);
+            if (_ammoText == null) _ammoText = FindNamedComponentInChildren<Text>("WeaponAmmoText", weaponPanel) ?? FindNamedComponentInChildren<Text>("AmmoText");
+            if (_ammoTmpText == null) _ammoTmpText = FindNamedComponentInChildren<TMP_Text>("WeaponAmmoText", weaponPanel) ?? FindNamedComponentInChildren<TMP_Text>("AmmoText");
+            if (_ammoReserveText == null) _ammoReserveText = FindNamedComponentInChildren<Text>("WeaponReserveText", weaponPanel);
+            if (_ammoReserveTmpText == null) _ammoReserveTmpText = FindNamedComponentInChildren<TMP_Text>("WeaponReserveText", weaponPanel);
+            if (_weaponNameText == null) _weaponNameText = FindNamedComponentInChildren<Text>("WeaponNameText", weaponPanel);
+            if (_weaponNameTmpText == null) _weaponNameTmpText = FindNamedComponentInChildren<TMP_Text>("WeaponNameText", weaponPanel);
+            if (_inventoryStatusText == null) _inventoryStatusText = FindNamedComponentInChildren<Text>("InventoryStatusText", objectivePanel);
+            if (_inventoryStatusTmpText == null) _inventoryStatusTmpText = FindNamedComponentInChildren<TMP_Text>("InventoryStatusText", objectivePanel);
+            if (_objectiveText == null) _objectiveText = FindNamedComponentInChildren<Text>("ObjectiveText", objectivePanel);
+            if (_objectiveTmpText == null) _objectiveTmpText = FindNamedComponentInChildren<TMP_Text>("ObjectiveText", objectivePanel);
             if (_interactPromptPanel == null)
             {
                 RectTransform prompt = FindNamedComponentInChildren<RectTransform>("InteractPrompt");
@@ -377,7 +383,9 @@ namespace TWD.UI
             if (_interactPromptTmpText == null) _interactPromptTmpText = FindNamedComponentInChildren<TMP_Text>("InteractPromptLabel");
             if (_interactPromptText == null && _interactPromptPanel != null) _interactPromptText = _interactPromptPanel.GetComponentInChildren<Text>(true);
             if (_interactPromptTmpText == null && _interactPromptPanel != null) _interactPromptTmpText = _interactPromptPanel.GetComponentInChildren<TMP_Text>(true);
-            if (_staminaBar == null) _staminaBar = FindNamedComponentInChildren<Slider>("StaminaBar");
+            Slider runtimeStaminaBar = FindNamedComponentInChildren<Slider>("StaminaBar", vitalsPanel);
+            if (runtimeStaminaBar != null) _staminaBar = runtimeStaminaBar;
+            else if (_staminaBar == null) _staminaBar = FindNamedComponentInChildren<Slider>("StaminaBar");
             if (_crosshair == null)
             {
                 RectTransform crosshair = FindNamedComponentInChildren<RectTransform>("Crosshair");
@@ -415,6 +423,8 @@ namespace TWD.UI
         {
             Transform health = transform.Find("HealthBarBg");
             if (health != null) health.gameObject.SetActive(false);
+            Transform legacyHealthBar = transform.Find("HealthBar");
+            if (legacyHealthBar != null) legacyHealthBar.gameObject.SetActive(false);
             Transform ammo = transform.Find("AmmoText");
             if (ammo != null) ammo.gameObject.SetActive(false);
         }
@@ -438,12 +448,12 @@ namespace TWD.UI
         private void CreateRuntimeVitalsPanel()
         {
             Font font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
-            GameObject panel = CreatePanel("VitalsPanel", transform, Vector2.zero, Vector2.zero, Vector2.zero, new Vector2(16f, 14f), new Vector2(156f, 26f), new Color(0f, 0f, 0f, 0f));
-            CreateText("VitalsHeader", panel.transform, font, "\u2665", 14, FontStyle.Bold, TextAnchor.UpperLeft, new Vector2(0f, -3f), new Vector2(14f, 14f), new Color(0.92f, 0.18f, 0.18f, 1f));
-            CreateSlider("HealthBar", panel.transform, new Vector2(18f, -4f), new Vector2(92f, 10f), new Color(0.08f, 0.08f, 0.08f, 0.32f), _healthColorFine);
-            Slider stamina = CreateSlider("StaminaBar", panel.transform, new Vector2(18f, -17f), new Vector2(92f, 10f), new Color(0.08f, 0.08f, 0.08f, 0.22f), new Color(0.19f, 0.55f, 0.95f, 1f));
+            GameObject panel = CreatePanel("VitalsPanel", transform, Vector2.zero, Vector2.zero, Vector2.zero, new Vector2(16f, 14f), new Vector2(132f, 18f), new Color(0f, 0f, 0f, 0f));
+            CreateText("VitalsHeader", panel.transform, font, "\u2665", 12, FontStyle.Bold, TextAnchor.UpperLeft, new Vector2(0f, -1f), new Vector2(12f, 12f), new Color(0.92f, 0.18f, 0.18f, 1f));
+            CreateSlider("HealthBar", panel.transform, new Vector2(15f, -1f), new Vector2(72f, 5f), new Color(0.08f, 0.08f, 0.08f, 0.34f), _healthColorFine);
+            Slider stamina = CreateSlider("StaminaBar", panel.transform, new Vector2(15f, -9f), new Vector2(72f, 5f), new Color(0.08f, 0.08f, 0.08f, 0.24f), new Color(0.19f, 0.55f, 0.95f, 1f));
             stamina.gameObject.SetActive(true);
-            CreateText("HealthValueText", panel.transform, font, "100", 8, FontStyle.Bold, TextAnchor.UpperLeft, new Vector2(116f, -3f), new Vector2(20f, 10f), new Color(0.94f, 0.94f, 0.94f, 1f));
+            CreateText("HealthValueText", panel.transform, font, "100", 8, FontStyle.Bold, TextAnchor.UpperLeft, new Vector2(92f, -1f), new Vector2(22f, 10f), new Color(0.94f, 0.94f, 0.94f, 1f));
         }
 
         private void CreateRuntimeWeaponPanel()
@@ -545,7 +555,7 @@ namespace TWD.UI
             RectTransform fillAreaRect = fillArea.GetComponent<RectTransform>();
             fillAreaRect.anchorMin = Vector2.zero;
             fillAreaRect.anchorMax = Vector2.one;
-            float inset = size.y <= 4f ? 1f : 2f;
+            float inset = size.y <= 6f ? 1f : 2f;
             fillAreaRect.offsetMin = new Vector2(inset, inset);
             fillAreaRect.offsetMax = new Vector2(-inset, -inset);
 
@@ -609,9 +619,10 @@ namespace TWD.UI
             return go;
         }
 
-        private T FindNamedComponentInChildren<T>(string objectName) where T : Component
+        private T FindNamedComponentInChildren<T>(string objectName, Transform root = null) where T : Component
         {
-            T[] components = GetComponentsInChildren<T>(true);
+            Transform searchRoot = root != null ? root : transform;
+            T[] components = searchRoot.GetComponentsInChildren<T>(true);
             for (int i = 0; i < components.Length; i++)
             {
                 if (components[i] != null && components[i].gameObject.name == objectName) return components[i];

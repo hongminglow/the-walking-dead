@@ -29,6 +29,7 @@ namespace TWD.Player
         [SerializeField] private float _sprintSpeed = Constants.Player.SPRINT_SPEED;
         [SerializeField] private float _crouchSpeed = Constants.Player.CROUCH_SPEED;
         [SerializeField] private float _rotationSpeed = Constants.Player.ROTATION_SPEED;
+        [SerializeField] private float _jumpHeight = 1.2f;
         [SerializeField] private float _gravity = -15f;
         [SerializeField] private float _groundCheckDistance = 0.3f;
         [SerializeField] private LayerMask _groundMask;
@@ -58,6 +59,7 @@ namespace TWD.Player
         private bool _isAiming;
         private bool _isGrounded;
         private bool _inputEnabled = true;
+        private bool _jumpQueued;
 
         #endregion
 
@@ -131,6 +133,7 @@ namespace TWD.Player
 
             ReadInput();
             GroundCheck();
+            HandleJump();
             HandleMovement();
             HandleStamina();
             ApplyGravity();
@@ -162,6 +165,9 @@ namespace TWD.Player
                     _characterController.height = _isCrouching ? 1.2f : 1.8f;
                     _characterController.center = new Vector3(0f, _characterController.height / 2f, 0f);
                 }
+
+                if (kb.spaceKey.wasPressedThisFrame)
+                    _jumpQueued = true;
             }
 
             var mouse = Mouse.current;
@@ -226,6 +232,18 @@ namespace TWD.Player
             _isAiming = value != null && value.isPressed;
         }
 
+        public void OnJump(InputAction.CallbackContext context)
+        {
+            if (context.performed)
+                _jumpQueued = true;
+        }
+
+        public void OnJump(InputValue value)
+        {
+            if (value != null && value.isPressed)
+                _jumpQueued = true;
+        }
+
         #endregion
 
         #region Movement
@@ -280,6 +298,20 @@ namespace TWD.Player
 
             // Update animator
             _playerAnimator?.SetMovement(MoveAmount * (speed / _walkSpeed));
+        }
+
+        private void HandleJump()
+        {
+            if (!_jumpQueued)
+                return;
+
+            _jumpQueued = false;
+
+            if (!_isGrounded || _isCrouching)
+                return;
+
+            _verticalVelocity.y = Mathf.Sqrt(_jumpHeight * -2f * _gravity);
+            _isSprinting = false;
         }
 
         private void ApplyGravity()

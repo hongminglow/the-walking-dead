@@ -38,12 +38,18 @@ namespace TWD.Core
             cueRoot.SetParent(frontDoor.transform, false);
             cueRoot.localPosition = Vector3.zero;
 
+            Material doorMaterial = CreateLitMaterial(new Color(0.32f, 0.19f, 0.1f, 1f), 0.04f, 0.4f, Color.black);
             Material frameMaterial = CreateLitMaterial(new Color(0.29f, 0.16f, 0.11f, 1f), 0.08f, 0.34f, Color.black);
             Material signMaterial = CreateLitMaterial(new Color(0.18f, 0.19f, 0.16f, 1f), 0.03f, 0.28f, new Color(0.35f, 0.85f, 0.5f, 1f) * 0.65f);
+
+            Renderer frontDoorRenderer = frontDoor.GetComponent<Renderer>();
+            if (frontDoorRenderer != null)
+                frontDoorRenderer.sharedMaterial = doorMaterial;
 
             CreatePart("FrameLeft", PrimitiveType.Cube, cueRoot, new Vector3(-0.58f, 0f, -0.02f), new Vector3(0.06f, 1.82f, 0.08f), frameMaterial);
             CreatePart("FrameRight", PrimitiveType.Cube, cueRoot, new Vector3(0.58f, 0f, -0.02f), new Vector3(0.06f, 1.82f, 0.08f), frameMaterial);
             CreatePart("FrameTop", PrimitiveType.Cube, cueRoot, new Vector3(0f, 0.88f, -0.02f), new Vector3(1.22f, 0.08f, 0.08f), frameMaterial);
+            CreatePart("DoorHandle", PrimitiveType.Sphere, cueRoot, new Vector3(0.42f, -0.05f, -0.12f), new Vector3(0.08f, 0.08f, 0.08f), CreateLitMaterial(new Color(0.86f, 0.73f, 0.36f, 1f), 0.42f, 0.7f, new Color(0.18f, 0.14f, 0.04f, 1f) * 0.15f));
             CreatePart("LampBackplate", PrimitiveType.Cube, cueRoot, new Vector3(0f, 1.12f, -0.08f), new Vector3(0.42f, 0.12f, 0.04f), signMaterial);
             CreatePart("LampBulb", PrimitiveType.Sphere, cueRoot, new Vector3(0f, 0.98f, -0.05f), new Vector3(0.12f, 0.12f, 0.12f), CreateLitMaterial(new Color(1f, 0.92f, 0.72f, 1f), 0.05f, 0.72f, new Color(1f, 0.92f, 0.72f, 1f) * 3f));
 

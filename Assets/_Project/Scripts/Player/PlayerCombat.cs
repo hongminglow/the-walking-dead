@@ -28,6 +28,11 @@ namespace TWD.Player
         [SerializeField] private WeaponData _currentWeaponData;
         [SerializeField] private Transform _muzzlePoint;
 
+        [Header("Presentation")]
+        [SerializeField] private float _muzzleFlashIntensity = 2.2f;
+        [SerializeField] private float _muzzleFlashRange = 3.2f;
+        [SerializeField] private float _muzzleFlashDuration = 0.04f;
+
         [Header("Raycast")]
         [SerializeField] private LayerMask _shootableLayers;
         [SerializeField] private Transform _cameraTransform;
@@ -47,8 +52,11 @@ namespace TWD.Player
         private int _reserveAmmo;
         private float _fireTimer;
         private float _reloadTimer;
+        private float _muzzleFlashTimer;
         private bool _isReloading;
         private bool _canFire = true;
+        private Light _muzzleFlashLight;
+        private AudioClip _fallbackGunshot;
 
         #endregion
 
@@ -99,6 +107,10 @@ namespace TWD.Player
             if (_currentWeaponData != null && _currentAmmoInClip <= 0)
                 _currentAmmoInClip = _currentWeaponData.magazineSize;
 
+            EnsureMuzzleFlashLight();
+            if (_fallbackGunshot == null)
+                _fallbackGunshot = CreateFallbackGunshotClip();
+
             UpdateAmmoUI();
         }
 
@@ -106,6 +118,8 @@ namespace TWD.Player
         {
             if (_fireTimer > 0f)
                 _fireTimer -= Time.deltaTime;
+
+            UpdateMuzzleFlash();
 
             HandleReloadTimer();
 
@@ -210,6 +224,7 @@ namespace TWD.Player
             // Animation & audio
             _playerAnimator?.TriggerShoot();
             PlaySound(_currentWeaponData.fireSound);
+            TriggerMuzzleFlash();
 
             // Update UI
             UpdateAmmoUI();
@@ -471,10 +486,88 @@ namespace TWD.Player
 
         private void PlaySound(AudioClip clip)
         {
-            if (_audioSource != null && clip != null)
+            if (_audioSource == null)
+                return;
+
+            AudioClip clipToPlay = clip != null ? clip : _fallbackGunshot;
+            if (clipToPlay != null)
             {
-                _audioSource.PlayOneShot(clip);
+                _audioSource.PlayOneShot(clipToPlay);
             }
+        }
+
+        private void EnsureMuzzleFlashLight()
+        {
+            if (_muzzlePoint == null || _muzzleFlashLight != null)
+                return;
+
+            Transform flashTransform = _muzzlePoint.Find("RuntimeMuzzleFlash");
+            if (flashTransform == null)
+            {
+                var flashObject = new GameObject("RuntimeMuzzleFlash");
+                flashObject.transform.SetParent(_muzzlePoint, false);
+                flashObject.transform.localPosition = new Vector3(0f, 0f, 0.08f);
+                flashTransform = flashObject.transform;
+            }
+
+            _muzzleFlashLight = flashTransform.GetComponent<Light>();
+            if (_muzzleFlashLight == null)
+                _muzzleFlashLight = flashTransform.gameObject.AddComponent<Light>();
+
+            _muzzleFlashLight.type = LightType.Point;
+            _muzzleFlashLight.color = new Color(1f, 0.84f, 0.54f, 1f);
+            _muzzleFlashLight.intensity = 0f;
+            _muzzleFlashLight.range = _muzzleFlashRange;
+            _muzzleFlashLight.shadows = LightShadows.None;
+        }
+
+        private void TriggerMuzzleFlash()
+        {
+            EnsureMuzzleFlashLight();
+            if (_muzzleFlashLight == null)
+                return;
+
+            _muzzleFlashTimer = _muzzleFlashDuration;
+            _muzzleFlashLight.intensity = _muzzleFlashIntensity;
+        }
+
+        private void UpdateMuzzleFlash()
+        {
+            if (_muzzleFlashLight == null)
+                return;
+
+            if (_muzzleFlashTimer > 0f)
+            {
+                _muzzleFlashTimer -= Time.deltaTime;
+                float t = Mathf.Clamp01(_muzzleFlashTimer / Mathf.Max(0.001f, _muzzleFlashDuration));
+                _muzzleFlashLight.intensity = _muzzleFlashIntensity * t;
+                return;
+            }
+
+            if (_muzzleFlashLight.intensity > 0f)
+                _muzzleFlashLight.intensity = 0f;
+        }
+
+        private static AudioClip CreateFallbackGunshotClip()
+        {
+            const int sampleRate = 22050;
+            const float duration = 0.16f;
+            int sampleCount = Mathf.CeilToInt(sampleRate * duration);
+            float[] samples = new float[sampleCount];
+
+            for (int i = 0; i < sampleCount; i++)
+            {
+                float time = i / (float)sampleRate;
+                float envelope = Mathf.Exp(-time * 30f);
+                float crack = Mathf.Sin(time * 1800f) * 0.65f;
+                float body = Mathf.Sin(time * 260f) * 0.2f;
+                float noise = (Random.value * 2f - 1f) * 0.5f;
+                samples[i] = Mathf.Clamp((crack + body + noise) * envelope, -1f, 1f);
+            }
+
+            AudioClip clip = AudioClip.Create("FallbackGunshot", sampleCount, 1, sampleRate, false);
+            clip.SetData(samples, 0);
+            return clip;
         }
 
         private static string GetReserveAmmoKey(AmmoType ammoType)

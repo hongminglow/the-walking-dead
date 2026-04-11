@@ -5,7 +5,7 @@
 > - Update this file after each work session.
 > - When resuming with AI, say: _"Continue from Stage X, Step Y"_
 
-> **LAST UPDATED**: 2026-04-11 (Session 29)
+> **LAST UPDATED**: 2026-04-11 (Session 30)
 > **CURRENT STAGE**: Stage 7 — Testing & Ship 🚧
 
 ---
@@ -671,6 +671,7 @@ This is fine for solo dev. CI is more important for teams.
 | 2026-04-11 | Session 27 | Level 1 readability/HUD pass: added a fuller survival-horror runtime HUD scaffold with objective, vitals, ammo, inventory load, and pickup toasts; upgraded pickup beacons/prompts so collectibles read from farther away; added built-in primitive lamp fixtures to the house light anchors; and restored `PlayerInput` Send Messages compatibility with `InputValue` overloads so play mode no longer floods missing-callback exceptions | Manually play `Level_01_House` again and judge whether the new HUD feels on-theme, pickup readability is finally obvious enough, and the ceiling fixtures/light balance now look closer to a shippable opening scene |
 | 2026-04-11 | Session 28 | HUD refinement pass from user feedback: replaced the chunky card-like vitals/ammo layout with a slimmer edge-hugging runtime HUD, reduced the ammo block to a compact bottom-right shooter-style readout, shifted health toward a lighter thin-bar presentation with a heart-side identifier, and forced runtime HUD elements to rebuild fresh each play so old bulky scaffold pieces no longer persist after code changes | Re-test `Level_01_House` manually and judge whether the health/ammo presentation now feels closer to a real survival-horror shooter HUD instead of prototype debug UI |
 | 2026-04-11 | Session 29 | Level 1 HUD/tutorial readability pass: rebuilt the health cluster into a much thinner heart-led HP bar with a matching blue stamina bar directly beneath it, reformatted the weapon HUD into a compact `weapon name + bullet icon + ammo pips + current/max` block, and added a front-door readability cue with framing, lamp, and `EXIT` sign so the escape door no longer disappears into the room lighting | Re-test `Level_01_House` manually and confirm whether the HP/stamina finally feel thin enough, the ammo block feels acceptable as a real-game HUD, and the front door is now immediately discoverable from normal play |
+| 2026-04-11 | Session 30 | Level 1 responsiveness and escape-flow fix pass: corrected the HUD so runtime vitals override the old serialized chunky slider instead of driving the legacy top-left bar, shrank the rebuilt HP/stamina bars further, added keyboard jump support, added muzzle-flash light plus fallback gunshot audio for the pistol, made the front door visually stronger with a true door material/handle cue, and changed door opening to stop blocking the passage so the exit zone can actually be reached | Manually re-test `Level_01_House` for four specific points: whether the HP/stamina are finally thin enough, whether pistol shots now feel readable with flash and sound, whether jump feels acceptable for the game, and whether unlocking/opening the front door now lets the player leave the house cleanly |
 
 ---
 
