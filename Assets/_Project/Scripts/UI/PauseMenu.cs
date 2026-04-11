@@ -199,7 +199,7 @@ namespace TWD.UI
         /// <summary>Saves the current game.</summary>
         public void SaveGame()
         {
-            if (SaveManager.Instance == null)
+            if (!SaveManager.IsInitialized || SaveManager.Instance == null)
             {
                 Debug.LogWarning("[PauseMenu] SaveManager is not available.");
                 return;
@@ -213,7 +213,7 @@ namespace TWD.UI
         /// <summary>Loads the most recent save.</summary>
         public void LoadGame()
         {
-            if (SaveManager.Instance == null)
+            if (!SaveManager.IsInitialized || SaveManager.Instance == null)
             {
                 Debug.LogWarning("[PauseMenu] SaveManager is not available.");
                 return;
@@ -440,15 +440,30 @@ namespace TWD.UI
 
         private void EnsureEventSystemExists()
         {
-            if (FindFirstObjectByType<EventSystem>() != null)
+            EventSystem[] eventSystems = Resources.FindObjectsOfTypeAll<EventSystem>();
+            for (int i = 0; i < eventSystems.Length; i++)
+            {
+                EventSystem existingEventSystem = eventSystems[i];
+                if (existingEventSystem == null || existingEventSystem.gameObject == null)
+                {
+                    continue;
+                }
+
+                if (existingEventSystem.gameObject.scene.IsValid() || existingEventSystem.gameObject.activeInHierarchy)
+                {
+                    return;
+                }
+            }
+
+            if (FindAnyObjectByType<EventSystem>() != null)
             {
                 return;
             }
 
-            GameObject eventSystem = new GameObject("EventSystem", typeof(EventSystem), typeof(InputSystemUIInputModule));
+            GameObject runtimeEventSystem = new GameObject("EventSystem", typeof(EventSystem), typeof(InputSystemUIInputModule));
             if (gameObject.scene.IsValid())
             {
-                SceneManager.MoveGameObjectToScene(eventSystem, gameObject.scene);
+                SceneManager.MoveGameObjectToScene(runtimeEventSystem, gameObject.scene);
             }
         }
 
@@ -483,7 +498,9 @@ namespace TWD.UI
 
                 if (string.Equals(button.gameObject.name, "LoadButton", StringComparison.Ordinal))
                 {
-                    button.interactable = SaveManager.Instance != null && SaveManager.Instance.HasAnySave();
+                    button.interactable = SaveManager.IsInitialized &&
+                                         SaveManager.Instance != null &&
+                                         SaveManager.Instance.HasAnySave();
                 }
             }
 

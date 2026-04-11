@@ -36,7 +36,7 @@ namespace TWD.Utilities
                 {
                     if (_instance == null)
                     {
-                        _instance = FindFirstObjectByType<T>();
+                        _instance = FindAnyObjectByType<T>();
 
                         if (_instance == null)
                         {
@@ -55,6 +55,8 @@ namespace TWD.Utilities
 
         protected virtual void Awake()
         {
+            _isQuitting = false;
+
             if (_instance != null && _instance != this)
             {
                 Debug.LogWarning($"[Singleton] Duplicate {typeof(T)} destroyed on {gameObject.name}.");
