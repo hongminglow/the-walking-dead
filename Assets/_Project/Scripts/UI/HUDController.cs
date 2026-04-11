@@ -1,38 +1,36 @@
-// ============================================================
-// File:        HUDController.cs
-// Namespace:   TWD.UI
-// Description: Manages the in-game HUD — health bar, ammo count,
-//              weapon icon, interaction prompts, and status effects.
-// Author:      The Walking Dead Team
-// Created:     2026-03-29
-// ============================================================
-
-using UnityEngine;
-using UnityEngine.UI;
 using TMPro;
+using UnityEngine;
+using UnityEngine.SceneManagement;
+using UnityEngine.UI;
+using TWD.Combat;
 using TWD.Core;
+using TWD.Inventory;
 using TWD.Player;
 using TWD.Utilities;
 
 namespace TWD.UI
 {
-    /// <summary>
-    /// Controls the in-game HUD overlay. Updates health bar, ammo count,
-    /// weapon display, and interaction prompts via EventBus subscriptions.
-    /// </summary>
     public class HUDController : MonoBehaviour
     {
-        #region Serialized Fields
+        private const float PickupToastDuration = 2.25f;
 
         [Header("Health")]
         [SerializeField] private Slider _healthBar;
         [SerializeField] private Image _healthBarFill;
-        [SerializeField] private Color _healthColorFine = new Color(0.545f, 0f, 0f, 1f);     // #8B0000
-        [SerializeField] private Color _healthColorLow = new Color(1f, 0.267f, 0.267f, 1f);   // #FF4444
+        [SerializeField] private Text _healthStatusText;
+        [SerializeField] private TMP_Text _healthStatusTmpText;
+        [SerializeField] private Text _healthValueText;
+        [SerializeField] private TMP_Text _healthValueTmpText;
+        [SerializeField] private Color _healthColorFine = new Color(0.71f, 0.12f, 0.12f, 1f);
+        [SerializeField] private Color _healthColorLow = new Color(0.98f, 0.34f, 0.26f, 1f);
 
         [Header("Ammo")]
         [SerializeField] private Text _ammoText;
         [SerializeField] private TMP_Text _ammoTmpText;
+        [SerializeField] private Text _ammoReserveText;
+        [SerializeField] private TMP_Text _ammoReserveTmpText;
+        [SerializeField] private Text _weaponNameText;
+        [SerializeField] private TMP_Text _weaponNameTmpText;
         [SerializeField] private Image _weaponIcon;
 
         [Header("Interaction")]
@@ -42,6 +40,17 @@ namespace TWD.UI
 
         [Header("Stamina")]
         [SerializeField] private Slider _staminaBar;
+        [SerializeField] private Text _inventoryStatusText;
+        [SerializeField] private TMP_Text _inventoryStatusTmpText;
+
+        [Header("Objective")]
+        [SerializeField] private Text _objectiveText;
+        [SerializeField] private TMP_Text _objectiveTmpText;
+
+        [Header("Pickup Toast")]
+        [SerializeField] private GameObject _pickupToastPanel;
+        [SerializeField] private Text _pickupToastText;
+        [SerializeField] private TMP_Text _pickupToastTmpText;
 
         [Header("Crosshair")]
         [SerializeField] private GameObject _crosshair;
@@ -50,16 +59,19 @@ namespace TWD.UI
         [SerializeField] private Image _damageOverlay;
         [SerializeField] private float _damageFlashDuration = 0.5f;
 
-        #endregion
-
-        #region Private Fields
-
         private float _damageFlashTimer;
+        private float _pickupToastTimer;
+        private bool _frontDoorUnlocked;
+        private CanvasGroup _pickupToastCanvasGroup;
         private PlayerController _playerController;
+        private PlayerHealth _playerHealth;
+        private PlayerCombat _playerCombat;
 
-        #endregion
-
-        #region Lifecycle
+        private void Awake()
+        {
+            EnsureRuntimeHudScaffold();
+            ResolveRuntimeReferences();
+        }
 
         private void OnEnable()
         {
@@ -70,6 +82,14 @@ namespace TWD.UI
             EventBus.OnShowInteractPrompt += ShowPrompt;
             EventBus.OnHideInteractPrompt += HidePrompt;
             EventBus.OnPlayerDamaged += OnDamageTaken;
+            EventBus.OnItemPickedUp += OnItemPickedUp;
+            EventBus.OnItemUsed += OnItemUsed;
+            EventBus.OnItemDropped += OnItemDropped;
+            EventBus.OnKeyItemObtained += OnKeyItemObtained;
+            EventBus.OnDoorUnlocked += OnDoorUnlocked;
+            EventBus.OnGameSaved += OnGameSaved;
+            EventBus.OnGameLoaded += OnGameLoaded;
+            EventBus.OnLevelComplete += OnLevelComplete;
         }
 
         private void OnDisable()
@@ -81,26 +101,28 @@ namespace TWD.UI
             EventBus.OnShowInteractPrompt -= ShowPrompt;
             EventBus.OnHideInteractPrompt -= HidePrompt;
             EventBus.OnPlayerDamaged -= OnDamageTaken;
+            EventBus.OnItemPickedUp -= OnItemPickedUp;
+            EventBus.OnItemUsed -= OnItemUsed;
+            EventBus.OnItemDropped -= OnItemDropped;
+            EventBus.OnKeyItemObtained -= OnKeyItemObtained;
+            EventBus.OnDoorUnlocked -= OnDoorUnlocked;
+            EventBus.OnGameSaved -= OnGameSaved;
+            EventBus.OnGameLoaded -= OnGameLoaded;
+            EventBus.OnLevelComplete -= OnLevelComplete;
         }
 
         private void Start()
         {
             EnsureRuntimeHudScaffold();
             ResolveRuntimeReferences();
-
-            var player = GameObject.FindWithTag("Player");
-            if (player != null)
-                _playerController = player.GetComponent<PlayerController>();
-
-            if (_interactPromptPanel != null)
-                _interactPromptPanel.SetActive(false);
-
-            if (_crosshair != null)
-                _crosshair.SetActive(false);
-
+            ResolveGameplayReferences();
+            InitializeState();
+            if (_interactPromptPanel != null) _interactPromptPanel.SetActive(false);
+            if (_pickupToastPanel != null) _pickupToastPanel.SetActive(false);
+            if (_crosshair != null) _crosshair.SetActive(false);
             if (_damageOverlay != null)
             {
-                var c = _damageOverlay.color;
+                Color c = _damageOverlay.color;
                 c.a = 0f;
                 _damageOverlay.color = c;
             }
@@ -108,206 +130,375 @@ namespace TWD.UI
 
         private void Update()
         {
-            // Crosshair: visible only when aiming
-            if (_crosshair != null && _playerController != null)
-                _crosshair.SetActive(_playerController.IsAiming);
-
-            // Damage overlay fade
+            if (_playerController == null || _playerHealth == null || _playerCombat == null) ResolveGameplayReferences();
+            if (_crosshair != null && _playerController != null) _crosshair.SetActive(_playerController.IsAiming);
             if (_damageFlashTimer > 0f)
             {
                 _damageFlashTimer -= Time.deltaTime;
                 if (_damageOverlay != null)
                 {
-                    float alpha = Mathf.Clamp01(_damageFlashTimer / _damageFlashDuration) * 0.4f;
-                    var c = _damageOverlay.color;
-                    c.a = alpha;
+                    Color c = _damageOverlay.color;
+                    c.a = Mathf.Clamp01(_damageFlashTimer / _damageFlashDuration) * 0.4f;
                     _damageOverlay.color = c;
                 }
             }
+
+            if (_pickupToastTimer > 0f)
+            {
+                _pickupToastTimer -= Time.deltaTime;
+                if (_pickupToastCanvasGroup != null)
+                    _pickupToastCanvasGroup.alpha = Mathf.Clamp01((_pickupToastTimer / PickupToastDuration) * 1.35f);
+            }
+            else if (_pickupToastPanel != null && _pickupToastPanel.activeSelf)
+            {
+                _pickupToastPanel.SetActive(false);
+            }
         }
-
-        #endregion
-
-        #region Health
 
         private void UpdateHealth(float health)
         {
             if (_healthBar != null)
             {
-                _healthBar.value = health / Constants.Player.MAX_HEALTH;
+                _healthBar.maxValue = Constants.Player.MAX_HEALTH;
+                _healthBar.value = Mathf.Clamp(health, 0f, Constants.Player.MAX_HEALTH);
             }
 
             if (_healthBarFill != null)
-            {
-                float healthPercent = health / Constants.Player.MAX_HEALTH;
-                _healthBarFill.color = Color.Lerp(_healthColorLow, _healthColorFine, healthPercent);
-            }
+                _healthBarFill.color = Color.Lerp(_healthColorLow, _healthColorFine, health / Constants.Player.MAX_HEALTH);
+
+            SetText(_healthValueText, _healthValueTmpText, $"{Mathf.CeilToInt(health):000} / {Mathf.CeilToInt(Constants.Player.MAX_HEALTH):000}");
+            UpdateHealthStatusText(health);
         }
-
-        #endregion
-
-        #region Stamina
 
         private void UpdateStamina(float stamina)
         {
-            if (_staminaBar != null)
-            {
-                _staminaBar.value = stamina / Constants.Player.MAX_STAMINA;
-
-                // Hide stamina bar when full
-                _staminaBar.gameObject.SetActive(stamina < Constants.Player.MAX_STAMINA);
-            }
+            if (_staminaBar == null) return;
+            _staminaBar.maxValue = Constants.Player.MAX_STAMINA;
+            _staminaBar.value = Mathf.Clamp(stamina, 0f, Constants.Player.MAX_STAMINA);
+            _staminaBar.gameObject.SetActive(stamina < Constants.Player.MAX_STAMINA - 0.1f);
         }
-
-        #endregion
-
-        #region Ammo
 
         private void UpdateAmmo(int current, int max)
         {
-            string ammoLabel = $"{current} / {max}";
-
-            if (_ammoText != null)
-                _ammoText.text = ammoLabel;
-
-            if (_ammoTmpText != null)
-                _ammoTmpText.text = ammoLabel;
+            SetText(_ammoText, _ammoTmpText, max > 0 ? $"{current:00} / {max:00}" : "-- / --");
+            bool usesAmmo = _playerCombat != null && _playerCombat.CurrentWeapon != null && _playerCombat.CurrentWeapon.UsesAmmo;
+            SetText(_ammoReserveText, _ammoReserveTmpText, usesAmmo ? $"RESERVE {_playerCombat.ReserveAmmo:00}" : "MELEE READY");
         }
 
         private void UpdateWeapon(string weaponName)
         {
-            // TODO: Update weapon icon based on weapon name
-            Debug.Log($"[HUD] Weapon switched to: {weaponName}");
+            SetText(_weaponNameText, _weaponNameTmpText, string.IsNullOrWhiteSpace(weaponName) ? "UNARMED" : weaponName.ToUpperInvariant());
         }
-
-        #endregion
-
-        #region Interaction Prompt
 
         private void ShowPrompt(string text)
         {
-            if (_interactPromptPanel != null)
-            {
-                _interactPromptPanel.SetActive(true);
-            }
-
-            if (_interactPromptText != null)
-            {
-                _interactPromptText.text = text;
-            }
-
-            if (_interactPromptTmpText != null)
-            {
-                _interactPromptTmpText.text = text;
-            }
+            if (_interactPromptPanel != null) _interactPromptPanel.SetActive(true);
+            SetText(_interactPromptText, _interactPromptTmpText, text);
         }
 
         private void HidePrompt()
         {
-            if (_interactPromptPanel != null)
-            {
-                _interactPromptPanel.SetActive(false);
-            }
+            if (_interactPromptPanel != null) _interactPromptPanel.SetActive(false);
         }
-
-        #endregion
-
-        #region Crosshair
-
-        /// <summary>Shows or hides the crosshair (visible only when aiming).</summary>
-        public void SetCrosshairVisible(bool visible)
-        {
-            if (_crosshair != null)
-            {
-                _crosshair.SetActive(visible);
-            }
-        }
-
-        #endregion
-
-        #region Damage Overlay
 
         private void OnDamageTaken(float amount)
         {
             _damageFlashTimer = _damageFlashDuration;
-            if (_damageOverlay != null)
+            if (_damageOverlay == null) return;
+            Color c = _damageOverlay.color;
+            c.a = 0.4f;
+            _damageOverlay.color = c;
+        }
+
+        private void OnItemPickedUp(string itemName)
+        {
+            UpdateInventoryStatus();
+            ShowPickupToast($"+ {itemName.ToUpperInvariant()}");
+            RefreshObjective();
+        }
+
+        private void OnItemUsed(string itemName)
+        {
+            UpdateInventoryStatus();
+            ShowPickupToast($"USED {itemName.ToUpperInvariant()}");
+        }
+
+        private void OnItemDropped(string itemName)
+        {
+            UpdateInventoryStatus();
+            ShowPickupToast($"DROPPED {itemName.ToUpperInvariant()}");
+        }
+
+        private void OnKeyItemObtained(string keyId)
+        {
+            UpdateInventoryStatus();
+            ShowPickupToast($"KEY ITEM: {HumanizeToken(keyId)}");
+            RefreshObjective();
+        }
+
+        private void OnDoorUnlocked(string doorId)
+        {
+            if (!string.IsNullOrWhiteSpace(doorId) && doorId.ToLowerInvariant().Contains("front"))
+                _frontDoorUnlocked = true;
+            ShowPickupToast($"UNLOCKED {HumanizeToken(doorId)}");
+            RefreshObjective();
+        }
+
+        private void OnGameSaved(int slot) => ShowPickupToast($"GAME SAVED  SLOT {slot}");
+
+        private void OnGameLoaded(int slot)
+        {
+            ResolveGameplayReferences();
+            InitializeState();
+            ShowPickupToast($"SAVE LOADED  SLOT {slot}");
+        }
+
+        private void OnLevelComplete(string sceneName)
+        {
+            SetText(_objectiveText, _objectiveTmpText, "EXIT REACHED");
+        }
+
+        private void ResolveGameplayReferences()
+        {
+            GameObject player = GameObject.FindWithTag(Constants.Tags.PLAYER);
+            if (player == null) return;
+            if (_playerController == null) _playerController = player.GetComponent<PlayerController>();
+            if (_playerHealth == null) _playerHealth = player.GetComponent<PlayerHealth>();
+            if (_playerCombat == null) _playerCombat = player.GetComponent<PlayerCombat>();
+        }
+
+        private void InitializeState()
+        {
+            UpdateInventoryStatus();
+            RefreshObjective();
+            if (_playerHealth != null) UpdateHealth(_playerHealth.CurrentHealth);
+            if (_playerController != null) UpdateStamina(_playerController.CurrentStamina);
+            if (_playerCombat != null)
             {
-                var c = _damageOverlay.color;
-                c.a = 0.4f;
-                _damageOverlay.color = c;
+                WeaponData weapon = _playerCombat.CurrentWeapon;
+                UpdateWeapon(weapon != null ? weapon.weaponName : "Knife");
+                UpdateAmmo(_playerCombat.AmmoInClip, weapon != null ? weapon.magazineSize : 0);
             }
+        }
+
+        private void UpdateInventoryStatus()
+        {
+            if (InventoryManager.Instance == null)
+            {
+                SetText(_inventoryStatusText, _inventoryStatusTmpText, "INVENTORY -- / 24");
+                return;
+            }
+
+            SetText(_inventoryStatusText, _inventoryStatusTmpText, $"INVENTORY {InventoryManager.Instance.UsedSlots:00} / {InventoryManager.Instance.SlotCount:00}");
+        }
+
+        private void RefreshObjective()
+        {
+            string objective = SceneManager.GetActiveScene().name switch
+            {
+                Constants.Scenes.LEVEL_01_HOUSE => GetLevel01Objective(),
+                Constants.Scenes.LEVEL_02_STREETS => "REACH THE HOSPITAL AND FIND A WAY INSIDE",
+                Constants.Scenes.LEVEL_03_HOSPITAL => "RESTORE POWER AND FIND THE SEWER MAP",
+                Constants.Scenes.LEVEL_04_UNDERGROUND => "FIND THE VALVE HANDLE AND OPEN THE GATE",
+                Constants.Scenes.LEVEL_05_FINALE => "SURVIVE THE BRUTE AND REACH THE EXIT",
+                _ => "SURVIVE AND KEEP MOVING"
+            };
+            SetText(_objectiveText, _objectiveTmpText, objective);
+        }
+
+        private string GetLevel01Objective()
+        {
+            if (_frontDoorUnlocked) return "LEAVE THE HOUSE";
+            if (InventoryManager.Instance != null && InventoryManager.Instance.HasItem("key_house")) return "UNLOCK THE FRONT DOOR";
+            return "FIND THE HOUSE KEY";
+        }
+
+        private void UpdateHealthStatusText(float health)
+        {
+            string status = "FINE";
+            Color color = new Color(0.84f, 0.85f, 0.79f, 1f);
+            if (health <= Constants.Player.HEALTH_HURT_THRESHOLD)
+            {
+                status = "CRITICAL";
+                color = new Color(1f, 0.36f, 0.3f, 1f);
+            }
+            else if (health <= Constants.Player.HEALTH_FINE_THRESHOLD)
+            {
+                status = "HURT";
+                color = new Color(0.93f, 0.63f, 0.28f, 1f);
+            }
+
+            if (_healthStatusText != null)
+            {
+                _healthStatusText.text = status;
+                _healthStatusText.color = color;
+            }
+
+            if (_healthStatusTmpText != null)
+            {
+                _healthStatusTmpText.text = status;
+                _healthStatusTmpText.color = color;
+            }
+        }
+
+        private void ShowPickupToast(string message)
+        {
+            if (_pickupToastPanel == null) return;
+            _pickupToastPanel.SetActive(true);
+            _pickupToastTimer = PickupToastDuration;
+            if (_pickupToastCanvasGroup != null) _pickupToastCanvasGroup.alpha = 1f;
+            SetText(_pickupToastText, _pickupToastTmpText, message);
         }
 
         private void ResolveRuntimeReferences()
         {
-            if (_healthBar == null)
-                _healthBar = FindNamedComponentInChildren<Slider>("HealthBar");
-
-            if (_healthBarFill == null && _healthBar != null && _healthBar.fillRect != null)
-                _healthBarFill = _healthBar.fillRect.GetComponent<Image>();
-
-            if (_ammoText == null)
-                _ammoText = FindNamedComponentInChildren<Text>("AmmoText");
-
-            if (_ammoTmpText == null)
-                _ammoTmpText = FindNamedComponentInChildren<TMP_Text>("AmmoText");
-
+            if (_healthBar == null) _healthBar = FindNamedComponentInChildren<Slider>("HealthBar");
+            if (_healthBarFill == null && _healthBar != null && _healthBar.fillRect != null) _healthBarFill = _healthBar.fillRect.GetComponent<Image>();
+            if (_healthStatusText == null) _healthStatusText = FindNamedComponentInChildren<Text>("HealthStatusText");
+            if (_healthStatusTmpText == null) _healthStatusTmpText = FindNamedComponentInChildren<TMP_Text>("HealthStatusText");
+            if (_healthValueText == null) _healthValueText = FindNamedComponentInChildren<Text>("HealthValueText");
+            if (_healthValueTmpText == null) _healthValueTmpText = FindNamedComponentInChildren<TMP_Text>("HealthValueText");
+            if (_ammoText == null) _ammoText = FindNamedComponentInChildren<Text>("WeaponAmmoText") ?? FindNamedComponentInChildren<Text>("AmmoText");
+            if (_ammoTmpText == null) _ammoTmpText = FindNamedComponentInChildren<TMP_Text>("WeaponAmmoText") ?? FindNamedComponentInChildren<TMP_Text>("AmmoText");
+            if (_ammoReserveText == null) _ammoReserveText = FindNamedComponentInChildren<Text>("WeaponReserveText");
+            if (_ammoReserveTmpText == null) _ammoReserveTmpText = FindNamedComponentInChildren<TMP_Text>("WeaponReserveText");
+            if (_weaponNameText == null) _weaponNameText = FindNamedComponentInChildren<Text>("WeaponNameText");
+            if (_weaponNameTmpText == null) _weaponNameTmpText = FindNamedComponentInChildren<TMP_Text>("WeaponNameText");
+            if (_inventoryStatusText == null) _inventoryStatusText = FindNamedComponentInChildren<Text>("InventoryStatusText");
+            if (_inventoryStatusTmpText == null) _inventoryStatusTmpText = FindNamedComponentInChildren<TMP_Text>("InventoryStatusText");
+            if (_objectiveText == null) _objectiveText = FindNamedComponentInChildren<Text>("ObjectiveText");
+            if (_objectiveTmpText == null) _objectiveTmpText = FindNamedComponentInChildren<TMP_Text>("ObjectiveText");
             if (_interactPromptPanel == null)
             {
-                RectTransform promptTransform = FindNamedComponentInChildren<RectTransform>("InteractPrompt");
-                if (promptTransform != null)
-                    _interactPromptPanel = promptTransform.gameObject;
+                RectTransform prompt = FindNamedComponentInChildren<RectTransform>("InteractPrompt");
+                if (prompt != null) _interactPromptPanel = prompt.gameObject;
             }
-
-            if (_interactPromptText == null)
-                _interactPromptText = FindNamedComponentInChildren<Text>("InteractPrompt");
-
-            if (_interactPromptTmpText == null)
-                _interactPromptTmpText = FindNamedComponentInChildren<TMP_Text>("InteractPrompt");
-
-            if (_staminaBar == null)
-                _staminaBar = FindNamedComponentInChildren<Slider>("StaminaBar");
-
+            if (_interactPromptText == null) _interactPromptText = FindNamedComponentInChildren<Text>("InteractPromptLabel");
+            if (_interactPromptTmpText == null) _interactPromptTmpText = FindNamedComponentInChildren<TMP_Text>("InteractPromptLabel");
+            if (_interactPromptText == null && _interactPromptPanel != null) _interactPromptText = _interactPromptPanel.GetComponentInChildren<Text>(true);
+            if (_interactPromptTmpText == null && _interactPromptPanel != null) _interactPromptTmpText = _interactPromptPanel.GetComponentInChildren<TMP_Text>(true);
+            if (_staminaBar == null) _staminaBar = FindNamedComponentInChildren<Slider>("StaminaBar");
             if (_crosshair == null)
             {
-                RectTransform crosshairTransform = FindNamedComponentInChildren<RectTransform>("Crosshair");
-                if (crosshairTransform != null)
-                    _crosshair = crosshairTransform.gameObject;
+                RectTransform crosshair = FindNamedComponentInChildren<RectTransform>("Crosshair");
+                if (crosshair != null) _crosshair = crosshair.gameObject;
             }
+            if (_pickupToastPanel == null)
+            {
+                RectTransform toast = FindNamedComponentInChildren<RectTransform>("PickupToast");
+                if (toast != null) _pickupToastPanel = toast.gameObject;
+            }
+            if (_pickupToastText == null) _pickupToastText = FindNamedComponentInChildren<Text>("PickupToastText");
+            if (_pickupToastTmpText == null) _pickupToastTmpText = FindNamedComponentInChildren<TMP_Text>("PickupToastText");
+            if (_pickupToastPanel != null && _pickupToastCanvasGroup == null) _pickupToastCanvasGroup = _pickupToastPanel.GetComponent<CanvasGroup>();
+            if (_damageOverlay == null) _damageOverlay = FindNamedComponentInChildren<Image>("DamageOverlay");
         }
 
         private void EnsureRuntimeHudScaffold()
         {
-            if (_healthBar == null && FindNamedComponentInChildren<Slider>("HealthBar") == null)
-                CreateRuntimeHealthBar();
-
-            if (_ammoText == null && _ammoTmpText == null &&
-                FindNamedComponentInChildren<Text>("AmmoText") == null &&
-                FindNamedComponentInChildren<TMPro.TMP_Text>("AmmoText") == null)
-            {
-                CreateRuntimeAmmoText();
-            }
-
-            if (_interactPromptPanel == null && FindNamedComponentInChildren<RectTransform>("InteractPrompt") == null)
-                CreateRuntimeInteractPrompt();
-
-            if (_crosshair == null && FindNamedComponentInChildren<RectTransform>("Crosshair") == null)
-                CreateRuntimeCrosshair();
+            HideLegacyHudArtifacts();
+            if (FindNamedComponentInChildren<RectTransform>("ObjectivePanel") == null) CreateRuntimeObjectivePanel();
+            if (FindNamedComponentInChildren<RectTransform>("VitalsPanel") == null) CreateRuntimeVitalsPanel();
+            if (FindNamedComponentInChildren<RectTransform>("WeaponPanel") == null) CreateRuntimeWeaponPanel();
+            if (FindNamedComponentInChildren<RectTransform>("PickupToast") == null) CreateRuntimePickupToast();
+            if (FindNamedComponentInChildren<RectTransform>("InteractPrompt") == null) CreateRuntimeInteractPrompt();
+            if (FindNamedComponentInChildren<RectTransform>("Crosshair") == null) CreateRuntimeCrosshair();
+            if (FindNamedComponentInChildren<Image>("DamageOverlay") == null) CreateRuntimeDamageOverlay();
         }
 
-        private void CreateRuntimeHealthBar()
+        private void HideLegacyHudArtifacts()
+        {
+            Transform health = transform.Find("HealthBarBg");
+            if (health != null) health.gameObject.SetActive(false);
+            Transform ammo = transform.Find("AmmoText");
+            if (ammo != null) ammo.gameObject.SetActive(false);
+        }
+
+        private void CreateRuntimeObjectivePanel()
         {
             Font font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
-            GameObject background = CreateUiChild("HealthBarBg", transform);
-            RectTransform bgRect = background.GetComponent<RectTransform>();
-            bgRect.anchorMin = new Vector2(0f, 0f);
-            bgRect.anchorMax = new Vector2(0f, 0f);
-            bgRect.pivot = new Vector2(0f, 0f);
-            bgRect.anchoredPosition = new Vector2(20f, 20f);
-            bgRect.sizeDelta = new Vector2(220f, 20f);
+            GameObject panel = CreatePanel("ObjectivePanel", transform, new Vector2(0f, 1f), new Vector2(0f, 1f), new Vector2(0f, 1f), new Vector2(24f, -24f), new Vector2(360f, 64f), new Color(0.03f, 0.04f, 0.05f, 0.76f));
+            CreateText("ObjectiveHeader", panel.transform, font, "CURRENT OBJECTIVE", 12, FontStyle.Bold, TextAnchor.UpperLeft, new Vector2(16f, -8f), new Vector2(320f, 18f), new Color(0.75f, 0.72f, 0.63f, 1f));
+            CreateText("ObjectiveText", panel.transform, font, "FIND THE HOUSE KEY", 18, FontStyle.Bold, TextAnchor.UpperLeft, new Vector2(16f, -26f), new Vector2(328f, 28f), Color.white);
+        }
 
-            Image bgImage = background.AddComponent<Image>();
-            bgImage.color = new Color(0f, 0f, 0f, 0.55f);
+        private void CreateRuntimeVitalsPanel()
+        {
+            Font font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            GameObject panel = CreatePanel("VitalsPanel", transform, Vector2.zero, Vector2.zero, Vector2.zero, new Vector2(24f, 24f), new Vector2(320f, 132f), new Color(0.03f, 0.04f, 0.05f, 0.78f));
+            CreateText("VitalsHeader", panel.transform, font, "ALEX CHEN", 12, FontStyle.Bold, TextAnchor.UpperLeft, new Vector2(16f, -8f), new Vector2(150f, 18f), new Color(0.72f, 0.72f, 0.68f, 1f));
+            CreateText("HealthStatusText", panel.transform, font, "FINE", 12, FontStyle.Bold, TextAnchor.UpperRight, new Vector2(154f, -8f), new Vector2(150f, 18f), new Color(0.84f, 0.85f, 0.79f, 1f));
+            CreateSlider("HealthBar", panel.transform, new Vector2(16f, -36f), new Vector2(288f, 20f), new Color(0.12f, 0.12f, 0.12f, 0.95f), _healthColorFine);
+            CreateText("HealthValueText", panel.transform, font, "100 / 100", 15, FontStyle.Bold, TextAnchor.UpperLeft, new Vector2(16f, -60f), new Vector2(160f, 20f), Color.white);
+            Slider stamina = CreateSlider("StaminaBar", panel.transform, new Vector2(16f, -86f), new Vector2(288f, 10f), new Color(0.1f, 0.1f, 0.1f, 0.9f), new Color(0.87f, 0.74f, 0.38f, 1f));
+            stamina.gameObject.SetActive(false);
+            CreateText("InventoryStatusText", panel.transform, font, "INVENTORY 00 / 24", 12, FontStyle.Normal, TextAnchor.UpperLeft, new Vector2(16f, -102f), new Vector2(288f, 18f), new Color(0.82f, 0.82f, 0.8f, 1f));
+        }
+
+        private void CreateRuntimeWeaponPanel()
+        {
+            Font font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            GameObject panel = CreatePanel("WeaponPanel", transform, new Vector2(1f, 0f), new Vector2(1f, 0f), new Vector2(1f, 0f), new Vector2(-24f, 24f), new Vector2(260f, 120f), new Color(0.03f, 0.04f, 0.05f, 0.78f));
+            CreateText("WeaponHeader", panel.transform, font, "EQUIPPED", 12, FontStyle.Bold, TextAnchor.UpperLeft, new Vector2(16f, -8f), new Vector2(100f, 18f), new Color(0.75f, 0.72f, 0.63f, 1f));
+            CreateText("WeaponNameText", panel.transform, font, "PISTOL", 16, FontStyle.Bold, TextAnchor.UpperLeft, new Vector2(16f, -28f), new Vector2(180f, 20f), Color.white);
+            CreateText("WeaponAmmoText", panel.transform, font, "12 / 12", 30, FontStyle.Bold, TextAnchor.UpperLeft, new Vector2(16f, -52f), new Vector2(200f, 34f), Color.white);
+            CreateText("WeaponReserveText", panel.transform, font, "RESERVE 00", 12, FontStyle.Normal, TextAnchor.UpperLeft, new Vector2(16f, -90f), new Vector2(140f, 18f), new Color(0.82f, 0.82f, 0.8f, 1f));
+            CreateText("WeaponHintText", panel.transform, font, "R TO RELOAD", 11, FontStyle.Normal, TextAnchor.UpperRight, new Vector2(118f, -90f), new Vector2(120f, 18f), new Color(0.63f, 0.64f, 0.66f, 1f));
+        }
+
+        private void CreateRuntimePickupToast()
+        {
+            Font font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            GameObject panel = CreatePanel("PickupToast", transform, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0f, -24f), new Vector2(320f, 44f), new Color(0.05f, 0.06f, 0.04f, 0.88f));
+            panel.AddComponent<CanvasGroup>();
+            CreateText("PickupToastText", panel.transform, font, string.Empty, 15, FontStyle.Bold, TextAnchor.MiddleCenter, new Vector2(20f, -9f), new Vector2(280f, 26f), new Color(0.98f, 0.9f, 0.62f, 1f));
+            panel.SetActive(false);
+        }
+
+        private void CreateRuntimeInteractPrompt()
+        {
+            Font font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            GameObject prompt = CreatePanel("InteractPrompt", transform, new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), new Vector2(0f, 84f), new Vector2(360f, 48f), new Color(0f, 0f, 0f, 0.64f));
+            CreateText("InteractPromptLabel", prompt.transform, font, string.Empty, 17, FontStyle.Bold, TextAnchor.MiddleCenter, new Vector2(20f, -9f), new Vector2(320f, 28f), Color.white);
+            prompt.SetActive(false);
+        }
+
+        private void CreateRuntimeCrosshair()
+        {
+            GameObject crosshair = CreateUiChild("Crosshair", transform);
+            RectTransform rect = crosshair.GetComponent<RectTransform>();
+            rect.anchorMin = new Vector2(0.5f, 0.5f);
+            rect.anchorMax = new Vector2(0.5f, 0.5f);
+            rect.pivot = new Vector2(0.5f, 0.5f);
+            rect.sizeDelta = new Vector2(12f, 12f);
+            Image image = crosshair.AddComponent<Image>();
+            image.color = new Color(1f, 1f, 1f, 0.78f);
+            crosshair.SetActive(false);
+        }
+
+        private void CreateRuntimeDamageOverlay()
+        {
+            GameObject overlay = CreateUiChild("DamageOverlay", transform);
+            RectTransform rect = overlay.GetComponent<RectTransform>();
+            rect.anchorMin = Vector2.zero;
+            rect.anchorMax = Vector2.one;
+            rect.offsetMin = Vector2.zero;
+            rect.offsetMax = Vector2.zero;
+            Image image = overlay.AddComponent<Image>();
+            image.color = new Color(0.45f, 0f, 0f, 0f);
+        }
+
+        private Slider CreateSlider(string name, Transform parent, Vector2 anchoredPosition, Vector2 size, Color backgroundColor, Color fillColor)
+        {
+            GameObject background = CreateUiChild(name, parent);
+            RectTransform bgRect = background.GetComponent<RectTransform>();
+            bgRect.anchorMin = new Vector2(0f, 1f);
+            bgRect.anchorMax = new Vector2(0f, 1f);
+            bgRect.pivot = new Vector2(0f, 1f);
+            bgRect.anchoredPosition = anchoredPosition;
+            bgRect.sizeDelta = size;
+            Image bg = background.AddComponent<Image>();
+            bg.color = backgroundColor;
 
             GameObject fillArea = CreateUiChild("FillArea", background.transform);
             RectTransform fillAreaRect = fillArea.GetComponent<RectTransform>();
@@ -320,90 +511,52 @@ namespace TWD.UI
             RectTransform fillRect = fill.GetComponent<RectTransform>();
             fillRect.anchorMin = Vector2.zero;
             fillRect.anchorMax = Vector2.one;
-            fillRect.offsetMin = Vector2.zero;
-            fillRect.offsetMax = Vector2.zero;
             Image fillImage = fill.AddComponent<Image>();
-            fillImage.color = _healthColorFine;
+            fillImage.color = fillColor;
 
             Slider slider = background.AddComponent<Slider>();
             slider.minValue = 0f;
-            slider.maxValue = Constants.Player.MAX_HEALTH;
-            slider.value = Constants.Player.MAX_HEALTH;
-            slider.targetGraphic = bgImage;
+            slider.maxValue = 100f;
+            slider.value = 100f;
+            slider.targetGraphic = bg;
             slider.fillRect = fillRect;
-            slider.direction = Slider.Direction.LeftToRight;
-
-            // Keep font loaded on some platforms even though this scaffold uses images.
-            _ = font;
+            return slider;
         }
 
-        private void CreateRuntimeAmmoText()
+        private GameObject CreatePanel(string name, Transform parent, Vector2 anchorMin, Vector2 anchorMax, Vector2 pivot, Vector2 anchoredPosition, Vector2 size, Color color)
         {
-            Font font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
-            GameObject ammo = CreateUiChild("AmmoText", transform);
-            RectTransform rect = ammo.GetComponent<RectTransform>();
-            rect.anchorMin = new Vector2(1f, 0f);
-            rect.anchorMax = new Vector2(1f, 0f);
-            rect.pivot = new Vector2(1f, 0f);
-            rect.anchoredPosition = new Vector2(-20f, 20f);
-            rect.sizeDelta = new Vector2(160f, 32f);
+            GameObject panel = CreateUiChild(name, parent);
+            RectTransform rect = panel.GetComponent<RectTransform>();
+            rect.anchorMin = anchorMin;
+            rect.anchorMax = anchorMax;
+            rect.pivot = pivot;
+            rect.anchoredPosition = anchoredPosition;
+            rect.sizeDelta = size;
+            Image image = panel.AddComponent<Image>();
+            image.color = color;
+            return panel;
+        }
 
-            Text text = ammo.AddComponent<Text>();
+        private Text CreateText(string name, Transform parent, Font font, string content, int fontSize, FontStyle fontStyle, TextAnchor alignment, Vector2 anchoredPosition, Vector2 size, Color color)
+        {
+            GameObject textObject = CreateUiChild(name, parent);
+            RectTransform rect = textObject.GetComponent<RectTransform>();
+            rect.anchorMin = new Vector2(0f, 1f);
+            rect.anchorMax = new Vector2(0f, 1f);
+            rect.pivot = new Vector2(0f, 1f);
+            rect.anchoredPosition = anchoredPosition;
+            rect.sizeDelta = size;
+            Text text = textObject.AddComponent<Text>();
             text.font = font;
-            text.fontSize = 20;
-            text.alignment = TextAnchor.MiddleRight;
-            text.color = Color.white;
-            text.text = "-- / --";
-        }
-
-        private void CreateRuntimeInteractPrompt()
-        {
-            Font font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
-            GameObject prompt = CreateUiChild("InteractPrompt", transform);
-            RectTransform rect = prompt.GetComponent<RectTransform>();
-            rect.anchorMin = new Vector2(0.5f, 0.18f);
-            rect.anchorMax = new Vector2(0.5f, 0.18f);
-            rect.pivot = new Vector2(0.5f, 0.5f);
-            rect.anchoredPosition = Vector2.zero;
-            rect.sizeDelta = new Vector2(320f, 36f);
-
-            Image panel = prompt.AddComponent<Image>();
-            panel.color = new Color(0f, 0f, 0f, 0.5f);
-
-            GameObject label = CreateUiChild("Label", prompt.transform);
-            RectTransform labelRect = label.GetComponent<RectTransform>();
-            labelRect.anchorMin = Vector2.zero;
-            labelRect.anchorMax = Vector2.one;
-            labelRect.offsetMin = Vector2.zero;
-            labelRect.offsetMax = Vector2.zero;
-
-            Text text = label.AddComponent<Text>();
-            text.font = font;
-            text.fontSize = 16;
-            text.alignment = TextAnchor.MiddleCenter;
-            text.color = Color.white;
-            text.text = string.Empty;
-
-            _interactPromptPanel = prompt;
-            _interactPromptText = text;
-
-            prompt.SetActive(false);
-        }
-
-        private void CreateRuntimeCrosshair()
-        {
-            GameObject crosshair = CreateUiChild("Crosshair", transform);
-            RectTransform rect = crosshair.GetComponent<RectTransform>();
-            rect.anchorMin = new Vector2(0.5f, 0.5f);
-            rect.anchorMax = new Vector2(0.5f, 0.5f);
-            rect.pivot = new Vector2(0.5f, 0.5f);
-            rect.anchoredPosition = Vector2.zero;
-            rect.sizeDelta = new Vector2(5f, 5f);
-
-            Image image = crosshair.AddComponent<Image>();
-            image.color = new Color(1f, 1f, 1f, 0.7f);
-
-            crosshair.SetActive(false);
+            text.fontSize = fontSize;
+            text.fontStyle = fontStyle;
+            text.alignment = alignment;
+            text.color = color;
+            text.text = content;
+            Outline outline = textObject.AddComponent<Outline>();
+            outline.effectColor = new Color(0f, 0f, 0f, 0.85f);
+            outline.effectDistance = new Vector2(1f, -1f);
+            return text;
         }
 
         private static GameObject CreateUiChild(string name, Transform parent)
@@ -418,13 +571,21 @@ namespace TWD.UI
             T[] components = GetComponentsInChildren<T>(true);
             for (int i = 0; i < components.Length; i++)
             {
-                if (components[i] != null && components[i].gameObject.name == objectName)
-                    return components[i];
+                if (components[i] != null && components[i].gameObject.name == objectName) return components[i];
             }
-
             return null;
         }
 
-        #endregion
+        private static void SetText(Text uiText, TMP_Text tmpText, string value)
+        {
+            if (uiText != null) uiText.text = value;
+            if (tmpText != null) tmpText.text = value;
+        }
+
+        private static string HumanizeToken(string value)
+        {
+            if (string.IsNullOrWhiteSpace(value)) return "UNKNOWN";
+            return value.Replace("_", " ").ToUpperInvariant();
+        }
     }
 }

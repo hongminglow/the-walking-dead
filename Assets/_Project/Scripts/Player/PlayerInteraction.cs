@@ -97,11 +97,14 @@ namespace TWD.Player
             if (!context.performed) return;
             if (!_inputEnabled || !GameManager.Instance.IsPlaying) return;
 
-            if (_currentTarget != null && _currentTarget.CanInteract)
-            {
-                _currentTarget.Interact();
-                _playerAnimator?.TriggerInteract();
-            }
+            TryInteract();
+        }
+
+        public void OnInteract(InputValue value)
+        {
+            if (value == null || !value.isPressed) return;
+            if (!_inputEnabled || !GameManager.Instance.IsPlaying) return;
+            TryInteract();
         }
 
         #endregion
@@ -199,6 +202,15 @@ namespace TWD.Player
             _inputEnabled = enabled;
             if (!enabled)
                 ClearCurrentTarget();
+        }
+
+        private void TryInteract()
+        {
+            if (_currentTarget == null || !_currentTarget.CanInteract)
+                return;
+
+            _currentTarget.Interact();
+            _playerAnimator?.TriggerInteract();
         }
 
         private void ClearCurrentTarget()

@@ -141,6 +141,13 @@ namespace TWD.Player
             TryFire();
         }
 
+        public void OnShoot(InputValue value)
+        {
+            if (value == null || !value.isPressed) return;
+            if (_controller == null || !_controller.IsAiming || !GameManager.Instance.IsPlaying) return;
+            TryFire();
+        }
+
         /// <summary>Called by PlayerInput for Reload action.</summary>
         public void OnReload(InputAction.CallbackContext context)
         {
@@ -150,12 +157,24 @@ namespace TWD.Player
             TryReload();
         }
 
+        public void OnReload(InputValue value)
+        {
+            if (value == null || !value.isPressed || !GameManager.Instance.IsPlaying) return;
+            TryReload();
+        }
+
         /// <summary>Called by PlayerInput for Melee action.</summary>
         public void OnMelee(InputAction.CallbackContext context)
         {
             if (!context.performed) return;
             if (!GameManager.Instance.IsPlaying) return;
 
+            PerformMelee();
+        }
+
+        public void OnMelee(InputValue value)
+        {
+            if (value == null || !value.isPressed || !GameManager.Instance.IsPlaying) return;
             PerformMelee();
         }
 

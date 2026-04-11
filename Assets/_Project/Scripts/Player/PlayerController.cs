@@ -177,6 +177,12 @@ namespace TWD.Player
             _moveInput = context.ReadValue<Vector2>();
         }
 
+        public void OnMove(InputValue value)
+        {
+            if (value != null)
+                _moveInput = value.Get<Vector2>();
+        }
+
         /// <summary>Called by PlayerInput component for Sprint action.</summary>
         public void OnSprint(InputAction.CallbackContext context)
         {
@@ -186,18 +192,24 @@ namespace TWD.Player
                 _isSprinting = false;
         }
 
+        public void OnSprint(InputValue value)
+        {
+            _isSprinting = value != null && value.isPressed;
+        }
+
         /// <summary>Called by PlayerInput component for Crouch action (toggle).</summary>
         public void OnCrouch(InputAction.CallbackContext context)
         {
             if (context.performed)
             {
-                _isCrouching = !_isCrouching;
-                if (_isCrouching) _isSprinting = false;
-
-                // Adjust CharacterController height
-                _characterController.height = _isCrouching ? 1.2f : 1.8f;
-                _characterController.center = new Vector3(0f, _characterController.height / 2f, 0f);
+                ToggleCrouchState();
             }
+        }
+
+        public void OnCrouch(InputValue value)
+        {
+            if (value != null && value.isPressed)
+                ToggleCrouchState();
         }
 
         /// <summary>Called by PlayerInput component for Aim action.</summary>
@@ -207,6 +219,11 @@ namespace TWD.Player
                 _isAiming = true;
             else if (context.canceled)
                 _isAiming = false;
+        }
+
+        public void OnAim(InputValue value)
+        {
+            _isAiming = value != null && value.isPressed;
         }
 
         #endregion
@@ -306,6 +323,14 @@ namespace TWD.Player
             }
 
             EventBus.PlayerStaminaChanged(_currentStamina);
+        }
+
+        private void ToggleCrouchState()
+        {
+            _isCrouching = !_isCrouching;
+            if (_isCrouching) _isSprinting = false;
+            _characterController.height = _isCrouching ? 1.2f : 1.8f;
+            _characterController.center = new Vector3(0f, _characterController.height / 2f, 0f);
         }
 
         private void SyncAnimatorState()

@@ -5,7 +5,7 @@
 > - Update this file after each work session.
 > - When resuming with AI, say: _"Continue from Stage X, Step Y"_
 
-> **LAST UPDATED**: 2026-04-11 (Session 26)
+> **LAST UPDATED**: 2026-04-11 (Session 27)
 > **CURRENT STAGE**: Stage 7 — Testing & Ship 🚧
 
 ---
@@ -668,6 +668,7 @@ This is fine for solo dev. CI is more important for teams.
 | 2026-04-11 | Session 24 | Level 1 first-impression polish pass: brightened `Level_01_House` fog/light balance for clearer navigation, removed the mouse-button requirement from free-look camera rotation, upgraded pickup presentation so placeholder items can render as stylized runtime props (including a proper brass key silhouette for the house key), and trimmed the pause bootstrap so the duplicate `EventSystem` warning no longer shows in the Level 1 runtime smoke | Re-test `Level_01_House` manually for readability, mouse-look feel, pickup readability, and whether the opening route now feels comfortably playable without losing the horror tone |
 | 2026-04-11 | Session 25 | Level 1 comfort pass from first user feedback: reduced serialized mouse sensitivity, brightened ambient/fog/interior light values again for easier room readability, and hardened third-person camera collision so the house shell blocks the camera more reliably instead of exposing the empty outside when turning near walls/ceiling | Re-test `Level_01_House` manually for camera comfort, room visibility, and whether outside-world peeking is now gone or at least meaningfully reduced |
 | 2026-04-11 | Session 26 | Level 1 usability pass from second user feedback: added a dedicated runtime ceiling fill light for the house onboarding scene, pushed overall room readability brighter again, dropped startup mouse sensitivity much lower, and made collectibles easier to recognize and grab by adding floating world-space `[E]` pickup prompts plus a friendlier pickup-target assist in `PlayerInteraction` | Re-test `Level_01_House` manually for brightness, startup mouse comfort, collectible prompt clarity, and whether pickups now feel unmistakably interactable |
+| 2026-04-11 | Session 27 | Level 1 readability/HUD pass: added a fuller survival-horror runtime HUD scaffold with objective, vitals, ammo, inventory load, and pickup toasts; upgraded pickup beacons/prompts so collectibles read from farther away; added built-in primitive lamp fixtures to the house light anchors; and restored `PlayerInput` Send Messages compatibility with `InputValue` overloads so play mode no longer floods missing-callback exceptions | Manually play `Level_01_House` again and judge whether the new HUD feels on-theme, pickup readability is finally obvious enough, and the ceiling fixtures/light balance now look closer to a shippable opening scene |
 
 ---
 

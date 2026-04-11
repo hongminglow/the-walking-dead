@@ -106,6 +106,12 @@ namespace TWD.UI
             Toggle();
         }
 
+        public void OnInventory(InputValue value)
+        {
+            if (value != null && value.isPressed)
+                Toggle();
+        }
+
         #endregion
 
         #region Toggle

@@ -131,6 +131,12 @@ namespace TWD.UI
             TogglePause();
         }
 
+        public void OnPause(InputValue value)
+        {
+            if (value != null && value.isPressed)
+                TogglePause();
+        }
+
         #endregion
 
         #region Pause Logic

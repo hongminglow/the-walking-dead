@@ -141,10 +141,21 @@ namespace TWD.Camera
             _lookInput = context.ReadValue<Vector2>();
         }
 
+        public void OnLook(InputValue value)
+        {
+            if (value != null)
+                _lookInput = value.Get<Vector2>();
+        }
+
         /// <summary>Called by PlayerInput for Aim action.</summary>
         public void OnAim(InputAction.CallbackContext context)
         {
             _isAiming = context.performed;
+        }
+
+        public void OnAim(InputValue value)
+        {
+            _isAiming = value != null && value.isPressed;
         }
 
         #endregion

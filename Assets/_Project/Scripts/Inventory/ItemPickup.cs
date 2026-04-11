@@ -24,6 +24,7 @@ namespace TWD.Inventory
     public class ItemPickup : MonoBehaviour, IInteractable
     {
         private const string RuntimeVisualRootName = "[PickupVisual]";
+        private const string RuntimeIndicatorRootName = "[PickupIndicator]";
 
         #region Serialized Fields
 
@@ -51,6 +52,7 @@ namespace TWD.Inventory
         private Vector3 _startPosition;
         private bool _hasBeenPickedUp;
         private Transform _runtimeVisualRoot;
+        private Transform _runtimeIndicatorRoot;
         private Canvas _promptCanvas;
         private Transform _playerTransform;
 
@@ -130,24 +132,27 @@ namespace TWD.Inventory
             }
 
             _startPosition = transform.position;
+            _worldPromptDistance = Mathf.Max(_worldPromptDistance, 4.5f);
 
             if (string.IsNullOrEmpty(_pickupId))
                 _pickupId = gameObject.name.Replace(" ", "_").ToLowerInvariant();
 
             EnsurePickupPresentation();
+            EnsurePickupIndicator();
             EnsureWorldPrompt();
             _playerTransform = GameObject.FindWithTag(Constants.Tags.PLAYER)?.transform;
         }
 
         private void Update()
         {
-            if (!_animatePickup) return;
+            if (_animatePickup)
+            {
+                float y = _startPosition.y + Mathf.Sin(Time.time * _bobSpeed) * _bobHeight;
+                transform.position = new Vector3(_startPosition.x, y, _startPosition.z);
+                transform.Rotate(Vector3.up, _rotateSpeed * Time.deltaTime);
+            }
 
-            // Gentle bob and rotate
-            float y = _startPosition.y + Mathf.Sin(Time.time * _bobSpeed) * _bobHeight;
-            transform.position = new Vector3(_startPosition.x, y, _startPosition.z);
-            transform.Rotate(Vector3.up, _rotateSpeed * Time.deltaTime);
-
+            AnimatePickupIndicator();
             UpdateWorldPrompt();
         }
 
@@ -199,15 +204,15 @@ namespace TWD.Inventory
 
             _promptCanvas = canvasObject.GetComponent<Canvas>();
             _promptCanvas.renderMode = RenderMode.WorldSpace;
-            _promptCanvas.worldCamera = Camera.main;
+            _promptCanvas.worldCamera = UnityEngine.Camera.main;
             _promptCanvas.sortingOrder = 50;
 
             RectTransform canvasRect = canvasObject.GetComponent<RectTransform>();
-            canvasRect.sizeDelta = new Vector2(180f, 60f);
-            canvasRect.localScale = Vector3.one * 0.01f;
+            canvasRect.sizeDelta = new Vector2(260f, 96f);
+            canvasRect.localScale = Vector3.one * 0.02f;
 
             CanvasScaler scaler = canvasObject.GetComponent<CanvasScaler>();
-            scaler.dynamicPixelsPerUnit = 20f;
+            scaler.dynamicPixelsPerUnit = 12f;
 
             Font font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
 
@@ -217,13 +222,13 @@ namespace TWD.Inventory
             panelRect.anchorMin = new Vector2(0.5f, 0.5f);
             panelRect.anchorMax = new Vector2(0.5f, 0.5f);
             panelRect.pivot = new Vector2(0.5f, 0.5f);
-            panelRect.sizeDelta = new Vector2(150f, 44f);
+            panelRect.sizeDelta = new Vector2(212f, 72f);
 
             Image panelImage = panelObject.GetComponent<Image>();
-            panelImage.color = new Color(0.06f, 0.07f, 0.08f, 0.82f);
+            panelImage.color = new Color(0.03f, 0.04f, 0.05f, 0.9f);
 
-            CreatePromptText("KeyText", panelObject.transform, font, "[E]", 20, new Vector2(0f, 8f), FontStyle.Bold);
-            CreatePromptText("ActionText", panelObject.transform, font, "PICK UP", 11, new Vector2(0f, -10f), FontStyle.Normal);
+            CreatePromptText("KeyText", panelObject.transform, font, "E", 34, new Vector2(0f, 12f), FontStyle.Bold, new Color(1f, 0.92f, 0.66f, 1f));
+            CreatePromptText("ActionText", panelObject.transform, font, "PICK UP", 17, new Vector2(0f, -14f), FontStyle.Bold, Color.white);
 
             canvasObject.SetActive(false);
         }
@@ -240,7 +245,7 @@ namespace TWD.Inventory
                 _playerTransform = GameObject.FindWithTag(Constants.Tags.PLAYER)?.transform;
             }
 
-            Camera worldCamera = Camera.main;
+            UnityEngine.Camera worldCamera = UnityEngine.Camera.main;
             if (worldCamera == null || _playerTransform == null || _hasBeenPickedUp || !CanInteract)
             {
                 _promptCanvas.gameObject.SetActive(false);
@@ -255,9 +260,66 @@ namespace TWD.Inventory
             _promptCanvas.gameObject.SetActive(shouldShow);
         }
 
-        private static void CreatePromptText(string name, Transform parent, Font font, string content, int fontSize, Vector2 anchoredPosition, FontStyle fontStyle)
+        private void EnsurePickupIndicator()
         {
-            GameObject textObject = new GameObject(name, typeof(RectTransform), typeof(Text));
+            Transform existingIndicator = transform.Find(RuntimeIndicatorRootName);
+            if (existingIndicator != null)
+            {
+                _runtimeIndicatorRoot = existingIndicator;
+                return;
+            }
+
+            _runtimeIndicatorRoot = new GameObject(RuntimeIndicatorRootName).transform;
+            _runtimeIndicatorRoot.SetParent(transform, false);
+            _runtimeIndicatorRoot.localPosition = new Vector3(0f, -0.1f, 0f);
+
+            Color accent = GetIndicatorColor();
+            Material ringMaterial = CreateEmissiveMaterial(accent, 2.3f);
+            Material markerMaterial = CreateEmissiveMaterial(Color.Lerp(accent, Color.white, 0.35f), 3.1f);
+
+            CreateVisualPart("IndicatorNorth", PrimitiveType.Cube, _runtimeIndicatorRoot, new Vector3(0f, 0f, 0.3f), Quaternion.identity, new Vector3(0.32f, 0.025f, 0.04f), ringMaterial);
+            CreateVisualPart("IndicatorSouth", PrimitiveType.Cube, _runtimeIndicatorRoot, new Vector3(0f, 0f, -0.3f), Quaternion.identity, new Vector3(0.32f, 0.025f, 0.04f), ringMaterial);
+            CreateVisualPart("IndicatorEast", PrimitiveType.Cube, _runtimeIndicatorRoot, new Vector3(0.3f, 0f, 0f), Quaternion.identity, new Vector3(0.04f, 0.025f, 0.32f), ringMaterial);
+            CreateVisualPart("IndicatorWest", PrimitiveType.Cube, _runtimeIndicatorRoot, new Vector3(-0.3f, 0f, 0f), Quaternion.identity, new Vector3(0.04f, 0.025f, 0.32f), ringMaterial);
+            CreateVisualPart("IndicatorColumn", PrimitiveType.Cylinder, _runtimeIndicatorRoot, new Vector3(0f, 0.2f, 0f), Quaternion.identity, new Vector3(0.025f, 0.18f, 0.025f), markerMaterial);
+            CreateVisualPart("IndicatorMarker", PrimitiveType.Cube, _runtimeIndicatorRoot, new Vector3(0f, 0.58f, 0f), Quaternion.Euler(0f, 45f, 45f), new Vector3(0.16f, 0.16f, 0.16f), markerMaterial);
+        }
+
+        private void AnimatePickupIndicator()
+        {
+            if (_runtimeIndicatorRoot == null)
+            {
+                return;
+            }
+
+            _runtimeIndicatorRoot.gameObject.SetActive(CanInteract && !_hasBeenPickedUp);
+
+            float pulse = 1f + Mathf.Sin(Time.time * 4f) * 0.08f;
+            _runtimeIndicatorRoot.localScale = new Vector3(pulse, pulse, pulse);
+
+            Transform marker = _runtimeIndicatorRoot.Find("IndicatorMarker");
+            if (marker != null)
+            {
+                marker.localPosition = new Vector3(0f, 0.58f + Mathf.Sin(Time.time * 3.1f) * 0.06f, 0f);
+                marker.Rotate(Vector3.up, 90f * Time.deltaTime, Space.Self);
+            }
+        }
+
+        private Color GetIndicatorColor()
+        {
+            return GetVisualKind() switch
+            {
+                "key" => new Color(0.96f, 0.79f, 0.31f, 1f),
+                "health" => new Color(0.95f, 0.28f, 0.28f, 1f),
+                "ammo" => new Color(0.52f, 0.79f, 0.97f, 1f),
+                "weapon" => new Color(0.92f, 0.92f, 0.95f, 1f),
+                _ => new Color(0.82f, 0.84f, 0.88f, 1f)
+            };
+        }
+
+        private static void CreatePromptText(string name, Transform parent, Font font, string content, int fontSize, Vector2 anchoredPosition, FontStyle fontStyle, Color color)
+        {
+            GameObject textObject = new GameObject(name, typeof(RectTransform), typeof(Text), typeof(Outline));
             textObject.transform.SetParent(parent, false);
 
             RectTransform rect = textObject.GetComponent<RectTransform>();
@@ -272,8 +334,12 @@ namespace TWD.Inventory
             text.fontSize = fontSize;
             text.fontStyle = fontStyle;
             text.alignment = TextAnchor.MiddleCenter;
-            text.color = Color.white;
+            text.color = color;
             text.text = content;
+
+            Outline outline = textObject.GetComponent<Outline>();
+            outline.effectColor = new Color(0f, 0f, 0f, 0.88f);
+            outline.effectDistance = new Vector2(1f, -1f);
         }
 
         private void EnsurePickupPresentation()
@@ -288,29 +354,55 @@ namespace TWD.Inventory
             _runtimeVisualRoot = new GameObject(RuntimeVisualRootName).transform;
             _runtimeVisualRoot.SetParent(transform, false);
 
-            switch (GetVisualKind())
+            if (_itemData != null && _itemData.worldPrefab != null)
             {
-                case "key":
-                    CreateKeyVisual(_runtimeVisualRoot);
-                    break;
-                case "health":
-                    CreateHealthVisual(_runtimeVisualRoot);
-                    break;
-                case "ammo":
-                    CreateAmmoVisual(_runtimeVisualRoot);
-                    break;
-                case "weapon":
-                    CreateWeaponVisual(_runtimeVisualRoot);
-                    break;
-                default:
-                    CreateGenericPickupVisual(_runtimeVisualRoot);
-                    break;
+                InstantiateVisualPrefab(_itemData.worldPrefab, _runtimeVisualRoot);
+            }
+            else if (_weaponData != null && _weaponData.weaponPrefab != null)
+            {
+                InstantiateVisualPrefab(_weaponData.weaponPrefab, _runtimeVisualRoot);
+            }
+            else
+            {
+                switch (GetVisualKind())
+                {
+                    case "key":
+                        CreateKeyVisual(_runtimeVisualRoot);
+                        break;
+                    case "health":
+                        CreateHealthVisual(_runtimeVisualRoot);
+                        break;
+                    case "ammo":
+                        CreateAmmoVisual(_runtimeVisualRoot);
+                        break;
+                    case "weapon":
+                        CreateWeaponVisual(_runtimeVisualRoot);
+                        break;
+                    default:
+                        CreateGenericPickupVisual(_runtimeVisualRoot);
+                        break;
+                }
             }
 
             Renderer rootRenderer = GetComponent<Renderer>();
             if (rootRenderer != null)
             {
                 rootRenderer.enabled = false;
+            }
+        }
+
+        private void InstantiateVisualPrefab(GameObject prefab, Transform parent)
+        {
+            GameObject visualInstance = Instantiate(prefab, parent);
+            visualInstance.name = "PrefabVisual";
+            visualInstance.transform.localPosition = Vector3.zero;
+            visualInstance.transform.localRotation = Quaternion.identity;
+            visualInstance.transform.localScale = Vector3.one * 0.75f;
+
+            Collider[] colliders = visualInstance.GetComponentsInChildren<Collider>(true);
+            for (int i = 0; i < colliders.Length; i++)
+            {
+                Destroy(colliders[i]);
             }
         }
 
@@ -449,6 +541,24 @@ namespace TWD.Inventory
             if (material.HasProperty("_Metallic"))
             {
                 material.SetFloat("_Metallic", 0.2f);
+            }
+
+            return material;
+        }
+
+        private Material CreateEmissiveMaterial(Color baseColor, float emissionStrength)
+        {
+            Material material = CreateLitMaterial(baseColor);
+
+            if (material.HasProperty("_EmissionColor"))
+            {
+                material.EnableKeyword("_EMISSION");
+                material.SetColor("_EmissionColor", baseColor * emissionStrength);
+            }
+
+            if (material.HasProperty("_Smoothness"))
+            {
+                material.SetFloat("_Smoothness", 0.75f);
             }
 
             return material;
