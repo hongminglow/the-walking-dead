@@ -180,9 +180,9 @@ namespace TWD.UI
 
         private void UpdateAmmo(int current, int max)
         {
-            SetText(_ammoText, _ammoTmpText, max > 0 ? $"{current:00} / {max:00}" : "-- / --");
+            SetText(_ammoText, _ammoTmpText, max > 0 ? $"{current:00}" : "--");
             bool usesAmmo = _playerCombat != null && _playerCombat.CurrentWeapon != null && _playerCombat.CurrentWeapon.UsesAmmo;
-            SetText(_ammoReserveText, _ammoReserveTmpText, usesAmmo ? $"RESERVE {_playerCombat.ReserveAmmo:00}" : "MELEE READY");
+            SetText(_ammoReserveText, _ammoReserveTmpText, usesAmmo ? $"RES {_playerCombat.ReserveAmmo:00}" : "MELEE");
         }
 
         private void UpdateWeapon(string weaponName)
@@ -285,11 +285,11 @@ namespace TWD.UI
         {
             if (InventoryManager.Instance == null)
             {
-                SetText(_inventoryStatusText, _inventoryStatusTmpText, "INVENTORY -- / 24");
+                SetText(_inventoryStatusText, _inventoryStatusTmpText, "INV --/24");
                 return;
             }
 
-            SetText(_inventoryStatusText, _inventoryStatusTmpText, $"INVENTORY {InventoryManager.Instance.UsedSlots:00} / {InventoryManager.Instance.SlotCount:00}");
+            SetText(_inventoryStatusText, _inventoryStatusTmpText, $"INV {InventoryManager.Instance.UsedSlots:00}/{InventoryManager.Instance.SlotCount:00}");
         }
 
         private void RefreshObjective()
@@ -397,6 +397,11 @@ namespace TWD.UI
         private void EnsureRuntimeHudScaffold()
         {
             HideLegacyHudArtifacts();
+            RebuildRuntimeElement("ObjectivePanel");
+            RebuildRuntimeElement("VitalsPanel");
+            RebuildRuntimeElement("WeaponPanel");
+            RebuildRuntimeElement("PickupToast");
+            RebuildRuntimeElement("DamageOverlay");
             if (FindNamedComponentInChildren<RectTransform>("ObjectivePanel") == null) CreateRuntimeObjectivePanel();
             if (FindNamedComponentInChildren<RectTransform>("VitalsPanel") == null) CreateRuntimeVitalsPanel();
             if (FindNamedComponentInChildren<RectTransform>("WeaponPanel") == null) CreateRuntimeWeaponPanel();
@@ -414,36 +419,41 @@ namespace TWD.UI
             if (ammo != null) ammo.gameObject.SetActive(false);
         }
 
+        private void RebuildRuntimeElement(string objectName)
+        {
+            Transform existing = transform.Find(objectName);
+            if (existing != null)
+                DestroyImmediate(existing.gameObject);
+        }
+
         private void CreateRuntimeObjectivePanel()
         {
             Font font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
-            GameObject panel = CreatePanel("ObjectivePanel", transform, new Vector2(0f, 1f), new Vector2(0f, 1f), new Vector2(0f, 1f), new Vector2(24f, -24f), new Vector2(360f, 64f), new Color(0.03f, 0.04f, 0.05f, 0.76f));
-            CreateText("ObjectiveHeader", panel.transform, font, "CURRENT OBJECTIVE", 12, FontStyle.Bold, TextAnchor.UpperLeft, new Vector2(16f, -8f), new Vector2(320f, 18f), new Color(0.75f, 0.72f, 0.63f, 1f));
-            CreateText("ObjectiveText", panel.transform, font, "FIND THE HOUSE KEY", 18, FontStyle.Bold, TextAnchor.UpperLeft, new Vector2(16f, -26f), new Vector2(328f, 28f), Color.white);
+            GameObject panel = CreatePanel("ObjectivePanel", transform, new Vector2(0f, 1f), new Vector2(0f, 1f), new Vector2(0f, 1f), new Vector2(24f, -20f), new Vector2(286f, 36f), new Color(0.02f, 0.03f, 0.04f, 0.42f));
+            CreateText("ObjectiveHeader", panel.transform, font, "OBJ", 10, FontStyle.Bold, TextAnchor.UpperLeft, new Vector2(10f, -9f), new Vector2(28f, 16f), new Color(0.85f, 0.78f, 0.62f, 1f));
+            CreateText("ObjectiveText", panel.transform, font, "FIND THE HOUSE KEY", 13, FontStyle.Bold, TextAnchor.UpperLeft, new Vector2(42f, -8f), new Vector2(230f, 18f), Color.white);
         }
 
         private void CreateRuntimeVitalsPanel()
         {
             Font font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
-            GameObject panel = CreatePanel("VitalsPanel", transform, Vector2.zero, Vector2.zero, Vector2.zero, new Vector2(24f, 24f), new Vector2(320f, 132f), new Color(0.03f, 0.04f, 0.05f, 0.78f));
-            CreateText("VitalsHeader", panel.transform, font, "ALEX CHEN", 12, FontStyle.Bold, TextAnchor.UpperLeft, new Vector2(16f, -8f), new Vector2(150f, 18f), new Color(0.72f, 0.72f, 0.68f, 1f));
-            CreateText("HealthStatusText", panel.transform, font, "FINE", 12, FontStyle.Bold, TextAnchor.UpperRight, new Vector2(154f, -8f), new Vector2(150f, 18f), new Color(0.84f, 0.85f, 0.79f, 1f));
-            CreateSlider("HealthBar", panel.transform, new Vector2(16f, -36f), new Vector2(288f, 20f), new Color(0.12f, 0.12f, 0.12f, 0.95f), _healthColorFine);
-            CreateText("HealthValueText", panel.transform, font, "100 / 100", 15, FontStyle.Bold, TextAnchor.UpperLeft, new Vector2(16f, -60f), new Vector2(160f, 20f), Color.white);
-            Slider stamina = CreateSlider("StaminaBar", panel.transform, new Vector2(16f, -86f), new Vector2(288f, 10f), new Color(0.1f, 0.1f, 0.1f, 0.9f), new Color(0.87f, 0.74f, 0.38f, 1f));
+            GameObject panel = CreatePanel("VitalsPanel", transform, Vector2.zero, Vector2.zero, Vector2.zero, new Vector2(20f, 18f), new Vector2(236f, 70f), new Color(0.02f, 0.03f, 0.04f, 0.3f));
+            CreateText("VitalsHeader", panel.transform, font, "\u2665", 22, FontStyle.Bold, TextAnchor.UpperLeft, new Vector2(10f, -8f), new Vector2(22f, 24f), new Color(0.92f, 0.18f, 0.18f, 1f));
+            CreateText("HealthStatusText", panel.transform, font, "FINE", 10, FontStyle.Bold, TextAnchor.UpperRight, new Vector2(172f, -8f), new Vector2(52f, 16f), new Color(0.84f, 0.85f, 0.79f, 1f));
+            CreateSlider("HealthBar", panel.transform, new Vector2(38f, -13f), new Vector2(136f, 9f), new Color(0.1f, 0.1f, 0.1f, 0.72f), _healthColorFine);
+            CreateText("HealthValueText", panel.transform, font, "100 / 100", 11, FontStyle.Bold, TextAnchor.UpperLeft, new Vector2(38f, -26f), new Vector2(70f, 14f), new Color(0.95f, 0.95f, 0.95f, 1f));
+            Slider stamina = CreateSlider("StaminaBar", panel.transform, new Vector2(38f, -44f), new Vector2(136f, 4f), new Color(0.1f, 0.1f, 0.1f, 0.5f), new Color(0.87f, 0.74f, 0.38f, 1f));
             stamina.gameObject.SetActive(false);
-            CreateText("InventoryStatusText", panel.transform, font, "INVENTORY 00 / 24", 12, FontStyle.Normal, TextAnchor.UpperLeft, new Vector2(16f, -102f), new Vector2(288f, 18f), new Color(0.82f, 0.82f, 0.8f, 1f));
+            CreateText("InventoryStatusText", panel.transform, font, "INV 00/24", 10, FontStyle.Normal, TextAnchor.UpperRight, new Vector2(154f, -26f), new Vector2(70f, 14f), new Color(0.75f, 0.75f, 0.74f, 0.95f));
         }
 
         private void CreateRuntimeWeaponPanel()
         {
             Font font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
-            GameObject panel = CreatePanel("WeaponPanel", transform, new Vector2(1f, 0f), new Vector2(1f, 0f), new Vector2(1f, 0f), new Vector2(-24f, 24f), new Vector2(260f, 120f), new Color(0.03f, 0.04f, 0.05f, 0.78f));
-            CreateText("WeaponHeader", panel.transform, font, "EQUIPPED", 12, FontStyle.Bold, TextAnchor.UpperLeft, new Vector2(16f, -8f), new Vector2(100f, 18f), new Color(0.75f, 0.72f, 0.63f, 1f));
-            CreateText("WeaponNameText", panel.transform, font, "PISTOL", 16, FontStyle.Bold, TextAnchor.UpperLeft, new Vector2(16f, -28f), new Vector2(180f, 20f), Color.white);
-            CreateText("WeaponAmmoText", panel.transform, font, "12 / 12", 30, FontStyle.Bold, TextAnchor.UpperLeft, new Vector2(16f, -52f), new Vector2(200f, 34f), Color.white);
-            CreateText("WeaponReserveText", panel.transform, font, "RESERVE 00", 12, FontStyle.Normal, TextAnchor.UpperLeft, new Vector2(16f, -90f), new Vector2(140f, 18f), new Color(0.82f, 0.82f, 0.8f, 1f));
-            CreateText("WeaponHintText", panel.transform, font, "R TO RELOAD", 11, FontStyle.Normal, TextAnchor.UpperRight, new Vector2(118f, -90f), new Vector2(120f, 18f), new Color(0.63f, 0.64f, 0.66f, 1f));
+            GameObject panel = CreatePanel("WeaponPanel", transform, new Vector2(1f, 0f), new Vector2(1f, 0f), new Vector2(1f, 0f), new Vector2(-20f, 18f), new Vector2(148f, 66f), new Color(0.02f, 0.03f, 0.04f, 0.3f));
+            CreateText("WeaponNameText", panel.transform, font, "PISTOL", 10, FontStyle.Bold, TextAnchor.UpperRight, new Vector2(68f, -8f), new Vector2(68f, 14f), new Color(0.85f, 0.85f, 0.83f, 0.95f));
+            CreateText("WeaponAmmoText", panel.transform, font, "12", 24, FontStyle.Bold, TextAnchor.UpperRight, new Vector2(54f, -18f), new Vector2(82f, 28f), Color.white);
+            CreateText("WeaponReserveText", panel.transform, font, "RES 24", 10, FontStyle.Normal, TextAnchor.UpperRight, new Vector2(62f, -46f), new Vector2(74f, 14f), new Color(0.72f, 0.72f, 0.72f, 0.95f));
         }
 
         private void CreateRuntimePickupToast()
