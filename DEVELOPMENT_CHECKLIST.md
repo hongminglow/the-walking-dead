@@ -5,7 +5,7 @@
 > - Update this file after each work session.
 > - When resuming with AI, say: _"Continue from Stage X, Step Y"_
 
-> **LAST UPDATED**: 2026-04-10 (Session 21)
+> **LAST UPDATED**: 2026-04-11 (Session 22)
 > **CURRENT STAGE**: Stage 7 — Testing & Ship 🚧
 
 ---
@@ -21,7 +21,7 @@
 | 4 | Phase 3: Systems | ✅ COMPLETE | Inventory UI + Save/Load + Pause + direct input |
 | 5 | Phase 4: Content | ✅ COMPLETE | 5 levels + MainMenu + Loading + Build Settings |
 | 6 | Phase 5: Polish | 🚧 IN PROGRESS | Runtime polish active; campaign scene stabilization is now in a much healthier place across Level 1-5, with final manual presentation/cutscene swaps still remaining |
-| 7 | Phase 6: Testing & Ship | 🚧 IN PROGRESS | Automated Level 1-5 smoke is green, Windows candidate build exists and boots, editor-side menu/save/continue validation is now green, and the next priority is manual death/build validation plus final release blockers |
+| 7 | Phase 6: Testing & Ship | 🚧 IN PROGRESS | Automated Level 1-5 smoke is green, Windows candidate build exists and boots, editor-side menu/save/continue validation is green, and the project is ready for the first human Level 1 playtest after package cleanup |
 
 ---
 
@@ -663,6 +663,7 @@ This is fine for solo dev. CI is more important for teams.
 | 2026-04-10 | Session 19 | Level 5 visual material pass: replaced the finale scene's anonymous default URP materials with a dedicated palette for dirt, asphalt, concrete, barricades, rusted barrels, gate metal, and varied wrecked cars, then re-verified the boss death and escape-unlock flow in play mode | Continue Stage 7 full-campaign regression and build-candidate validation |
 | 2026-04-10 | Session 20 | Stage 7 kickoff: added reusable campaign-smoke and Windows-build tooling, ran automated Level 1-5 smoke successfully, generated `CAMPAIGN_SMOKE_REPORT.md`, produced a Windows candidate build that boots outside the editor, and ignored generated build-test artifacts that were polluting Git | Manually validate menu/save/death flows in the Windows build and record any final release blockers |
 | 2026-04-10 | Session 21 | Stage 7 menu-flow validation pass: repaired `MainMenu` panel references, upgraded `PauseMenu` with a runtime fallback scaffold for incomplete gameplay scenes, added an audio listener to `Loading`, and verified `New Game` -> `Level_01_House` -> manual save -> return to `MainMenu` -> `Continue` -> `Level_01_House` all work in-editor without the previous pause/menu blockers | Validate death/retry and the same menu/save flow in the Windows build, then record final release blockers |
+| 2026-04-11 | Session 22 | Stage 7 launch-readiness cleanup: identified that the main package startup exception was coming from the unused `com.coplaydev.coplay` dependency, removed it from `Packages/manifest.json` and `Packages/packages-lock.json`, and prepared the project for the first real-user Level 1 playtest handoff | Reopen Unity once to let Package Manager re-resolve, then do a human playtest of `Level_01_House` and collect feedback on readability, pacing, prompts, and progression friction |
 
 ---
 
