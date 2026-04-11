@@ -11,6 +11,7 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 using TWD.Core;
 using TWD.Environment;
+using TWD.Inventory;
 using TWD.Utilities;
 
 namespace TWD.Player
@@ -25,6 +26,8 @@ namespace TWD.Player
 
         [Header("Raycast Settings")]
         [SerializeField] private float _interactDistance = Constants.Player.INTERACT_DISTANCE;
+        [SerializeField] private float _interactRadius = 0.35f;
+        [SerializeField] private float _pickupAssistRadius = 1.75f;
         [SerializeField] private LayerMask _interactableLayer;
 
         [Header("References")]
@@ -107,31 +110,83 @@ namespace TWD.Player
 
         private void PerformRaycast()
         {
-            Ray ray = new Ray(_cameraTransform.position, _cameraTransform.forward);
-
-            if (Physics.Raycast(ray, out RaycastHit hit, _interactDistance, _interactableLayer))
+            IInteractable interactable = FindTargetFromCamera();
+            if (interactable == null)
             {
-                // Check if hit object implements IInteractable
+                interactable = FindNearbyPickupTarget();
+            }
+
+            if (interactable != null)
+            {
+                if (!interactable.CanInteract)
+                {
+                    ClearCurrentTarget();
+                    return;
+                }
+
+                if (interactable != _currentTarget)
+                {
+                    ClearCurrentTarget();
+                    _currentTarget = interactable;
+                    _currentTarget.OnLookAt();
+                }
+
+                return;
+            }
+
+            ClearCurrentTarget();
+        }
+
+        private IInteractable FindTargetFromCamera()
+        {
+            Ray ray = new Ray(_cameraTransform.position, _cameraTransform.forward);
+            if (Physics.SphereCast(ray, _interactRadius, out RaycastHit hit, _interactDistance, _interactableLayer, QueryTriggerInteraction.Collide))
+            {
                 if (hit.collider.TryGetComponent<IInteractable>(out var interactable))
                 {
-                    if (!interactable.CanInteract)
-                    {
-                        ClearCurrentTarget();
-                        return;
-                    }
-
-                    if (interactable != _currentTarget)
-                    {
-                        ClearCurrentTarget();
-                        _currentTarget = interactable;
-                        _currentTarget.OnLookAt();
-                    }
-                    return;
+                    return interactable;
                 }
             }
 
-            // No valid hit — clear target
-            ClearCurrentTarget();
+            return null;
+        }
+
+        private IInteractable FindNearbyPickupTarget()
+        {
+            Collider[] colliders = Physics.OverlapSphere(transform.position, _pickupAssistRadius, _interactableLayer, QueryTriggerInteraction.Collide);
+            IInteractable bestTarget = null;
+            float bestScore = float.MinValue;
+
+            for (int i = 0; i < colliders.Length; i++)
+            {
+                Collider candidate = colliders[i];
+                if (candidate == null || !candidate.TryGetComponent<ItemPickup>(out var pickup) || !pickup.CanInteract)
+                {
+                    continue;
+                }
+
+                Vector3 toPickup = pickup.transform.position - _cameraTransform.position;
+                float distance = toPickup.magnitude;
+                if (distance <= Mathf.Epsilon)
+                {
+                    return pickup;
+                }
+
+                float facingScore = Vector3.Dot(_cameraTransform.forward, toPickup.normalized);
+                if (facingScore < 0.2f)
+                {
+                    continue;
+                }
+
+                float score = facingScore * 4f - distance;
+                if (score > bestScore)
+                {
+                    bestScore = score;
+                    bestTarget = pickup;
+                }
+            }
+
+            return bestTarget;
         }
 
         #endregion

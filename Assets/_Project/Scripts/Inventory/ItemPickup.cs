@@ -8,6 +8,7 @@
 // ============================================================
 
 using UnityEngine;
+using UnityEngine.UI;
 using TWD.Core;
 using TWD.Combat;
 using TWD.Environment;
@@ -40,6 +41,8 @@ namespace TWD.Inventory
         [SerializeField] private float _bobHeight = 0.1f;
         [SerializeField] private float _rotateSpeed = 45f;
         [SerializeField] private bool _animatePickup = true;
+        [SerializeField] private bool _showWorldPrompt = true;
+        [SerializeField] private float _worldPromptDistance = 2.5f;
 
         #endregion
 
@@ -48,6 +51,8 @@ namespace TWD.Inventory
         private Vector3 _startPosition;
         private bool _hasBeenPickedUp;
         private Transform _runtimeVisualRoot;
+        private Canvas _promptCanvas;
+        private Transform _playerTransform;
 
         #endregion
 
@@ -130,6 +135,8 @@ namespace TWD.Inventory
                 _pickupId = gameObject.name.Replace(" ", "_").ToLowerInvariant();
 
             EnsurePickupPresentation();
+            EnsureWorldPrompt();
+            _playerTransform = GameObject.FindWithTag(Constants.Tags.PLAYER)?.transform;
         }
 
         private void Update()
@@ -140,6 +147,8 @@ namespace TWD.Inventory
             float y = _startPosition.y + Mathf.Sin(Time.time * _bobSpeed) * _bobHeight;
             transform.position = new Vector3(_startPosition.x, y, _startPosition.z);
             transform.Rotate(Vector3.up, _rotateSpeed * Time.deltaTime);
+
+            UpdateWorldPrompt();
         }
 
         #endregion
@@ -175,6 +184,96 @@ namespace TWD.Inventory
             {
                 gameObject.SetActive(false);
             }
+        }
+
+        private void EnsureWorldPrompt()
+        {
+            if (!_showWorldPrompt || _promptCanvas != null)
+            {
+                return;
+            }
+
+            GameObject canvasObject = new GameObject("[PickupPrompt]", typeof(RectTransform), typeof(Canvas), typeof(CanvasScaler));
+            canvasObject.transform.SetParent(transform, false);
+            canvasObject.transform.localPosition = new Vector3(0f, 0.55f, 0f);
+
+            _promptCanvas = canvasObject.GetComponent<Canvas>();
+            _promptCanvas.renderMode = RenderMode.WorldSpace;
+            _promptCanvas.worldCamera = Camera.main;
+            _promptCanvas.sortingOrder = 50;
+
+            RectTransform canvasRect = canvasObject.GetComponent<RectTransform>();
+            canvasRect.sizeDelta = new Vector2(180f, 60f);
+            canvasRect.localScale = Vector3.one * 0.01f;
+
+            CanvasScaler scaler = canvasObject.GetComponent<CanvasScaler>();
+            scaler.dynamicPixelsPerUnit = 20f;
+
+            Font font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+
+            GameObject panelObject = new GameObject("Panel", typeof(RectTransform), typeof(Image));
+            panelObject.transform.SetParent(canvasObject.transform, false);
+            RectTransform panelRect = panelObject.GetComponent<RectTransform>();
+            panelRect.anchorMin = new Vector2(0.5f, 0.5f);
+            panelRect.anchorMax = new Vector2(0.5f, 0.5f);
+            panelRect.pivot = new Vector2(0.5f, 0.5f);
+            panelRect.sizeDelta = new Vector2(150f, 44f);
+
+            Image panelImage = panelObject.GetComponent<Image>();
+            panelImage.color = new Color(0.06f, 0.07f, 0.08f, 0.82f);
+
+            CreatePromptText("KeyText", panelObject.transform, font, "[E]", 20, new Vector2(0f, 8f), FontStyle.Bold);
+            CreatePromptText("ActionText", panelObject.transform, font, "PICK UP", 11, new Vector2(0f, -10f), FontStyle.Normal);
+
+            canvasObject.SetActive(false);
+        }
+
+        private void UpdateWorldPrompt()
+        {
+            if (_promptCanvas == null)
+            {
+                return;
+            }
+
+            if (_playerTransform == null)
+            {
+                _playerTransform = GameObject.FindWithTag(Constants.Tags.PLAYER)?.transform;
+            }
+
+            Camera worldCamera = Camera.main;
+            if (worldCamera == null || _playerTransform == null || _hasBeenPickedUp || !CanInteract)
+            {
+                _promptCanvas.gameObject.SetActive(false);
+                return;
+            }
+
+            _promptCanvas.worldCamera = worldCamera;
+            _promptCanvas.transform.forward = worldCamera.transform.forward;
+
+            float distance = Vector3.Distance(_playerTransform.position, transform.position);
+            bool shouldShow = distance <= _worldPromptDistance;
+            _promptCanvas.gameObject.SetActive(shouldShow);
+        }
+
+        private static void CreatePromptText(string name, Transform parent, Font font, string content, int fontSize, Vector2 anchoredPosition, FontStyle fontStyle)
+        {
+            GameObject textObject = new GameObject(name, typeof(RectTransform), typeof(Text));
+            textObject.transform.SetParent(parent, false);
+
+            RectTransform rect = textObject.GetComponent<RectTransform>();
+            rect.anchorMin = new Vector2(0.5f, 0.5f);
+            rect.anchorMax = new Vector2(0.5f, 0.5f);
+            rect.pivot = new Vector2(0.5f, 0.5f);
+            rect.anchoredPosition = anchoredPosition;
+            rect.sizeDelta = new Vector2(130f, 22f);
+
+            Text text = textObject.GetComponent<Text>();
+            text.font = font;
+            text.fontSize = fontSize;
+            text.fontStyle = fontStyle;
+            text.alignment = TextAnchor.MiddleCenter;
+            text.color = Color.white;
+            text.text = content;
         }
 
         private void EnsurePickupPresentation()
