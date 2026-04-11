@@ -166,7 +166,7 @@ namespace TWD.UI
             if (_healthBarFill != null)
                 _healthBarFill.color = Color.Lerp(_healthColorLow, _healthColorFine, health / Constants.Player.MAX_HEALTH);
 
-            SetText(_healthValueText, _healthValueTmpText, $"{Mathf.CeilToInt(health):000} / {Mathf.CeilToInt(Constants.Player.MAX_HEALTH):000}");
+            SetText(_healthValueText, _healthValueTmpText, $"{Mathf.CeilToInt(health):000}");
             UpdateHealthStatusText(health);
         }
 
@@ -175,19 +175,19 @@ namespace TWD.UI
             if (_staminaBar == null) return;
             _staminaBar.maxValue = Constants.Player.MAX_STAMINA;
             _staminaBar.value = Mathf.Clamp(stamina, 0f, Constants.Player.MAX_STAMINA);
-            _staminaBar.gameObject.SetActive(stamina < Constants.Player.MAX_STAMINA - 0.1f);
+            _staminaBar.gameObject.SetActive(true);
         }
 
         private void UpdateAmmo(int current, int max)
         {
-            SetText(_ammoText, _ammoTmpText, max > 0 ? $"{current:00}" : "--");
+            SetText(_ammoText, _ammoTmpText, max > 0 ? BuildAmmoPips(current, max) : string.Empty);
             bool usesAmmo = _playerCombat != null && _playerCombat.CurrentWeapon != null && _playerCombat.CurrentWeapon.UsesAmmo;
-            SetText(_ammoReserveText, _ammoReserveTmpText, usesAmmo ? $"RES {_playerCombat.ReserveAmmo:00}" : "MELEE");
+            SetText(_ammoReserveText, _ammoReserveTmpText, usesAmmo ? $"{current:00}/{max:00}" : "MELEE");
         }
 
         private void UpdateWeapon(string weaponName)
         {
-            SetText(_weaponNameText, _weaponNameTmpText, string.IsNullOrWhiteSpace(weaponName) ? "UNARMED" : weaponName.ToUpperInvariant());
+            SetText(_weaponNameText, _weaponNameTmpText, string.IsNullOrWhiteSpace(weaponName) ? "UNARMED" : weaponName);
         }
 
         private void ShowPrompt(string text)
@@ -429,31 +429,31 @@ namespace TWD.UI
         private void CreateRuntimeObjectivePanel()
         {
             Font font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
-            GameObject panel = CreatePanel("ObjectivePanel", transform, new Vector2(0f, 1f), new Vector2(0f, 1f), new Vector2(0f, 1f), new Vector2(24f, -20f), new Vector2(286f, 36f), new Color(0.02f, 0.03f, 0.04f, 0.42f));
-            CreateText("ObjectiveHeader", panel.transform, font, "OBJ", 10, FontStyle.Bold, TextAnchor.UpperLeft, new Vector2(10f, -9f), new Vector2(28f, 16f), new Color(0.85f, 0.78f, 0.62f, 1f));
-            CreateText("ObjectiveText", panel.transform, font, "FIND THE HOUSE KEY", 13, FontStyle.Bold, TextAnchor.UpperLeft, new Vector2(42f, -8f), new Vector2(230f, 18f), Color.white);
+            GameObject panel = CreatePanel("ObjectivePanel", transform, new Vector2(0f, 1f), new Vector2(0f, 1f), new Vector2(0f, 1f), new Vector2(18f, -18f), new Vector2(304f, 34f), new Color(0.02f, 0.03f, 0.04f, 0.2f));
+            CreateText("ObjectiveHeader", panel.transform, font, "OBJ", 9, FontStyle.Bold, TextAnchor.UpperLeft, new Vector2(10f, -8f), new Vector2(24f, 14f), new Color(0.85f, 0.78f, 0.62f, 1f));
+            CreateText("ObjectiveText", panel.transform, font, "FIND THE HOUSE KEY", 12, FontStyle.Bold, TextAnchor.UpperLeft, new Vector2(36f, -7f), new Vector2(196f, 16f), Color.white);
+            CreateText("InventoryStatusText", panel.transform, font, "INV 00/24", 9, FontStyle.Normal, TextAnchor.UpperRight, new Vector2(234f, -8f), new Vector2(60f, 14f), new Color(0.74f, 0.74f, 0.72f, 0.95f));
         }
 
         private void CreateRuntimeVitalsPanel()
         {
             Font font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
-            GameObject panel = CreatePanel("VitalsPanel", transform, Vector2.zero, Vector2.zero, Vector2.zero, new Vector2(20f, 18f), new Vector2(236f, 70f), new Color(0.02f, 0.03f, 0.04f, 0.3f));
-            CreateText("VitalsHeader", panel.transform, font, "\u2665", 22, FontStyle.Bold, TextAnchor.UpperLeft, new Vector2(10f, -8f), new Vector2(22f, 24f), new Color(0.92f, 0.18f, 0.18f, 1f));
-            CreateText("HealthStatusText", panel.transform, font, "FINE", 10, FontStyle.Bold, TextAnchor.UpperRight, new Vector2(172f, -8f), new Vector2(52f, 16f), new Color(0.84f, 0.85f, 0.79f, 1f));
-            CreateSlider("HealthBar", panel.transform, new Vector2(38f, -13f), new Vector2(136f, 9f), new Color(0.1f, 0.1f, 0.1f, 0.72f), _healthColorFine);
-            CreateText("HealthValueText", panel.transform, font, "100 / 100", 11, FontStyle.Bold, TextAnchor.UpperLeft, new Vector2(38f, -26f), new Vector2(70f, 14f), new Color(0.95f, 0.95f, 0.95f, 1f));
-            Slider stamina = CreateSlider("StaminaBar", panel.transform, new Vector2(38f, -44f), new Vector2(136f, 4f), new Color(0.1f, 0.1f, 0.1f, 0.5f), new Color(0.87f, 0.74f, 0.38f, 1f));
-            stamina.gameObject.SetActive(false);
-            CreateText("InventoryStatusText", panel.transform, font, "INV 00/24", 10, FontStyle.Normal, TextAnchor.UpperRight, new Vector2(154f, -26f), new Vector2(70f, 14f), new Color(0.75f, 0.75f, 0.74f, 0.95f));
+            GameObject panel = CreatePanel("VitalsPanel", transform, Vector2.zero, Vector2.zero, Vector2.zero, new Vector2(16f, 14f), new Vector2(156f, 26f), new Color(0f, 0f, 0f, 0f));
+            CreateText("VitalsHeader", panel.transform, font, "\u2665", 14, FontStyle.Bold, TextAnchor.UpperLeft, new Vector2(0f, -3f), new Vector2(14f, 14f), new Color(0.92f, 0.18f, 0.18f, 1f));
+            CreateSlider("HealthBar", panel.transform, new Vector2(18f, -4f), new Vector2(92f, 10f), new Color(0.08f, 0.08f, 0.08f, 0.32f), _healthColorFine);
+            Slider stamina = CreateSlider("StaminaBar", panel.transform, new Vector2(18f, -17f), new Vector2(92f, 10f), new Color(0.08f, 0.08f, 0.08f, 0.22f), new Color(0.19f, 0.55f, 0.95f, 1f));
+            stamina.gameObject.SetActive(true);
+            CreateText("HealthValueText", panel.transform, font, "100", 8, FontStyle.Bold, TextAnchor.UpperLeft, new Vector2(116f, -3f), new Vector2(20f, 10f), new Color(0.94f, 0.94f, 0.94f, 1f));
         }
 
         private void CreateRuntimeWeaponPanel()
         {
             Font font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
-            GameObject panel = CreatePanel("WeaponPanel", transform, new Vector2(1f, 0f), new Vector2(1f, 0f), new Vector2(1f, 0f), new Vector2(-20f, 18f), new Vector2(148f, 66f), new Color(0.02f, 0.03f, 0.04f, 0.3f));
-            CreateText("WeaponNameText", panel.transform, font, "PISTOL", 10, FontStyle.Bold, TextAnchor.UpperRight, new Vector2(68f, -8f), new Vector2(68f, 14f), new Color(0.85f, 0.85f, 0.83f, 0.95f));
-            CreateText("WeaponAmmoText", panel.transform, font, "12", 24, FontStyle.Bold, TextAnchor.UpperRight, new Vector2(54f, -18f), new Vector2(82f, 28f), Color.white);
-            CreateText("WeaponReserveText", panel.transform, font, "RES 24", 10, FontStyle.Normal, TextAnchor.UpperRight, new Vector2(62f, -46f), new Vector2(74f, 14f), new Color(0.72f, 0.72f, 0.72f, 0.95f));
+            GameObject panel = CreatePanel("WeaponPanel", transform, new Vector2(1f, 0f), new Vector2(1f, 0f), new Vector2(1f, 0f), new Vector2(-18f, 16f), new Vector2(164f, 44f), new Color(0.02f, 0.03f, 0.04f, 0.12f));
+            CreateText("WeaponNameText", panel.transform, font, "Pistol", 10, FontStyle.Bold, TextAnchor.UpperRight, new Vector2(76f, -6f), new Vector2(74f, 12f), new Color(0.87f, 0.87f, 0.84f, 0.95f));
+            CreateAmmoIcon(panel.transform);
+            CreateText("WeaponAmmoText", panel.transform, font, "|||||", 12, FontStyle.Bold, TextAnchor.UpperLeft, new Vector2(26f, -18f), new Vector2(70f, 14f), new Color(0.94f, 0.9f, 0.78f, 1f));
+            CreateText("WeaponReserveText", panel.transform, font, "05/12", 12, FontStyle.Bold, TextAnchor.UpperRight, new Vector2(102f, -18f), new Vector2(48f, 14f), Color.white);
         }
 
         private void CreateRuntimePickupToast()
@@ -498,6 +498,37 @@ namespace TWD.UI
             image.color = new Color(0.45f, 0f, 0f, 0f);
         }
 
+        private void CreateAmmoIcon(Transform parent)
+        {
+            GameObject iconRoot = CreateUiChild("AmmoIcon", parent);
+            RectTransform rootRect = iconRoot.GetComponent<RectTransform>();
+            rootRect.anchorMin = new Vector2(0f, 1f);
+            rootRect.anchorMax = new Vector2(0f, 1f);
+            rootRect.pivot = new Vector2(0f, 1f);
+            rootRect.anchoredPosition = new Vector2(8f, -18f);
+            rootRect.sizeDelta = new Vector2(14f, 14f);
+
+            GameObject shell = CreateUiChild("Shell", iconRoot.transform);
+            RectTransform shellRect = shell.GetComponent<RectTransform>();
+            shellRect.anchorMin = new Vector2(0f, 0f);
+            shellRect.anchorMax = new Vector2(0f, 0f);
+            shellRect.pivot = new Vector2(0f, 0f);
+            shellRect.anchoredPosition = new Vector2(2f, 2f);
+            shellRect.sizeDelta = new Vector2(6f, 9f);
+            Image shellImage = shell.AddComponent<Image>();
+            shellImage.color = new Color(0.9f, 0.78f, 0.45f, 1f);
+
+            GameObject tip = CreateUiChild("Tip", iconRoot.transform);
+            RectTransform tipRect = tip.GetComponent<RectTransform>();
+            tipRect.anchorMin = new Vector2(0f, 0f);
+            tipRect.anchorMax = new Vector2(0f, 0f);
+            tipRect.pivot = new Vector2(0f, 0f);
+            tipRect.anchoredPosition = new Vector2(8f, 5f);
+            tipRect.sizeDelta = new Vector2(3f, 4f);
+            Image tipImage = tip.AddComponent<Image>();
+            tipImage.color = new Color(0.97f, 0.88f, 0.62f, 1f);
+        }
+
         private Slider CreateSlider(string name, Transform parent, Vector2 anchoredPosition, Vector2 size, Color backgroundColor, Color fillColor)
         {
             GameObject background = CreateUiChild(name, parent);
@@ -514,8 +545,9 @@ namespace TWD.UI
             RectTransform fillAreaRect = fillArea.GetComponent<RectTransform>();
             fillAreaRect.anchorMin = Vector2.zero;
             fillAreaRect.anchorMax = Vector2.one;
-            fillAreaRect.offsetMin = new Vector2(3f, 3f);
-            fillAreaRect.offsetMax = new Vector2(-3f, -3f);
+            float inset = size.y <= 4f ? 1f : 2f;
+            fillAreaRect.offsetMin = new Vector2(inset, inset);
+            fillAreaRect.offsetMax = new Vector2(-inset, -inset);
 
             GameObject fill = CreateUiChild("Fill", fillArea.transform);
             RectTransform fillRect = fill.GetComponent<RectTransform>();
@@ -530,6 +562,7 @@ namespace TWD.UI
             slider.value = 100f;
             slider.targetGraphic = bg;
             slider.fillRect = fillRect;
+            slider.direction = Slider.Direction.LeftToRight;
             return slider;
         }
 
@@ -596,6 +629,21 @@ namespace TWD.UI
         {
             if (string.IsNullOrWhiteSpace(value)) return "UNKNOWN";
             return value.Replace("_", " ").ToUpperInvariant();
+        }
+
+        private static string BuildAmmoPips(int current, int max)
+        {
+            if (max <= 0 || current <= 0)
+                return "-";
+
+            int pipCount = Mathf.Clamp(current, 0, 6);
+            if (max > 6)
+            {
+                float normalized = (float)current / max;
+                pipCount = Mathf.Clamp(Mathf.CeilToInt(normalized * 6f), 0, 6);
+            }
+
+            return new string('|', pipCount);
         }
     }
 }
