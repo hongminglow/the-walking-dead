@@ -8,6 +8,7 @@ namespace TWD.Core
     public static class Level01FrontDoorCue
     {
         private const string CueRootName = "[FrontDoorCue]";
+        private const string LeftWallSegmentName = "Wall_South_Left";
         private const string RightWallSegmentName = "Wall_South_Right";
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
@@ -33,6 +34,7 @@ namespace TWD.Core
                 return;
 
             EnsureDoorway(frontDoor);
+            EnsureExitZone();
 
             if (frontDoor.transform.Find(CueRootName) != null)
                 return;
@@ -108,33 +110,46 @@ namespace TWD.Core
             if (southWall == null)
                 return;
 
-            southWall.transform.position = new Vector3(8f, 1.75f, -0.15f);
-            southWall.transform.localScale = new Vector3(16f, 3.5f, 0.3f);
+            southWall.transform.position = new Vector3(12.5f, 1.75f, -0.15f);
+            southWall.transform.localScale = new Vector3(15f, 3.5f, 0.3f);
 
             Renderer wallRenderer = southWall.GetComponent<Renderer>();
             Material wallMaterial = wallRenderer != null ? wallRenderer.sharedMaterial : null;
 
-            GameObject rightSegment = GameObject.Find(RightWallSegmentName);
-            if (rightSegment == null)
+            GameObject leftSegment = GameObject.Find(LeftWallSegmentName);
+            if (leftSegment == null)
             {
-                rightSegment = GameObject.CreatePrimitive(PrimitiveType.Cube);
-                rightSegment.name = RightWallSegmentName;
-                rightSegment.layer = southWall.layer;
+                leftSegment = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                leftSegment.name = LeftWallSegmentName;
+                leftSegment.layer = southWall.layer;
             }
 
-            rightSegment.transform.position = new Vector3(19.25f, 1.75f, -0.15f);
-            rightSegment.transform.localScale = new Vector3(1.5f, 3.5f, 0.3f);
+            leftSegment.transform.position = new Vector3(1.5f, 1.75f, -0.15f);
+            leftSegment.transform.localScale = new Vector3(3f, 3.5f, 0.3f);
 
-            Renderer rightRenderer = rightSegment.GetComponent<Renderer>();
-            if (rightRenderer != null && wallMaterial != null)
-                rightRenderer.sharedMaterial = wallMaterial;
+            Renderer leftRenderer = leftSegment.GetComponent<Renderer>();
+            if (leftRenderer != null && wallMaterial != null)
+                leftRenderer.sharedMaterial = wallMaterial;
 
-            Collider rightCollider = rightSegment.GetComponent<Collider>();
-            if (rightCollider != null)
-                rightCollider.enabled = true;
+            Collider leftCollider = leftSegment.GetComponent<Collider>();
+            if (leftCollider != null)
+                leftCollider.enabled = true;
 
-            frontDoor.transform.position = new Vector3(17f, 1.75f, -0.08f);
-            frontDoor.transform.localScale = new Vector3(1.5f, 3.5f, 0.18f);
+            GameObject strayRightSegment = GameObject.Find(RightWallSegmentName);
+            if (strayRightSegment != null)
+                Object.Destroy(strayRightSegment);
+
+            frontDoor.transform.position = new Vector3(4f, 1.75f, -0.08f);
+            frontDoor.transform.localScale = new Vector3(2f, 3.5f, 0.18f);
+        }
+
+        private static void EnsureExitZone()
+        {
+            GameObject exitZone = GameObject.Find("ExitZone_ToStreets");
+            if (exitZone == null)
+                return;
+
+            exitZone.transform.position = new Vector3(4f, 1f, -1.5f);
         }
 
         private static void CreatePart(string name, PrimitiveType primitiveType, Transform parent, Vector3 localPosition, Vector3 localScale, Material material)
