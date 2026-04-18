@@ -8,6 +8,7 @@ namespace TWD.Core
     public static class Level01FrontDoorCue
     {
         private const string CueRootName = "[FrontDoorCue]";
+        private const string RightWallSegmentName = "Wall_South_Right";
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
         private static void Install()
@@ -30,6 +31,8 @@ namespace TWD.Core
             GameObject frontDoor = GameObject.Find("FrontDoor");
             if (frontDoor == null)
                 return;
+
+            EnsureDoorway(frontDoor);
 
             if (frontDoor.transform.Find(CueRootName) != null)
                 return;
@@ -97,6 +100,41 @@ namespace TWD.Core
             cueLight.intensity = 1.2f;
             cueLight.range = 4.8f;
             cueLight.shadows = LightShadows.None;
+        }
+
+        private static void EnsureDoorway(GameObject frontDoor)
+        {
+            GameObject southWall = GameObject.Find("Wall_South");
+            if (southWall == null)
+                return;
+
+            southWall.transform.position = new Vector3(8f, 1.75f, -0.15f);
+            southWall.transform.localScale = new Vector3(16f, 3.5f, 0.3f);
+
+            Renderer wallRenderer = southWall.GetComponent<Renderer>();
+            Material wallMaterial = wallRenderer != null ? wallRenderer.sharedMaterial : null;
+
+            GameObject rightSegment = GameObject.Find(RightWallSegmentName);
+            if (rightSegment == null)
+            {
+                rightSegment = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                rightSegment.name = RightWallSegmentName;
+                rightSegment.layer = southWall.layer;
+            }
+
+            rightSegment.transform.position = new Vector3(19.25f, 1.75f, -0.15f);
+            rightSegment.transform.localScale = new Vector3(1.5f, 3.5f, 0.3f);
+
+            Renderer rightRenderer = rightSegment.GetComponent<Renderer>();
+            if (rightRenderer != null && wallMaterial != null)
+                rightRenderer.sharedMaterial = wallMaterial;
+
+            Collider rightCollider = rightSegment.GetComponent<Collider>();
+            if (rightCollider != null)
+                rightCollider.enabled = true;
+
+            frontDoor.transform.position = new Vector3(17f, 1.75f, -0.08f);
+            frontDoor.transform.localScale = new Vector3(1.5f, 3.5f, 0.18f);
         }
 
         private static void CreatePart(string name, PrimitiveType primitiveType, Transform parent, Vector3 localPosition, Vector3 localScale, Material material)

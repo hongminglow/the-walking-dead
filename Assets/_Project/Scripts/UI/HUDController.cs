@@ -21,8 +21,8 @@ namespace TWD.UI
         [SerializeField] private TMP_Text _healthStatusTmpText;
         [SerializeField] private Text _healthValueText;
         [SerializeField] private TMP_Text _healthValueTmpText;
-        [SerializeField] private Color _healthColorFine = new Color(0.71f, 0.12f, 0.12f, 1f);
-        [SerializeField] private Color _healthColorLow = new Color(0.98f, 0.34f, 0.26f, 1f);
+        [SerializeField] private Color _healthColorFine = new Color(0.83f, 0.16f, 0.16f, 1f);
+        [SerializeField] private Color _healthColorLow = new Color(0.98f, 0.42f, 0.3f, 1f);
 
         [Header("Ammo")]
         [SerializeField] private Text _ammoText;
@@ -69,6 +69,7 @@ namespace TWD.UI
 
         private void Awake()
         {
+            RemoveLegacyVitalsRectFix();
             EnsureRuntimeHudScaffold();
             ResolveRuntimeReferences();
         }
@@ -419,6 +420,23 @@ namespace TWD.UI
             if (FindNamedComponentInChildren<Image>("DamageOverlay") == null) CreateRuntimeDamageOverlay();
         }
 
+        private void RemoveLegacyVitalsRectFix()
+        {
+            MonoBehaviour[] behaviours = GetComponents<MonoBehaviour>();
+            for (int i = 0; i < behaviours.Length; i++)
+            {
+                MonoBehaviour behaviour = behaviours[i];
+                if (behaviour == null || behaviour == this)
+                    continue;
+
+                if (behaviour.GetType().FullName != "TWD.UI.HUDVitalsRectFix")
+                    continue;
+
+                behaviour.enabled = false;
+                Destroy(behaviour);
+            }
+        }
+
         private void HideLegacyHudArtifacts()
         {
             Transform health = transform.Find("HealthBarBg");
@@ -447,13 +465,12 @@ namespace TWD.UI
 
         private void CreateRuntimeVitalsPanel()
         {
-            Font font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
-            GameObject panel = CreatePanel("VitalsPanel", transform, Vector2.zero, Vector2.zero, Vector2.zero, new Vector2(16f, 14f), new Vector2(132f, 18f), new Color(0f, 0f, 0f, 0f));
-            CreateText("VitalsHeader", panel.transform, font, "\u2665", 12, FontStyle.Bold, TextAnchor.UpperLeft, new Vector2(0f, -1f), new Vector2(12f, 12f), new Color(0.92f, 0.18f, 0.18f, 1f));
-            CreateSlider("HealthBar", panel.transform, new Vector2(15f, -1f), new Vector2(72f, 5f), new Color(0.08f, 0.08f, 0.08f, 0.34f), _healthColorFine);
-            Slider stamina = CreateSlider("StaminaBar", panel.transform, new Vector2(15f, -9f), new Vector2(72f, 5f), new Color(0.08f, 0.08f, 0.08f, 0.24f), new Color(0.19f, 0.55f, 0.95f, 1f));
+            GameObject panel = CreatePanel("VitalsPanel", transform, Vector2.zero, Vector2.zero, Vector2.zero, new Vector2(16f, 16f), new Vector2(146f, 24f), new Color(0.03f, 0.04f, 0.05f, 0.12f));
+            CreateHeartIcon("HealthIcon", panel.transform, new Vector2(3f, -5f), new Color(0.95f, 0.22f, 0.22f, 0.98f));
+            CreateSlider("HealthBar", panel.transform, new Vector2(18f, -6f), new Vector2(82f, 5f), new Color(0.08f, 0.08f, 0.08f, 0.3f), _healthColorFine);
+            CreateStaminaIcon("StaminaIcon", panel.transform, new Vector2(4f, -15f), new Color(0.28f, 0.68f, 1f, 0.98f));
+            Slider stamina = CreateSlider("StaminaBar", panel.transform, new Vector2(18f, -16f), new Vector2(82f, 5f), new Color(0.08f, 0.08f, 0.08f, 0.22f), new Color(0.22f, 0.6f, 0.98f, 1f));
             stamina.gameObject.SetActive(true);
-            CreateText("HealthValueText", panel.transform, font, "100", 8, FontStyle.Bold, TextAnchor.UpperLeft, new Vector2(92f, -1f), new Vector2(22f, 10f), new Color(0.94f, 0.94f, 0.94f, 1f));
         }
 
         private void CreateRuntimeWeaponPanel()
@@ -539,6 +556,52 @@ namespace TWD.UI
             tipImage.color = new Color(0.97f, 0.88f, 0.62f, 1f);
         }
 
+        private void CreateHeartIcon(string name, Transform parent, Vector2 anchoredPosition, Color color)
+        {
+            GameObject iconRoot = CreateUiChild(name, parent);
+            RectTransform rootRect = iconRoot.GetComponent<RectTransform>();
+            rootRect.anchorMin = new Vector2(0f, 1f);
+            rootRect.anchorMax = new Vector2(0f, 1f);
+            rootRect.pivot = new Vector2(0f, 1f);
+            rootRect.anchoredPosition = anchoredPosition;
+            rootRect.sizeDelta = new Vector2(10f, 9f);
+
+            CreateIconBlock("LeftLobe", iconRoot.transform, new Vector2(0f, 0f), new Vector2(4f, 3f), color);
+            CreateIconBlock("RightLobe", iconRoot.transform, new Vector2(6f, 0f), new Vector2(4f, 3f), color);
+            CreateIconBlock("Center", iconRoot.transform, new Vector2(2f, -2f), new Vector2(6f, 3f), color);
+            CreateIconBlock("Lower", iconRoot.transform, new Vector2(1f, -4f), new Vector2(8f, 3f), color);
+            CreateIconBlock("Tip", iconRoot.transform, new Vector2(3f, -6f), new Vector2(4f, 3f), color);
+        }
+
+        private void CreateStaminaIcon(string name, Transform parent, Vector2 anchoredPosition, Color color)
+        {
+            GameObject iconRoot = CreateUiChild(name, parent);
+            RectTransform rootRect = iconRoot.GetComponent<RectTransform>();
+            rootRect.anchorMin = new Vector2(0f, 1f);
+            rootRect.anchorMax = new Vector2(0f, 1f);
+            rootRect.pivot = new Vector2(0f, 1f);
+            rootRect.anchoredPosition = anchoredPosition;
+            rootRect.sizeDelta = new Vector2(10f, 9f);
+
+            CreateIconBlock("Upper", iconRoot.transform, new Vector2(4f, 0f), new Vector2(4f, 3f), color);
+            CreateIconBlock("Middle", iconRoot.transform, new Vector2(2f, -3f), new Vector2(4f, 3f), color);
+            CreateIconBlock("Lower", iconRoot.transform, new Vector2(5f, -6f), new Vector2(3f, 3f), color);
+        }
+
+        private void CreateIconBlock(string name, Transform parent, Vector2 anchoredPosition, Vector2 size, Color color)
+        {
+            GameObject block = CreateUiChild(name, parent);
+            RectTransform rect = block.GetComponent<RectTransform>();
+            rect.anchorMin = new Vector2(0f, 1f);
+            rect.anchorMax = new Vector2(0f, 1f);
+            rect.pivot = new Vector2(0f, 1f);
+            rect.anchoredPosition = anchoredPosition;
+            rect.sizeDelta = size;
+            Image image = block.AddComponent<Image>();
+            image.color = color;
+            image.raycastTarget = false;
+        }
+
         private Slider CreateSlider(string name, Transform parent, Vector2 anchoredPosition, Vector2 size, Color backgroundColor, Color fillColor)
         {
             GameObject background = CreateUiChild(name, parent);
@@ -563,6 +626,9 @@ namespace TWD.UI
             RectTransform fillRect = fill.GetComponent<RectTransform>();
             fillRect.anchorMin = Vector2.zero;
             fillRect.anchorMax = Vector2.one;
+            fillRect.offsetMin = Vector2.zero;
+            fillRect.offsetMax = Vector2.zero;
+            fillRect.sizeDelta = Vector2.zero;
             Image fillImage = fill.AddComponent<Image>();
             fillImage.color = fillColor;
 
@@ -590,7 +656,7 @@ namespace TWD.UI
             return panel;
         }
 
-        private Text CreateText(string name, Transform parent, Font font, string content, int fontSize, FontStyle fontStyle, TextAnchor alignment, Vector2 anchoredPosition, Vector2 size, Color color)
+        private Text CreateText(string name, Transform parent, Font font, string content, int fontSize, FontStyle fontStyle, TextAnchor alignment, Vector2 anchoredPosition, Vector2 size, Color color, bool outlined = true)
         {
             GameObject textObject = CreateUiChild(name, parent);
             RectTransform rect = textObject.GetComponent<RectTransform>();
@@ -606,9 +672,12 @@ namespace TWD.UI
             text.alignment = alignment;
             text.color = color;
             text.text = content;
-            Outline outline = textObject.AddComponent<Outline>();
-            outline.effectColor = new Color(0f, 0f, 0f, 0.85f);
-            outline.effectDistance = new Vector2(1f, -1f);
+            if (outlined)
+            {
+                Outline outline = textObject.AddComponent<Outline>();
+                outline.effectColor = new Color(0f, 0f, 0f, 0.85f);
+                outline.effectDistance = new Vector2(1f, -1f);
+            }
             return text;
         }
 

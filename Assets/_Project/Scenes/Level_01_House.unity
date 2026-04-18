@@ -2645,8 +2645,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::TWD.UI.HUDController
   _healthBar: {fileID: 0}
   _healthBarFill: {fileID: 0}
-  _healthColorFine: {r: 0.545, g: 0, b: 0, a: 1}
-  _healthColorLow: {r: 1, g: 0.267, b: 0.267, a: 1}
+  _healthColorFine: {r: 0.83, g: 0.16, b: 0.16, a: 1}
+  _healthColorLow: {r: 0.98, g: 0.42, b: 0.3, a: 1}
   _ammoText: {fileID: 0}
   _weaponIcon: {fileID: 0}
   _interactPromptPanel: {fileID: 59812608}
@@ -8385,6 +8385,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 2121867333}
+  - component: {fileID: 2121867336}
   - component: {fileID: 2121867335}
   - component: {fileID: 2121867334}
   m_Layer: 0
@@ -8409,6 +8410,18 @@ Transform:
   m_Children: []
   m_Father: {fileID: 1635935840}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &2121867336
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2121867332}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7649476a09d948038cbaaf6159286791, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TWD.Player.PlayerCharacterVisual
 --- !u!23 &2121867334
 MeshRenderer:
   m_ObjectHideFlags: 0
