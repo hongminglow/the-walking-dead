@@ -116,14 +116,21 @@ namespace TWD.Inventory
 
         private void Start()
         {
-            if (_itemData == null)
+            WeaponData inferredWeapon = RuntimeSceneResolver.InferWeaponFromObjectName(gameObject.name);
+            bool looksLikeWeaponPickup = inferredWeapon != null;
+
+            if (_weaponData == null && inferredWeapon != null)
             {
-                _itemData = RuntimeSceneResolver.InferItemDataFromObjectName(gameObject.name);
+                _weaponData = inferredWeapon;
             }
 
-            if (_itemData == null && _weaponData == null)
+            if (looksLikeWeaponPickup)
             {
-                _weaponData = RuntimeSceneResolver.InferWeaponFromObjectName(gameObject.name);
+                _itemData = null;
+            }
+            else if (_itemData == null)
+            {
+                _itemData = RuntimeSceneResolver.InferItemDataFromObjectName(gameObject.name);
             }
 
             if (_itemData == null && _weaponData == null)

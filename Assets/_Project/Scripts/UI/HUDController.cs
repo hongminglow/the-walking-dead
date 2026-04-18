@@ -13,6 +13,7 @@ namespace TWD.UI
     public class HUDController : MonoBehaviour
     {
         private const float PickupToastDuration = 2.25f;
+        private const int HotbarSlotCount = 9;
 
         [Header("Health")]
         [SerializeField] private Slider _healthBar;
@@ -66,6 +67,10 @@ namespace TWD.UI
         private PlayerController _playerController;
         private PlayerHealth _playerHealth;
         private PlayerCombat _playerCombat;
+        private GameObject _hotbarPanel;
+        private Image[] _hotbarSlotBackgrounds;
+        private Text[] _hotbarSlotLabels;
+        private Text[] _hotbarSlotNumbers;
 
         private void Awake()
         {
@@ -189,6 +194,7 @@ namespace TWD.UI
         private void UpdateWeapon(string weaponName)
         {
             SetText(_weaponNameText, _weaponNameTmpText, string.IsNullOrWhiteSpace(weaponName) ? "UNARMED" : weaponName);
+            RefreshHotbar();
         }
 
         private void ShowPrompt(string text)
@@ -280,6 +286,7 @@ namespace TWD.UI
                 UpdateWeapon(weapon != null ? weapon.weaponName : "Knife");
                 UpdateAmmo(_playerCombat.AmmoInClip, weapon != null ? weapon.magazineSize : 0);
             }
+            RefreshHotbar();
         }
 
         private void UpdateInventoryStatus()
@@ -401,6 +408,12 @@ namespace TWD.UI
             if (_pickupToastTmpText == null) _pickupToastTmpText = FindNamedComponentInChildren<TMP_Text>("PickupToastText");
             if (_pickupToastPanel != null && _pickupToastCanvasGroup == null) _pickupToastCanvasGroup = _pickupToastPanel.GetComponent<CanvasGroup>();
             if (_damageOverlay == null) _damageOverlay = FindNamedComponentInChildren<Image>("DamageOverlay");
+            if (_hotbarPanel == null)
+            {
+                RectTransform hotbar = FindNamedComponentInChildren<RectTransform>("HotbarPanel");
+                if (hotbar != null) _hotbarPanel = hotbar.gameObject;
+            }
+            ResolveHotbarReferences();
         }
 
         private void EnsureRuntimeHudScaffold()
@@ -409,11 +422,13 @@ namespace TWD.UI
             RebuildRuntimeElement("ObjectivePanel");
             RebuildRuntimeElement("VitalsPanel");
             RebuildRuntimeElement("WeaponPanel");
+            RebuildRuntimeElement("HotbarPanel");
             RebuildRuntimeElement("PickupToast");
             RebuildRuntimeElement("DamageOverlay");
             if (FindNamedComponentInChildren<RectTransform>("ObjectivePanel") == null) CreateRuntimeObjectivePanel();
             if (FindNamedComponentInChildren<RectTransform>("VitalsPanel") == null) CreateRuntimeVitalsPanel();
             if (FindNamedComponentInChildren<RectTransform>("WeaponPanel") == null) CreateRuntimeWeaponPanel();
+            if (FindNamedComponentInChildren<RectTransform>("HotbarPanel") == null) CreateRuntimeHotbarPanel();
             if (FindNamedComponentInChildren<RectTransform>("PickupToast") == null) CreateRuntimePickupToast();
             if (FindNamedComponentInChildren<RectTransform>("InteractPrompt") == null) CreateRuntimeInteractPrompt();
             if (FindNamedComponentInChildren<RectTransform>("Crosshair") == null) CreateRuntimeCrosshair();
@@ -481,6 +496,40 @@ namespace TWD.UI
             CreateAmmoIcon(panel.transform);
             CreateText("WeaponAmmoText", panel.transform, font, "|||||", 12, FontStyle.Bold, TextAnchor.UpperLeft, new Vector2(26f, -18f), new Vector2(70f, 14f), new Color(0.94f, 0.9f, 0.78f, 1f));
             CreateText("WeaponReserveText", panel.transform, font, "05/12", 12, FontStyle.Bold, TextAnchor.UpperRight, new Vector2(102f, -18f), new Vector2(48f, 14f), Color.white);
+        }
+
+        private void CreateRuntimeHotbarPanel()
+        {
+            Font font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            GameObject panel = CreatePanel("HotbarPanel", transform, new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), new Vector2(0f, 18f), new Vector2(504f, 56f), new Color(0f, 0f, 0f, 0f));
+            _hotbarPanel = panel;
+            _hotbarSlotBackgrounds = new Image[HotbarSlotCount];
+            _hotbarSlotLabels = new Text[HotbarSlotCount];
+            _hotbarSlotNumbers = new Text[HotbarSlotCount];
+
+            for (int i = 0; i < HotbarSlotCount; i++)
+            {
+                GameObject slot = CreateUiChild($"HotbarSlot_{i}", panel.transform);
+                RectTransform slotRect = slot.GetComponent<RectTransform>();
+                slotRect.anchorMin = new Vector2(0f, 0.5f);
+                slotRect.anchorMax = new Vector2(0f, 0.5f);
+                slotRect.pivot = new Vector2(0f, 0.5f);
+                slotRect.anchoredPosition = new Vector2(6f + (i * 55f), 0f);
+                slotRect.sizeDelta = new Vector2(50f, 50f);
+
+                Image bg = slot.AddComponent<Image>();
+                bg.color = new Color(0.06f, 0.07f, 0.08f, 0.76f);
+                _hotbarSlotBackgrounds[i] = bg;
+
+                Outline slotOutline = slot.AddComponent<Outline>();
+                slotOutline.effectColor = new Color(0f, 0f, 0f, 0.85f);
+                slotOutline.effectDistance = new Vector2(1f, -1f);
+
+                Text number = CreateText($"HotbarNumber_{i}", slot.transform, font, (i + 1).ToString(), 9, FontStyle.Bold, TextAnchor.UpperLeft, new Vector2(4f, -4f), new Vector2(16f, 12f), new Color(0.74f, 0.77f, 0.8f, 0.95f), false);
+                Text label = CreateText($"HotbarLabel_{i}", slot.transform, font, "---", 10, FontStyle.Bold, TextAnchor.MiddleCenter, new Vector2(5f, -10f), new Vector2(40f, 30f), new Color(0.9f, 0.9f, 0.88f, 0.96f));
+                _hotbarSlotNumbers[i] = number;
+                _hotbarSlotLabels[i] = label;
+            }
         }
 
         private void CreateRuntimePickupToast()
@@ -709,6 +758,85 @@ namespace TWD.UI
         {
             if (string.IsNullOrWhiteSpace(value)) return "UNKNOWN";
             return value.Replace("_", " ").ToUpperInvariant();
+        }
+
+        private void ResolveHotbarReferences()
+        {
+            if (_hotbarPanel == null)
+                return;
+
+            if (_hotbarSlotBackgrounds == null || _hotbarSlotBackgrounds.Length != HotbarSlotCount)
+                _hotbarSlotBackgrounds = new Image[HotbarSlotCount];
+
+            if (_hotbarSlotLabels == null || _hotbarSlotLabels.Length != HotbarSlotCount)
+                _hotbarSlotLabels = new Text[HotbarSlotCount];
+
+            if (_hotbarSlotNumbers == null || _hotbarSlotNumbers.Length != HotbarSlotCount)
+                _hotbarSlotNumbers = new Text[HotbarSlotCount];
+
+            for (int i = 0; i < HotbarSlotCount; i++)
+            {
+                if (_hotbarSlotBackgrounds[i] == null)
+                    _hotbarSlotBackgrounds[i] = FindNamedComponentInChildren<Image>($"HotbarSlot_{i}", _hotbarPanel.transform);
+                if (_hotbarSlotLabels[i] == null)
+                    _hotbarSlotLabels[i] = FindNamedComponentInChildren<Text>($"HotbarLabel_{i}", _hotbarPanel.transform);
+                if (_hotbarSlotNumbers[i] == null)
+                    _hotbarSlotNumbers[i] = FindNamedComponentInChildren<Text>($"HotbarNumber_{i}", _hotbarPanel.transform);
+            }
+        }
+
+        private void RefreshHotbar()
+        {
+            if (_playerCombat == null || _hotbarSlotBackgrounds == null || _hotbarSlotLabels == null)
+                return;
+
+            for (int i = 0; i < HotbarSlotCount; i++)
+            {
+                if (_hotbarSlotBackgrounds[i] == null || _hotbarSlotLabels[i] == null)
+                    continue;
+
+                WeaponData weapon = _playerCombat.GetHotbarWeapon(i);
+                bool isSelected = _playerCombat.SelectedHotbarIndex == i;
+
+                _hotbarSlotBackgrounds[i].color = isSelected
+                    ? new Color(0.76f, 0.18f, 0.14f, 0.94f)
+                    : weapon != null
+                        ? new Color(0.1f, 0.12f, 0.14f, 0.82f)
+                        : new Color(0.05f, 0.06f, 0.07f, 0.55f);
+
+                _hotbarSlotLabels[i].text = weapon != null ? GetHotbarLabel(weapon) : "---";
+                _hotbarSlotLabels[i].color = isSelected
+                    ? new Color(1f, 0.96f, 0.88f, 1f)
+                    : weapon != null
+                        ? new Color(0.88f, 0.9f, 0.9f, 0.96f)
+                        : new Color(0.42f, 0.46f, 0.5f, 0.85f);
+
+                if (_hotbarSlotNumbers[i] != null)
+                {
+                    _hotbarSlotNumbers[i].color = isSelected
+                        ? new Color(1f, 0.93f, 0.7f, 1f)
+                        : new Color(0.74f, 0.77f, 0.8f, weapon != null ? 0.96f : 0.65f);
+                }
+            }
+        }
+
+        private static string GetHotbarLabel(WeaponData weapon)
+        {
+            if (weapon == null || string.IsNullOrWhiteSpace(weapon.weaponName))
+                return "---";
+
+            string upperName = weapon.weaponName.ToUpperInvariant();
+
+            if (upperName.Contains("KNIFE"))
+                return "KNF";
+            if (upperName.Contains("PISTOL"))
+                return "PST";
+            if (upperName.Contains("SHOTGUN"))
+                return "SGN";
+            if (upperName.Contains("WRENCH"))
+                return "WRN";
+
+            return upperName.Length <= 3 ? upperName : upperName.Substring(0, 3);
         }
 
         private static string BuildAmmoPips(int current, int max)

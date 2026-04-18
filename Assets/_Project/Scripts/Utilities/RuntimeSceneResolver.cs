@@ -156,8 +156,14 @@ namespace TWD.Utilities
 
             string name = objectName.ToLowerInvariant();
 
+            if (name.Contains("pistol") || name.Contains("handgun"))
+                return FindWeaponById("weapon_pistol") ?? FindWeaponByType(WeaponType.Pistol, "pistol");
+
             if (name.Contains("shotgun"))
                 return FindWeaponById("weapon_shotgun") ?? FindWeaponByType(WeaponType.Shotgun, "shotgun");
+
+            if (name.Contains("knife"))
+                return FindWeaponById("weapon_knife") ?? FindWeaponByType(WeaponType.Melee, "knife");
 
             if (name.Contains("wrench"))
                 return FindWeaponById("weapon_wrench") ?? FindWeaponByType(WeaponType.Melee, "wrench");

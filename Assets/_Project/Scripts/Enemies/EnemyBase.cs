@@ -78,6 +78,8 @@ namespace TWD.Enemies
             _animator = GetComponent<Animator>();
             _audioSource = GetComponent<AudioSource>();
             ResolveRuntimeDefaults();
+            if (GetComponent<EnemyCharacterVisual>() == null)
+                gameObject.AddComponent<EnemyCharacterVisual>();
             _enemyId = _data != null ? $"{_data.enemyType}_{gameObject.GetInstanceID()}" : $"enemy_{gameObject.GetInstanceID()}";
         }
 
@@ -503,8 +505,12 @@ namespace TWD.Enemies
             // Notify event bus
             EventBus.EnemyKilled(_enemyId);
 
-            // Destroy after corpse lifetime
-            Destroy(gameObject, _data.corpseLifetime);
+            float destroyDelay = _data.corpseLifetime;
+            EnemyCharacterVisual visual = GetComponent<EnemyCharacterVisual>();
+            if (visual != null)
+                destroyDelay = visual.TriggerDeathVanish();
+
+            Destroy(gameObject, Mathf.Max(0.7f, destroyDelay));
 
             Debug.Log($"[EnemyBase] {_data.enemyName} died. ID: {_enemyId}");
         }

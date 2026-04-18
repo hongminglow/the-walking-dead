@@ -7,12 +7,15 @@
 // Created:     2026-03-29
 // ============================================================
 
+using System;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using TWD.Combat;
 using TWD.Core;
 using TWD.Inventory;
 using TWD.Utilities;
+using Random = UnityEngine.Random;
 
 namespace TWD.Player
 {
@@ -22,6 +25,8 @@ namespace TWD.Player
     /// </summary>
     public class PlayerCombat : MonoBehaviour
     {
+        private const int HotbarSlotCount = 9;
+
         #region Serialized Fields
 
         [Header("Weapon")]
@@ -57,6 +62,10 @@ namespace TWD.Player
         private bool _canFire = true;
         private Light _muzzleFlashLight;
         private AudioClip _fallbackGunshot;
+        private WeaponData[] _hotbarWeapons = new WeaponData[HotbarSlotCount];
+        private int _selectedHotbarIndex = -1;
+        private Dictionary<string, int> _clipAmmoByWeaponId = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+        private Dictionary<AmmoType, int> _reserveAmmoByType = new Dictionary<AmmoType, int>();
 
         #endregion
 
@@ -73,6 +82,10 @@ namespace TWD.Player
 
         /// <summary>Whether currently reloading.</summary>
         public bool IsReloading => _isReloading;
+
+        public int HotbarSize => HotbarSlotCount;
+
+        public int SelectedHotbarIndex => _selectedHotbarIndex;
 
         #endregion
 
@@ -104,8 +117,8 @@ namespace TWD.Player
                 _meleeWeaponData = RuntimeSceneResolver.FindWeaponById("weapon_knife") ??
                                    RuntimeSceneResolver.FindWeaponByType(WeaponType.Melee, "knife");
 
-            if (_currentWeaponData != null && _currentAmmoInClip <= 0)
-                _currentAmmoInClip = _currentWeaponData.magazineSize;
+            BuildDefaultHotbar();
+            RestoreCurrentWeaponState();
 
             EnsureMuzzleFlashLight();
             if (_fallbackGunshot == null)
@@ -144,6 +157,9 @@ namespace TWD.Player
 
             if (kb != null && kb.vKey.wasPressedThisFrame)
                 PerformMelee();
+
+            if (kb != null)
+                ReadHotbarInput(kb);
         }
 
         /// <summary>Called by PlayerInput for Shoot action.</summary>
@@ -285,6 +301,7 @@ namespace TWD.Player
             _isReloading = true;
             _reloadTimer = _currentWeaponData.reloadTime;
             _canFire = false;
+            StoreCurrentWeaponState();
 
             _playerAnimator?.TriggerReload();
             PlaySound(_currentWeaponData.reloadSound);
@@ -325,6 +342,7 @@ namespace TWD.Player
 
                 _isReloading = false;
                 _canFire = true;
+                StoreCurrentWeaponState();
 
                 UpdateAmmoUI();
                 EventBus.WeaponReloaded();
@@ -374,9 +392,15 @@ namespace TWD.Player
         /// </summary>
         public void EquipWeapon(WeaponData weaponData)
         {
+            if (weaponData == null)
+                return;
+
+            StoreCurrentWeaponState();
+
+            int hotbarSlot = RegisterWeapon(weaponData);
             _currentWeaponData = weaponData;
-            _currentAmmoInClip = weaponData.magazineSize;
-            _reserveAmmo = 0;
+            _selectedHotbarIndex = hotbarSlot;
+            RestoreCurrentWeaponState();
             _isReloading = false;
             _canFire = true;
             _fireTimer = 0f;
@@ -391,6 +415,7 @@ namespace TWD.Player
         public void AddReserveAmmo(int amount)
         {
             _reserveAmmo += amount;
+            TrackReserveAmmo();
             UpdateAmmoUI();
             Debug.Log($"[PlayerCombat] Added {amount} reserve ammo. Total reserve: {_reserveAmmo}");
         }
@@ -442,6 +467,8 @@ namespace TWD.Player
                 _currentWeaponData = savedWeapon;
             }
 
+            BuildDefaultHotbar();
+
             if (_currentWeaponData != null && _currentWeaponData.UsesAmmo)
             {
                 _currentAmmoInClip = Mathf.Clamp(
@@ -463,6 +490,8 @@ namespace TWD.Player
             _canFire = true;
             _reloadTimer = 0f;
             _fireTimer = 0f;
+            StoreCurrentWeaponState();
+            EnsureWeaponSelected(_currentWeaponData);
 
             UpdateAmmoUI();
 
@@ -481,7 +510,10 @@ namespace TWD.Player
             if (_currentWeaponData != null && _currentWeaponData.UsesAmmo)
             {
                 EventBus.AmmoChanged(_currentAmmoInClip, _currentWeaponData.magazineSize);
+                return;
             }
+
+            EventBus.AmmoChanged(0, 0);
         }
 
         private void PlaySound(AudioClip clip)
@@ -578,6 +610,166 @@ namespace TWD.Player
         private static string GetClipAmmoKey(string weaponId)
         {
             return $"clip::{weaponId}";
+        }
+
+        public WeaponData GetHotbarWeapon(int slotIndex)
+        {
+            if (slotIndex < 0 || slotIndex >= _hotbarWeapons.Length)
+                return null;
+
+            return _hotbarWeapons[slotIndex];
+        }
+
+        public bool EquipHotbarSlot(int slotIndex)
+        {
+            if (slotIndex < 0 || slotIndex >= _hotbarWeapons.Length)
+                return false;
+
+            WeaponData weapon = _hotbarWeapons[slotIndex];
+            if (weapon == null)
+                return false;
+
+            if (_selectedHotbarIndex == slotIndex && _currentWeaponData == weapon)
+                return true;
+
+            EquipWeapon(weapon);
+            return true;
+        }
+
+        private void ReadHotbarInput(Keyboard keyboard)
+        {
+            if (keyboard.digit1Key.wasPressedThisFrame || keyboard.numpad1Key.wasPressedThisFrame) EquipHotbarSlot(0);
+            else if (keyboard.digit2Key.wasPressedThisFrame || keyboard.numpad2Key.wasPressedThisFrame) EquipHotbarSlot(1);
+            else if (keyboard.digit3Key.wasPressedThisFrame || keyboard.numpad3Key.wasPressedThisFrame) EquipHotbarSlot(2);
+            else if (keyboard.digit4Key.wasPressedThisFrame || keyboard.numpad4Key.wasPressedThisFrame) EquipHotbarSlot(3);
+            else if (keyboard.digit5Key.wasPressedThisFrame || keyboard.numpad5Key.wasPressedThisFrame) EquipHotbarSlot(4);
+            else if (keyboard.digit6Key.wasPressedThisFrame || keyboard.numpad6Key.wasPressedThisFrame) EquipHotbarSlot(5);
+            else if (keyboard.digit7Key.wasPressedThisFrame || keyboard.numpad7Key.wasPressedThisFrame) EquipHotbarSlot(6);
+            else if (keyboard.digit8Key.wasPressedThisFrame || keyboard.numpad8Key.wasPressedThisFrame) EquipHotbarSlot(7);
+            else if (keyboard.digit9Key.wasPressedThisFrame || keyboard.numpad9Key.wasPressedThisFrame) EquipHotbarSlot(8);
+        }
+
+        private void BuildDefaultHotbar()
+        {
+            _hotbarWeapons = new WeaponData[HotbarSlotCount];
+            _selectedHotbarIndex = -1;
+
+            if (_meleeWeaponData != null)
+                RegisterWeapon(_meleeWeaponData);
+
+            if (_currentWeaponData != null)
+                RegisterWeapon(_currentWeaponData);
+
+            EnsureWeaponSelected(_currentWeaponData ?? _meleeWeaponData);
+        }
+
+        private void RestoreCurrentWeaponState()
+        {
+            if (_currentWeaponData == null)
+                return;
+
+            if (_currentWeaponData.UsesAmmo)
+            {
+                if (!_clipAmmoByWeaponId.TryGetValue(_currentWeaponData.weaponId, out _currentAmmoInClip))
+                    _currentAmmoInClip = Mathf.Max(0, _currentWeaponData.magazineSize);
+
+                if (!_reserveAmmoByType.TryGetValue(_currentWeaponData.ammoType, out _reserveAmmo))
+                    _reserveAmmo = 0;
+            }
+            else
+            {
+                _currentAmmoInClip = 0;
+                _reserveAmmo = 0;
+            }
+        }
+
+        private void StoreCurrentWeaponState()
+        {
+            if (_currentWeaponData == null || !_currentWeaponData.UsesAmmo)
+                return;
+
+            _clipAmmoByWeaponId[_currentWeaponData.weaponId] = Mathf.Clamp(_currentAmmoInClip, 0, _currentWeaponData.magazineSize);
+            _reserveAmmoByType[_currentWeaponData.ammoType] = Mathf.Max(0, _reserveAmmo);
+        }
+
+        private void TrackReserveAmmo()
+        {
+            if (_currentWeaponData == null || !_currentWeaponData.UsesAmmo)
+                return;
+
+            _reserveAmmoByType[_currentWeaponData.ammoType] = Mathf.Max(0, _reserveAmmo);
+        }
+
+        private int RegisterWeapon(WeaponData weaponData)
+        {
+            if (weaponData == null)
+                return -1;
+
+            for (int i = 0; i < _hotbarWeapons.Length; i++)
+            {
+                if (_hotbarWeapons[i] == weaponData)
+                    return i;
+            }
+
+            int preferredIndex = GetPreferredHotbarSlot(weaponData);
+            if (preferredIndex >= 0 && preferredIndex < _hotbarWeapons.Length && _hotbarWeapons[preferredIndex] == null)
+            {
+                _hotbarWeapons[preferredIndex] = weaponData;
+                return preferredIndex;
+            }
+
+            for (int i = 0; i < _hotbarWeapons.Length; i++)
+            {
+                if (_hotbarWeapons[i] == null)
+                {
+                    _hotbarWeapons[i] = weaponData;
+                    return i;
+                }
+            }
+
+            int clampedIndex = Mathf.Clamp(preferredIndex, 0, _hotbarWeapons.Length - 1);
+            _hotbarWeapons[clampedIndex] = weaponData;
+            return clampedIndex;
+        }
+
+        private void EnsureWeaponSelected(WeaponData weaponData)
+        {
+            if (weaponData == null)
+                return;
+
+            for (int i = 0; i < _hotbarWeapons.Length; i++)
+            {
+                if (_hotbarWeapons[i] == weaponData)
+                {
+                    _selectedHotbarIndex = i;
+                    return;
+                }
+            }
+        }
+
+        private static int GetPreferredHotbarSlot(WeaponData weaponData)
+        {
+            if (weaponData == null)
+                return 0;
+
+            string weaponId = weaponData.weaponId != null ? weaponData.weaponId.ToLowerInvariant() : string.Empty;
+
+            if (weaponId.Contains("knife"))
+                return 0;
+            if (weaponId.Contains("pistol"))
+                return 1;
+            if (weaponId.Contains("shotgun"))
+                return 2;
+            if (weaponId.Contains("wrench"))
+                return 3;
+
+            return weaponData.weaponType switch
+            {
+                WeaponType.Melee => 0,
+                WeaponType.Pistol => 1,
+                WeaponType.Shotgun => 2,
+                _ => 0
+            };
         }
 
         #endregion

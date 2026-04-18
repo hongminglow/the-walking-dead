@@ -1,13 +1,13 @@
 using UnityEngine;
 using UnityEngine.SceneManagement;
-using UnityEngine.UI;
 using TWD.Utilities;
 
 namespace TWD.Core
 {
     public static class Level01FrontDoorCue
     {
-        private const string CueRootName = "[FrontDoorCue]";
+        private const string CueRootName = "[FrontDoorFrameCue]";
+        private const string LeafCueRootName = "[FrontDoorLeafCue]";
         private const string LeftWallSegmentName = "Wall_South_Left";
         private const string RightWallSegmentName = "Wall_South_Right";
 
@@ -36,72 +36,60 @@ namespace TWD.Core
             EnsureDoorway(frontDoor);
             EnsureExitZone();
 
-            if (frontDoor.transform.Find(CueRootName) != null)
-                return;
+            Transform staticCueRoot = frontDoor.transform.parent != null
+                ? frontDoor.transform.parent.Find(CueRootName)
+                : GameObject.Find(CueRootName)?.transform;
+            if (staticCueRoot == null)
+            {
+                staticCueRoot = new GameObject(CueRootName).transform;
+                if (frontDoor.transform.parent != null)
+                    staticCueRoot.SetParent(frontDoor.transform.parent, false);
+            }
 
-            Transform cueRoot = new GameObject(CueRootName).transform;
-            cueRoot.SetParent(frontDoor.transform, false);
-            cueRoot.localPosition = Vector3.zero;
+            staticCueRoot.position = frontDoor.transform.position;
+            staticCueRoot.rotation = frontDoor.transform.rotation;
+            staticCueRoot.localScale = Vector3.one;
+            ClearChildren(staticCueRoot);
 
-            Material doorMaterial = CreateLitMaterial(new Color(0.32f, 0.19f, 0.1f, 1f), 0.04f, 0.4f, Color.black);
-            Material frameMaterial = CreateLitMaterial(new Color(0.29f, 0.16f, 0.11f, 1f), 0.08f, 0.34f, Color.black);
-            Material signMaterial = CreateLitMaterial(new Color(0.18f, 0.19f, 0.16f, 1f), 0.03f, 0.28f, new Color(0.35f, 0.85f, 0.5f, 1f) * 0.65f);
+            Transform leafCueRoot = frontDoor.transform.Find(LeafCueRootName);
+            if (leafCueRoot == null)
+            {
+                leafCueRoot = new GameObject(LeafCueRootName).transform;
+                leafCueRoot.SetParent(frontDoor.transform, false);
+            }
+
+            leafCueRoot.localPosition = Vector3.zero;
+            leafCueRoot.localRotation = Quaternion.identity;
+            leafCueRoot.localScale = Vector3.one;
+            ClearChildren(leafCueRoot);
+
+            Material doorMaterial = CreateLitMaterial(new Color(0.42f, 0.24f, 0.12f, 1f), 0.02f, 0.42f, Color.black);
+            Material panelMaterial = CreateLitMaterial(new Color(0.34f, 0.18f, 0.1f, 1f), 0.02f, 0.38f, Color.black);
+            Material frameMaterial = CreateLitMaterial(new Color(0.24f, 0.13f, 0.08f, 1f), 0.05f, 0.32f, Color.black);
+            Material hardwareMaterial = CreateLitMaterial(new Color(0.84f, 0.68f, 0.3f, 1f), 0.46f, 0.74f, new Color(0.1f, 0.08f, 0.03f, 1f) * 0.08f);
+            Material matMaterial = CreateLitMaterial(new Color(0.15f, 0.12f, 0.1f, 1f), 0.01f, 0.18f, Color.black);
 
             Renderer frontDoorRenderer = frontDoor.GetComponent<Renderer>();
             if (frontDoorRenderer != null)
                 frontDoorRenderer.sharedMaterial = doorMaterial;
 
-            CreatePart("FrameLeft", PrimitiveType.Cube, cueRoot, new Vector3(-0.58f, 0f, -0.02f), new Vector3(0.06f, 1.82f, 0.08f), frameMaterial);
-            CreatePart("FrameRight", PrimitiveType.Cube, cueRoot, new Vector3(0.58f, 0f, -0.02f), new Vector3(0.06f, 1.82f, 0.08f), frameMaterial);
-            CreatePart("FrameTop", PrimitiveType.Cube, cueRoot, new Vector3(0f, 0.88f, -0.02f), new Vector3(1.22f, 0.08f, 0.08f), frameMaterial);
-            CreatePart("DoorHandle", PrimitiveType.Sphere, cueRoot, new Vector3(0.42f, -0.05f, -0.12f), new Vector3(0.08f, 0.08f, 0.08f), CreateLitMaterial(new Color(0.86f, 0.73f, 0.36f, 1f), 0.42f, 0.7f, new Color(0.18f, 0.14f, 0.04f, 1f) * 0.15f));
-            CreatePart("LampBackplate", PrimitiveType.Cube, cueRoot, new Vector3(0f, 1.12f, -0.08f), new Vector3(0.42f, 0.12f, 0.04f), signMaterial);
-            CreatePart("LampBulb", PrimitiveType.Sphere, cueRoot, new Vector3(0f, 0.98f, -0.05f), new Vector3(0.12f, 0.12f, 0.12f), CreateLitMaterial(new Color(1f, 0.92f, 0.72f, 1f), 0.05f, 0.72f, new Color(1f, 0.92f, 0.72f, 1f) * 3f));
+            CreatePart("FrameLeft", PrimitiveType.Cube, staticCueRoot, new Vector3(-0.61f, 0f, -0.02f), new Vector3(0.1f, 1.9f, 0.14f), frameMaterial);
+            CreatePart("FrameRight", PrimitiveType.Cube, staticCueRoot, new Vector3(0.61f, 0f, -0.02f), new Vector3(0.1f, 1.9f, 0.14f), frameMaterial);
+            CreatePart("FrameTop", PrimitiveType.Cube, staticCueRoot, new Vector3(0f, 0.92f, -0.02f), new Vector3(1.32f, 0.1f, 0.14f), frameMaterial);
+            CreatePart("Threshold", PrimitiveType.Cube, staticCueRoot, new Vector3(0f, -0.92f, 0.03f), new Vector3(1.14f, 0.05f, 0.18f), frameMaterial);
+            CreatePart("DoorMat", PrimitiveType.Cube, staticCueRoot, new Vector3(0f, -1.01f, 0.66f), new Vector3(0.9f, 0.02f, 0.44f), matMaterial);
 
-            GameObject signCanvasObject = new GameObject("ExitSign", typeof(RectTransform), typeof(Canvas), typeof(CanvasScaler));
-            signCanvasObject.transform.SetParent(cueRoot, false);
-            signCanvasObject.transform.localPosition = new Vector3(0f, 1.22f, -0.06f);
-
-            Canvas canvas = signCanvasObject.GetComponent<Canvas>();
-            canvas.renderMode = RenderMode.WorldSpace;
-            canvas.worldCamera = UnityEngine.Camera.main;
-            canvas.sortingOrder = 40;
-
-            RectTransform canvasRect = signCanvasObject.GetComponent<RectTransform>();
-            canvasRect.sizeDelta = new Vector2(100f, 24f);
-            canvasRect.localScale = Vector3.one * 0.01f;
-
-            Image background = signCanvasObject.AddComponent<Image>();
-            background.color = new Color(0.05f, 0.08f, 0.05f, 0.8f);
-
-            Font font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
-            GameObject labelObject = new GameObject("Label", typeof(RectTransform), typeof(Text), typeof(Outline));
-            labelObject.transform.SetParent(signCanvasObject.transform, false);
-
-            RectTransform labelRect = labelObject.GetComponent<RectTransform>();
-            labelRect.anchorMin = Vector2.zero;
-            labelRect.anchorMax = Vector2.one;
-            labelRect.offsetMin = Vector2.zero;
-            labelRect.offsetMax = Vector2.zero;
-
-            Text label = labelObject.GetComponent<Text>();
-            label.font = font;
-            label.fontSize = 16;
-            label.fontStyle = FontStyle.Bold;
-            label.alignment = TextAnchor.MiddleCenter;
-            label.color = new Color(0.72f, 1f, 0.72f, 1f);
-            label.text = "EXIT";
-
-            Outline outline = labelObject.GetComponent<Outline>();
-            outline.effectColor = new Color(0f, 0f, 0f, 0.85f);
-            outline.effectDistance = new Vector2(1f, -1f);
-
-            Light cueLight = signCanvasObject.AddComponent<Light>();
-            cueLight.type = LightType.Point;
-            cueLight.color = new Color(1f, 0.9f, 0.76f, 1f);
-            cueLight.intensity = 1.2f;
-            cueLight.range = 4.8f;
-            cueLight.shadows = LightShadows.None;
+            CreatePart("UpperPanel", PrimitiveType.Cube, leafCueRoot, new Vector3(0f, 0.38f, -0.02f), new Vector3(0.74f, 0.56f, 0.06f), panelMaterial);
+            CreatePart("LowerPanel", PrimitiveType.Cube, leafCueRoot, new Vector3(0f, -0.32f, -0.02f), new Vector3(0.74f, 0.74f, 0.06f), panelMaterial);
+            CreatePart("MiddleRail", PrimitiveType.Cube, leafCueRoot, new Vector3(0f, 0.02f, -0.03f), new Vector3(0.82f, 0.08f, 0.07f), frameMaterial);
+            CreatePart("LeftStile", PrimitiveType.Cube, leafCueRoot, new Vector3(-0.44f, 0f, -0.03f), new Vector3(0.08f, 1.64f, 0.07f), frameMaterial);
+            CreatePart("RightStile", PrimitiveType.Cube, leafCueRoot, new Vector3(0.44f, 0f, -0.03f), new Vector3(0.08f, 1.64f, 0.07f), frameMaterial);
+            CreatePart("TopRail", PrimitiveType.Cube, leafCueRoot, new Vector3(0f, 0.78f, -0.03f), new Vector3(0.82f, 0.08f, 0.07f), frameMaterial);
+            CreatePart("BottomRail", PrimitiveType.Cube, leafCueRoot, new Vector3(0f, -0.78f, -0.03f), new Vector3(0.82f, 0.08f, 0.07f), frameMaterial);
+            CreatePart("HandlePlate", PrimitiveType.Cube, leafCueRoot, new Vector3(0.34f, -0.04f, -0.11f), new Vector3(0.06f, 0.22f, 0.03f), hardwareMaterial);
+            CreatePart("HandleGrip", PrimitiveType.Cube, leafCueRoot, new Vector3(0.42f, -0.04f, -0.14f), new Vector3(0.12f, 0.03f, 0.03f), hardwareMaterial);
+            CreatePart("KeyLock", PrimitiveType.Sphere, leafCueRoot, new Vector3(0.33f, -0.18f, -0.12f), new Vector3(0.04f, 0.04f, 0.02f), hardwareMaterial);
+            CreatePart("Peephole", PrimitiveType.Sphere, leafCueRoot, new Vector3(0f, 0.58f, -0.11f), new Vector3(0.04f, 0.04f, 0.02f), hardwareMaterial);
         }
 
         private static void EnsureDoorway(GameObject frontDoor)
@@ -198,6 +186,14 @@ namespace TWD.Core
             }
 
             return material;
+        }
+
+        private static void ClearChildren(Transform parent)
+        {
+            for (int i = parent.childCount - 1; i >= 0; i--)
+            {
+                Object.DestroyImmediate(parent.GetChild(i).gameObject);
+            }
         }
     }
 }
