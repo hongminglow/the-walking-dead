@@ -165,6 +165,8 @@ namespace TWD.Utilities
             public const string TAKE_DAMAGE = "TakeDamage";
             public const string IS_DEAD = "IsDead";
             public const string INTERACT = "Interact";
+            public const string JUMP = "Jump";
+            public const string IS_GROUNDED = "IsGrounded";
 
             // Enemy
             public const string IS_CHASING = "IsChasing";

@@ -311,7 +311,10 @@ namespace TWD.Player
                 return;
 
             _verticalVelocity.y = Mathf.Sqrt(_jumpHeight * -2f * _gravity);
+            _isGrounded = false;
             _isSprinting = false;
+            _playerAnimator?.SetGrounded(false);
+            _playerAnimator?.TriggerJump();
         }
 
         private void ApplyGravity()
@@ -378,6 +381,7 @@ namespace TWD.Player
             _playerAnimator.SetSprinting(isActivelySprinting);
             _playerAnimator.SetCrouching(_isCrouching);
             _playerAnimator.SetAiming(_isAiming);
+            _playerAnimator.SetGrounded(_isGrounded);
         }
 
         #endregion

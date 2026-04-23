@@ -32,6 +32,8 @@ namespace TWD.Player
         private int _takeDamageHash;
         private int _isDeadHash;
         private int _interactHash;
+        private int _jumpHash;
+        private int _isGroundedHash;
 
         private float _smoothSpeed;
         private const float SPEED_DAMP_TIME = 0.1f;
@@ -67,6 +69,8 @@ namespace TWD.Player
             _takeDamageHash = Animator.StringToHash(Constants.AnimParams.TAKE_DAMAGE);
             _isDeadHash = Animator.StringToHash(Constants.AnimParams.IS_DEAD);
             _interactHash = Animator.StringToHash(Constants.AnimParams.INTERACT);
+            _jumpHash = Animator.StringToHash(Constants.AnimParams.JUMP);
+            _isGroundedHash = Animator.StringToHash(Constants.AnimParams.IS_GROUNDED);
         }
 
         #endregion
@@ -95,6 +99,20 @@ namespace TWD.Player
         {
             if (_animator == null) return;
             _animator.SetBool(_isCrouchingHash, isCrouching);
+        }
+
+        /// <summary>Sets the grounded state for jump/fall transitions.</summary>
+        public void SetGrounded(bool isGrounded)
+        {
+            if (_animator == null) return;
+            _animator.SetBool(_isGroundedHash, isGrounded);
+        }
+
+        /// <summary>Triggers the jump animation.</summary>
+        public void TriggerJump()
+        {
+            if (_animator == null) return;
+            _animator.SetTrigger(_jumpHash);
         }
 
         #endregion

@@ -18,6 +18,7 @@ namespace TWD.Enemies
         private bool _isBrute;
         private bool _isCrawler;
         private bool _isVanishing;
+        private bool _usesProceduralVisuals;
 
         private void Awake()
         {
@@ -28,6 +29,9 @@ namespace TWD.Enemies
         public float TriggerDeathVanish()
         {
             const float vanishDuration = 0.9f;
+
+            if (!_usesProceduralVisuals || _visualRoot == null || !_visualRoot.gameObject.activeInHierarchy)
+                return -1f;
 
             if (_isVanishing)
                 return vanishDuration;
@@ -51,6 +55,17 @@ namespace TWD.Enemies
                 _visualRoot.SetParent(transform, false);
             }
 
+            if (HasImportedCharacter())
+            {
+                _usesProceduralVisuals = false;
+                HideBuiltInPlaceholderMeshes();
+                _visualRoot.gameObject.SetActive(false);
+                return;
+            }
+
+            _visualRoot.gameObject.SetActive(true);
+            _usesProceduralVisuals = true;
+
             if (_visualRoot.childCount > 0)
                 return;
 
@@ -60,6 +75,48 @@ namespace TWD.Enemies
                 BuildCrawler();
             else
                 BuildWalker();
+        }
+
+        private bool HasImportedCharacter()
+        {
+            SkinnedMeshRenderer[] skinnedMeshes = GetComponentsInChildren<SkinnedMeshRenderer>(true);
+            for (int i = 0; i < skinnedMeshes.Length; i++)
+            {
+                SkinnedMeshRenderer mesh = skinnedMeshes[i];
+                if (mesh == null)
+                    continue;
+
+                if (_visualRoot != null && mesh.transform.IsChildOf(_visualRoot))
+                    continue;
+
+                return true;
+            }
+
+            Animator[] animators = GetComponentsInChildren<Animator>(true);
+            for (int i = 0; i < animators.Length; i++)
+            {
+                Animator animator = animators[i];
+                if (animator == null || animator.gameObject == gameObject)
+                    continue;
+
+                if (_visualRoot != null && animator.transform.IsChildOf(_visualRoot))
+                    continue;
+
+                return true;
+            }
+
+            return false;
+        }
+
+        private void HideBuiltInPlaceholderMeshes()
+        {
+            Transform modelAnchor = transform.Find("ZombieModel");
+            if (modelAnchor == null)
+                return;
+
+            MeshRenderer meshRenderer = modelAnchor.GetComponent<MeshRenderer>();
+            if (meshRenderer != null)
+                meshRenderer.enabled = false;
         }
 
         private void HideLegacyMeshes()

@@ -48,6 +48,14 @@ namespace TWD.Player
                 visualRoot.SetParent(transform, false);
             }
 
+            if (HasImportedCharacter(visualRoot))
+            {
+                visualRoot.gameObject.SetActive(false);
+                return;
+            }
+
+            visualRoot.gameObject.SetActive(true);
+
             if (visualRoot.childCount > 0)
                 return;
 
@@ -67,6 +75,37 @@ namespace TWD.Player
             CreatePart("RightLeg", PrimitiveType.Cube, visualRoot, new Vector3(0.1f, -0.34f, 0f), new Vector3(0.12f, 0.48f, 0.13f), pants);
             CreatePart("LeftFoot", PrimitiveType.Cube, visualRoot, new Vector3(-0.1f, -0.64f, 0.07f), new Vector3(0.14f, 0.06f, 0.22f), boots);
             CreatePart("RightFoot", PrimitiveType.Cube, visualRoot, new Vector3(0.1f, -0.64f, 0.07f), new Vector3(0.14f, 0.06f, 0.22f), boots);
+        }
+
+        private bool HasImportedCharacter(Transform visualRoot)
+        {
+            SkinnedMeshRenderer[] skinnedMeshes = GetComponentsInChildren<SkinnedMeshRenderer>(true);
+            for (int i = 0; i < skinnedMeshes.Length; i++)
+            {
+                SkinnedMeshRenderer mesh = skinnedMeshes[i];
+                if (mesh == null)
+                    continue;
+
+                if (visualRoot != null && mesh.transform.IsChildOf(visualRoot))
+                    continue;
+
+                return true;
+            }
+
+            Animator[] animators = GetComponentsInChildren<Animator>(true);
+            for (int i = 0; i < animators.Length; i++)
+            {
+                Animator animator = animators[i];
+                if (animator == null || animator.gameObject == gameObject)
+                    continue;
+
+                if (visualRoot != null && animator.transform.IsChildOf(visualRoot))
+                    continue;
+
+                return true;
+            }
+
+            return false;
         }
 
         private static void CreatePart(string name, PrimitiveType primitiveType, Transform parent, Vector3 localPosition, Vector3 localScale, Material material)

@@ -508,7 +508,11 @@ namespace TWD.Enemies
             float destroyDelay = _data.corpseLifetime;
             EnemyCharacterVisual visual = GetComponent<EnemyCharacterVisual>();
             if (visual != null)
-                destroyDelay = visual.TriggerDeathVanish();
+            {
+                float visualDelay = visual.TriggerDeathVanish();
+                if (visualDelay > 0f)
+                    destroyDelay = visualDelay;
+            }
 
             Destroy(gameObject, Mathf.Max(0.7f, destroyDelay));
 
