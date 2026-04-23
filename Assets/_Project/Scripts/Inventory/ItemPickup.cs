@@ -9,6 +9,7 @@
 
 using UnityEngine;
 using UnityEngine.UI;
+using System.Collections.Generic;
 using TWD.Core;
 using TWD.Combat;
 using TWD.Environment;
@@ -25,6 +26,7 @@ namespace TWD.Inventory
     {
         private const string RuntimeVisualRootName = "[PickupVisual]";
         private const string RuntimeIndicatorRootName = "[PickupIndicator]";
+        private const string IndicatorChevronRootName = "IndicatorChevronRoot";
 
         #region Serialized Fields
 
@@ -55,6 +57,11 @@ namespace TWD.Inventory
         private Transform _runtimeIndicatorRoot;
         private Canvas _promptCanvas;
         private Transform _playerTransform;
+        private readonly List<Renderer> _indicatorRenderers = new List<Renderer>();
+        private Material _indicatorHaloMaterial;
+        private Material _indicatorAccentMaterial;
+        private Material _indicatorSoftMaterial;
+        private bool _isFocused;
 
         #endregion
 
@@ -102,11 +109,15 @@ namespace TWD.Inventory
         public void OnLookAt()
         {
             if (CanInteract)
+            {
+                _isFocused = true;
                 EventBus.ShowInteractPrompt(InteractPrompt);
+            }
         }
 
         public void OnLookAway()
         {
+            _isFocused = false;
             EventBus.HideInteractPrompt();
         }
 
@@ -160,6 +171,7 @@ namespace TWD.Inventory
             }
 
             AnimatePickupIndicator();
+            AnimatePickupFocus();
             UpdateWorldPrompt();
         }
 
@@ -187,6 +199,7 @@ namespace TWD.Inventory
         private void CompletePickup()
         {
             _hasBeenPickedUp = true;
+            _isFocused = false;
 
             if (_destroyOnPickup)
             {
@@ -278,18 +291,28 @@ namespace TWD.Inventory
 
             _runtimeIndicatorRoot = new GameObject(RuntimeIndicatorRootName).transform;
             _runtimeIndicatorRoot.SetParent(transform, false);
-            _runtimeIndicatorRoot.localPosition = new Vector3(0f, -0.1f, 0f);
+            _runtimeIndicatorRoot.localPosition = new Vector3(0f, -0.08f, 0f);
 
             Color accent = GetIndicatorColor();
-            Material ringMaterial = CreateEmissiveMaterial(accent, 2.3f);
-            Material markerMaterial = CreateEmissiveMaterial(Color.Lerp(accent, Color.white, 0.35f), 3.1f);
+            _indicatorRenderers.Clear();
+            _indicatorHaloMaterial = CreateEmissiveMaterial(accent, 2.2f);
+            _indicatorAccentMaterial = CreateEmissiveMaterial(Color.Lerp(accent, Color.white, 0.45f), 3.3f);
+            _indicatorSoftMaterial = CreateEmissiveMaterial(Color.Lerp(accent, new Color(0.12f, 0.15f, 0.18f, 1f), 0.3f), 1.4f);
 
-            CreateVisualPart("IndicatorNorth", PrimitiveType.Cube, _runtimeIndicatorRoot, new Vector3(0f, 0f, 0.3f), Quaternion.identity, new Vector3(0.32f, 0.025f, 0.04f), ringMaterial);
-            CreateVisualPart("IndicatorSouth", PrimitiveType.Cube, _runtimeIndicatorRoot, new Vector3(0f, 0f, -0.3f), Quaternion.identity, new Vector3(0.32f, 0.025f, 0.04f), ringMaterial);
-            CreateVisualPart("IndicatorEast", PrimitiveType.Cube, _runtimeIndicatorRoot, new Vector3(0.3f, 0f, 0f), Quaternion.identity, new Vector3(0.04f, 0.025f, 0.32f), ringMaterial);
-            CreateVisualPart("IndicatorWest", PrimitiveType.Cube, _runtimeIndicatorRoot, new Vector3(-0.3f, 0f, 0f), Quaternion.identity, new Vector3(0.04f, 0.025f, 0.32f), ringMaterial);
-            CreateVisualPart("IndicatorColumn", PrimitiveType.Cylinder, _runtimeIndicatorRoot, new Vector3(0f, 0.2f, 0f), Quaternion.identity, new Vector3(0.025f, 0.18f, 0.025f), markerMaterial);
-            CreateVisualPart("IndicatorMarker", PrimitiveType.Cube, _runtimeIndicatorRoot, new Vector3(0f, 0.58f, 0f), Quaternion.Euler(0f, 45f, 45f), new Vector3(0.16f, 0.16f, 0.16f), markerMaterial);
+            CreateIndicatorPart("IndicatorHaloOuter", PrimitiveType.Cylinder, _runtimeIndicatorRoot, new Vector3(0f, 0f, 0f), Quaternion.identity, new Vector3(0.78f, 0.008f, 0.78f), _indicatorSoftMaterial);
+            CreateIndicatorPart("IndicatorHaloInner", PrimitiveType.Cylinder, _runtimeIndicatorRoot, new Vector3(0f, 0.008f, 0f), Quaternion.identity, new Vector3(0.52f, 0.006f, 0.52f), _indicatorHaloMaterial);
+            CreateIndicatorPart("IndicatorBracketNorth", PrimitiveType.Cube, _runtimeIndicatorRoot, new Vector3(0f, 0.014f, 0.42f), Quaternion.identity, new Vector3(0.36f, 0.012f, 0.04f), _indicatorAccentMaterial);
+            CreateIndicatorPart("IndicatorBracketSouth", PrimitiveType.Cube, _runtimeIndicatorRoot, new Vector3(0f, 0.014f, -0.42f), Quaternion.identity, new Vector3(0.36f, 0.012f, 0.04f), _indicatorAccentMaterial);
+            CreateIndicatorPart("IndicatorBracketEast", PrimitiveType.Cube, _runtimeIndicatorRoot, new Vector3(0.42f, 0.014f, 0f), Quaternion.identity, new Vector3(0.04f, 0.012f, 0.36f), _indicatorAccentMaterial);
+            CreateIndicatorPart("IndicatorBracketWest", PrimitiveType.Cube, _runtimeIndicatorRoot, new Vector3(-0.42f, 0.014f, 0f), Quaternion.identity, new Vector3(0.04f, 0.012f, 0.36f), _indicatorAccentMaterial);
+
+            Transform chevronRoot = new GameObject(IndicatorChevronRootName).transform;
+            chevronRoot.SetParent(_runtimeIndicatorRoot, false);
+            chevronRoot.localPosition = new Vector3(0f, 0.56f, 0f);
+
+            CreateChevron("ChevronTop", chevronRoot, 0.18f, _indicatorAccentMaterial);
+            CreateChevron("ChevronMid", chevronRoot, 0.02f, _indicatorHaloMaterial);
+            CreateChevron("ChevronLow", chevronRoot, -0.14f, _indicatorSoftMaterial);
         }
 
         private void AnimatePickupIndicator()
@@ -300,16 +323,47 @@ namespace TWD.Inventory
             }
 
             _runtimeIndicatorRoot.gameObject.SetActive(CanInteract && !_hasBeenPickedUp);
+            _runtimeIndicatorRoot.localPosition = new Vector3(0f, -0.08f - (transform.position.y - _startPosition.y), 0f);
+            _runtimeIndicatorRoot.rotation = Quaternion.identity;
 
-            float pulse = 1f + Mathf.Sin(Time.time * 4f) * 0.08f;
-            _runtimeIndicatorRoot.localScale = new Vector3(pulse, pulse, pulse);
-
-            Transform marker = _runtimeIndicatorRoot.Find("IndicatorMarker");
-            if (marker != null)
+            float distanceBlend = 0f;
+            if (_playerTransform != null)
             {
-                marker.localPosition = new Vector3(0f, 0.58f + Mathf.Sin(Time.time * 3.1f) * 0.06f, 0f);
-                marker.Rotate(Vector3.up, 90f * Time.deltaTime, Space.Self);
+                float distance = Vector3.Distance(_playerTransform.position, transform.position);
+                distanceBlend = Mathf.Clamp01(1f - (distance / 6f));
             }
+
+            float emphasis = Mathf.Clamp01((_isFocused ? 0.85f : 0.25f) + (distanceBlend * 0.45f));
+            float pulse = 1f + Mathf.Sin(Time.time * 4.2f) * Mathf.Lerp(0.04f, 0.11f, emphasis);
+            _runtimeIndicatorRoot.localScale = Vector3.one * pulse;
+
+            Transform chevronRoot = _runtimeIndicatorRoot.Find(IndicatorChevronRootName);
+            if (chevronRoot != null)
+            {
+                chevronRoot.localPosition = new Vector3(0f, 0.56f + Mathf.Sin(Time.time * 3.1f) * 0.05f, 0f);
+            }
+
+            UpdateIndicatorEmission(emphasis);
+        }
+
+        private void AnimatePickupFocus()
+        {
+            if (_runtimeVisualRoot == null)
+            {
+                return;
+            }
+
+            float targetScale = _isFocused ? 1.1f : 1f;
+            float targetHeight = _isFocused ? 0.03f : 0f;
+
+            _runtimeVisualRoot.localScale = Vector3.Lerp(
+                _runtimeVisualRoot.localScale,
+                Vector3.one * targetScale,
+                Time.deltaTime * 8f);
+
+            Vector3 visualPosition = _runtimeVisualRoot.localPosition;
+            visualPosition.y = Mathf.Lerp(visualPosition.y, targetHeight, Time.deltaTime * 7f);
+            _runtimeVisualRoot.localPosition = visualPosition;
         }
 
         private Color GetIndicatorColor()
@@ -395,6 +449,62 @@ namespace TWD.Inventory
             if (rootRenderer != null)
             {
                 rootRenderer.enabled = false;
+            }
+        }
+
+        private void CreateChevron(string name, Transform parent, float yOffset, Material material)
+        {
+            Transform chevron = new GameObject(name).transform;
+            chevron.SetParent(parent, false);
+            chevron.localPosition = new Vector3(0f, yOffset, 0f);
+
+            CreateIndicatorPart($"{name}_L", PrimitiveType.Cube, chevron, new Vector3(-0.06f, 0f, 0f), Quaternion.Euler(0f, 0f, 36f), new Vector3(0.12f, 0.02f, 0.03f), material);
+            CreateIndicatorPart($"{name}_R", PrimitiveType.Cube, chevron, new Vector3(0.06f, 0f, 0f), Quaternion.Euler(0f, 0f, -36f), new Vector3(0.12f, 0.02f, 0.03f), material);
+        }
+
+        private void CreateIndicatorPart(string name, PrimitiveType primitiveType, Transform parent, Vector3 localPosition, Quaternion localRotation, Vector3 localScale, Material material)
+        {
+            GameObject part = GameObject.CreatePrimitive(primitiveType);
+            part.name = name;
+            part.transform.SetParent(parent, false);
+            part.transform.localPosition = localPosition;
+            part.transform.localRotation = localRotation;
+            part.transform.localScale = localScale;
+            part.layer = gameObject.layer;
+
+            Collider collider = part.GetComponent<Collider>();
+            if (collider != null)
+            {
+                Destroy(collider);
+            }
+
+            Renderer renderer = part.GetComponent<Renderer>();
+            if (renderer != null)
+            {
+                renderer.sharedMaterial = material;
+                renderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+                renderer.receiveShadows = false;
+                _indicatorRenderers.Add(renderer);
+            }
+        }
+
+        private void UpdateIndicatorEmission(float emphasis)
+        {
+            for (int i = 0; i < _indicatorRenderers.Count; i++)
+            {
+                Renderer renderer = _indicatorRenderers[i];
+                if (renderer == null || renderer.sharedMaterial == null || !renderer.sharedMaterial.HasProperty("_EmissionColor"))
+                {
+                    continue;
+                }
+
+                Material material = renderer.sharedMaterial;
+                Color baseColor = material.HasProperty("_BaseColor")
+                    ? material.GetColor("_BaseColor")
+                    : material.color;
+
+                float strength = 1.1f + (emphasis * 2.8f);
+                material.SetColor("_EmissionColor", baseColor * strength);
             }
         }
 

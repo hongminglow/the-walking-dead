@@ -15,15 +15,15 @@ RenderSettings:
   m_ObjectHideFlags: 0
   serializedVersion: 10
   m_Fog: 1
-  m_FogColor: {r: 0.13, g: 0.13, b: 0.14, a: 1}
+  m_FogColor: {r: 0.145, g: 0.145, b: 0.15, a: 1}
   m_FogMode: 2
   m_FogDensity: 0.006
   m_LinearFogStart: 0
   m_LinearFogEnd: 300
-  m_AmbientSkyColor: {r: 0.11, g: 0.09, b: 0.08, a: 1}
-  m_AmbientEquatorColor: {r: 0.16, g: 0.13, b: 0.11, a: 1}
-  m_AmbientGroundColor: {r: 0.06, g: 0.055, b: 0.05, a: 1}
-  m_AmbientIntensity: 1.55
+  m_AmbientSkyColor: {r: 0.125, g: 0.105, b: 0.095, a: 1}
+  m_AmbientEquatorColor: {r: 0.18, g: 0.15, b: 0.13, a: 1}
+  m_AmbientGroundColor: {r: 0.075, g: 0.07, b: 0.065, a: 1}
+  m_AmbientIntensity: 1.72
   m_AmbientMode: 3
   m_SubtractiveShadowColor: {r: 0.42, g: 0.478, b: 0.627, a: 1}
   m_SkyboxMaterial: {fileID: 0}
@@ -1966,8 +1966,8 @@ Light:
   serializedVersion: 13
   m_Type: 2
   m_Color: {r: 0.5, g: 0.3, b: 0.25, a: 1}
-  m_Intensity: 2.2
-  m_Range: 8
+  m_Intensity: 2.55
+  m_Range: 9
   m_SpotAngle: 30
   m_InnerSpotAngle: 21.80208
   m_CookieSize2D: {x: 0.5, y: 0.5}
@@ -3018,8 +3018,8 @@ MonoBehaviour:
   _requiredKeyId: key_house
   _consumeKey: 1
   _animator: {fileID: 0}
-  _openAngle: 90
-  _openSpeed: 2
+  _openAngle: 108
+  _openSpeed: 1.6
   _openSound: {fileID: 0}
   _closeSound: {fileID: 0}
   _lockedSound: {fileID: 0}
@@ -3335,8 +3335,8 @@ Light:
   serializedVersion: 13
   m_Type: 2
   m_Color: {r: 0.3, g: 0.4, b: 0.5, a: 1}
-  m_Intensity: 2.1
-  m_Range: 8
+  m_Intensity: 2.35
+  m_Range: 8.8
   m_SpotAngle: 30
   m_InnerSpotAngle: 21.80208
   m_CookieSize2D: {x: 0.5, y: 0.5}
@@ -5011,8 +5011,8 @@ Light:
   serializedVersion: 13
   m_Type: 2
   m_Color: {r: 0.7, g: 0.5, b: 0.3, a: 1}
-  m_Intensity: 3
-  m_Range: 8
+  m_Intensity: 3.35
+  m_Range: 8.8
   m_SpotAngle: 30
   m_InnerSpotAngle: 21.80208
   m_CookieSize2D: {x: 0.5, y: 0.5}
@@ -5228,7 +5228,7 @@ Light:
   serializedVersion: 13
   m_Type: 1
   m_Color: {r: 0.5, g: 0.55, b: 0.7, a: 1}
-  m_Intensity: 1.15
+  m_Intensity: 1.28
   m_Range: 10
   m_SpotAngle: 30
   m_InnerSpotAngle: 21.80208
@@ -5815,8 +5815,8 @@ Light:
   serializedVersion: 13
   m_Type: 2
   m_Color: {r: 0.8, g: 0.6, b: 0.3, a: 1}
-  m_Intensity: 3.2
-  m_Range: 8
+  m_Intensity: 3.75
+  m_Range: 9.5
   m_SpotAngle: 30
   m_InnerSpotAngle: 21.80208
   m_CookieSize2D: {x: 0.5, y: 0.5}
@@ -8507,8 +8507,8 @@ Light:
   serializedVersion: 13
   m_Type: 2
   m_Color: {r: 0.65, g: 0.52, b: 0.4, a: 1}
-  m_Intensity: 3.35
-  m_Range: 8
+  m_Intensity: 3.55
+  m_Range: 8.8
   m_SpotAngle: 30
   m_InnerSpotAngle: 21.80208
   m_CookieSize2D: {x: 0.5, y: 0.5}

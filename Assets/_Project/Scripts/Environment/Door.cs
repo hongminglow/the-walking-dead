@@ -30,6 +30,7 @@ namespace TWD.Environment
 
         [Header("Animation")]
         [SerializeField] private Animator _animator;
+        [SerializeField] private Transform _doorLeaf;
         [SerializeField] private float _openAngle = 90f;
         [SerializeField] private float _openSpeed = 2f;
 
@@ -55,6 +56,9 @@ namespace TWD.Environment
         private bool _doorWasTrigger;
         private Quaternion _closedRotation;
         private Quaternion _openRotation;
+        private bool _hasResolvedRotations;
+
+        private const string DefaultDoorLeafPivotName = "[DoorLeafPivot]";
 
         #endregion
 
@@ -119,10 +123,10 @@ namespace TWD.Environment
             _audioSource = GetComponent<AudioSource>();
             _doorCollider = GetComponent<Collider>();
             _currentState = _initialState;
-            _closedRotation = transform.rotation;
-            _openRotation = _closedRotation * Quaternion.Euler(0f, _openAngle, 0f);
             if (_doorCollider != null)
                 _doorWasTrigger = _doorCollider.isTrigger;
+
+            ResolveDoorLeaf(forceRefresh: true);
 
             if (string.IsNullOrEmpty(_doorId))
                 _doorId = gameObject.name.Replace(" ", "_").ToLowerInvariant();
@@ -180,6 +184,7 @@ namespace TWD.Environment
 
         private void Open()
         {
+            ResolveDoorLeaf();
             _currentState = DoorState.Open;
             _isAnimating = true;
             SetPassageBlocked(false);
@@ -201,6 +206,7 @@ namespace TWD.Environment
 
         private void Close()
         {
+            ResolveDoorLeaf();
             _currentState = DoorState.Unlocked;
             _isAnimating = true;
             SetPassageBlocked(true);
@@ -220,13 +226,20 @@ namespace TWD.Environment
 
         private System.Collections.IEnumerator RotateDoor(Quaternion target)
         {
-            while (Quaternion.Angle(transform.rotation, target) > 1f)
+            Transform doorLeaf = ResolveDoorLeaf();
+            if (doorLeaf == null)
             {
-                transform.rotation = Quaternion.Slerp(transform.rotation, target, Time.deltaTime * _openSpeed);
+                _isAnimating = false;
+                yield break;
+            }
+
+            while (Quaternion.Angle(doorLeaf.localRotation, target) > 1f)
+            {
+                doorLeaf.localRotation = Quaternion.Slerp(doorLeaf.localRotation, target, Time.deltaTime * _openSpeed);
                 yield return null;
             }
 
-            transform.rotation = target;
+            doorLeaf.localRotation = target;
             _isAnimating = false;
         }
 
@@ -237,11 +250,11 @@ namespace TWD.Environment
         /// <summary>Forces the door to a specific state (for save/load).</summary>
         public void SetState(DoorState state)
         {
+            Transform doorLeaf = ResolveDoorLeaf();
             _currentState = state;
-            if (state == DoorState.Open)
-            {
-                transform.rotation = _openRotation;
-            }
+            if (doorLeaf == null) return;
+
+            doorLeaf.localRotation = state == DoorState.Open ? _openRotation : _closedRotation;
         }
 
         #endregion
@@ -262,6 +275,28 @@ namespace TWD.Environment
                 return;
 
             _doorCollider.isTrigger = !blocked ? true : _doorWasTrigger;
+        }
+
+        private Transform ResolveDoorLeaf(bool forceRefresh = false)
+        {
+            Transform autoDetectedLeaf = transform.Find(DefaultDoorLeafPivotName);
+            if ((_doorLeaf == null || _doorLeaf == transform || forceRefresh) && autoDetectedLeaf != null)
+            {
+                _doorLeaf = autoDetectedLeaf;
+                _hasResolvedRotations = false;
+            }
+
+            if (_doorLeaf == null)
+                _doorLeaf = transform;
+
+            if (!_hasResolvedRotations)
+            {
+                _closedRotation = _doorLeaf.localRotation;
+                _openRotation = _closedRotation * Quaternion.Euler(0f, _openAngle, 0f);
+                _hasResolvedRotations = true;
+            }
+
+            return _doorLeaf;
         }
 
         #endregion

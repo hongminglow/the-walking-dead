@@ -7,7 +7,8 @@ namespace TWD.Core
     public static class Level01FrontDoorCue
     {
         private const string CueRootName = "[FrontDoorFrameCue]";
-        private const string LeafCueRootName = "[FrontDoorLeafCue]";
+        private const string LeafPivotName = "[DoorLeafPivot]";
+        private const string LeafVisualRootName = "[FrontDoorLeafVisual]";
         private const string LeftWallSegmentName = "Wall_South_Left";
         private const string RightWallSegmentName = "Wall_South_Right";
 
@@ -51,17 +52,28 @@ namespace TWD.Core
             staticCueRoot.localScale = Vector3.one;
             ClearChildren(staticCueRoot);
 
-            Transform leafCueRoot = frontDoor.transform.Find(LeafCueRootName);
-            if (leafCueRoot == null)
+            Transform leafPivot = frontDoor.transform.Find(LeafPivotName);
+            if (leafPivot == null)
             {
-                leafCueRoot = new GameObject(LeafCueRootName).transform;
-                leafCueRoot.SetParent(frontDoor.transform, false);
+                leafPivot = new GameObject(LeafPivotName).transform;
+                leafPivot.SetParent(frontDoor.transform, false);
             }
 
-            leafCueRoot.localPosition = Vector3.zero;
-            leafCueRoot.localRotation = Quaternion.identity;
-            leafCueRoot.localScale = Vector3.one;
-            ClearChildren(leafCueRoot);
+            leafPivot.localPosition = new Vector3(-0.45f, 0f, 0f);
+            leafPivot.localRotation = Quaternion.identity;
+            leafPivot.localScale = Vector3.one;
+
+            Transform leafVisualRoot = leafPivot.Find(LeafVisualRootName);
+            if (leafVisualRoot == null)
+            {
+                leafVisualRoot = new GameObject(LeafVisualRootName).transform;
+                leafVisualRoot.SetParent(leafPivot, false);
+            }
+
+            leafVisualRoot.localPosition = new Vector3(0.45f, 0f, 0f);
+            leafVisualRoot.localRotation = Quaternion.identity;
+            leafVisualRoot.localScale = Vector3.one;
+            ClearChildren(leafVisualRoot);
 
             Material doorMaterial = CreateLitMaterial(new Color(0.42f, 0.24f, 0.12f, 1f), 0.02f, 0.42f, Color.black);
             Material panelMaterial = CreateLitMaterial(new Color(0.34f, 0.18f, 0.1f, 1f), 0.02f, 0.38f, Color.black);
@@ -71,7 +83,7 @@ namespace TWD.Core
 
             Renderer frontDoorRenderer = frontDoor.GetComponent<Renderer>();
             if (frontDoorRenderer != null)
-                frontDoorRenderer.sharedMaterial = doorMaterial;
+                frontDoorRenderer.enabled = false;
 
             CreatePart("FrameLeft", PrimitiveType.Cube, staticCueRoot, new Vector3(-0.61f, 0f, -0.02f), new Vector3(0.1f, 1.9f, 0.14f), frameMaterial);
             CreatePart("FrameRight", PrimitiveType.Cube, staticCueRoot, new Vector3(0.61f, 0f, -0.02f), new Vector3(0.1f, 1.9f, 0.14f), frameMaterial);
@@ -79,17 +91,17 @@ namespace TWD.Core
             CreatePart("Threshold", PrimitiveType.Cube, staticCueRoot, new Vector3(0f, -0.92f, 0.03f), new Vector3(1.14f, 0.05f, 0.18f), frameMaterial);
             CreatePart("DoorMat", PrimitiveType.Cube, staticCueRoot, new Vector3(0f, -1.01f, 0.66f), new Vector3(0.9f, 0.02f, 0.44f), matMaterial);
 
-            CreatePart("UpperPanel", PrimitiveType.Cube, leafCueRoot, new Vector3(0f, 0.38f, -0.02f), new Vector3(0.74f, 0.56f, 0.06f), panelMaterial);
-            CreatePart("LowerPanel", PrimitiveType.Cube, leafCueRoot, new Vector3(0f, -0.32f, -0.02f), new Vector3(0.74f, 0.74f, 0.06f), panelMaterial);
-            CreatePart("MiddleRail", PrimitiveType.Cube, leafCueRoot, new Vector3(0f, 0.02f, -0.03f), new Vector3(0.82f, 0.08f, 0.07f), frameMaterial);
-            CreatePart("LeftStile", PrimitiveType.Cube, leafCueRoot, new Vector3(-0.44f, 0f, -0.03f), new Vector3(0.08f, 1.64f, 0.07f), frameMaterial);
-            CreatePart("RightStile", PrimitiveType.Cube, leafCueRoot, new Vector3(0.44f, 0f, -0.03f), new Vector3(0.08f, 1.64f, 0.07f), frameMaterial);
-            CreatePart("TopRail", PrimitiveType.Cube, leafCueRoot, new Vector3(0f, 0.78f, -0.03f), new Vector3(0.82f, 0.08f, 0.07f), frameMaterial);
-            CreatePart("BottomRail", PrimitiveType.Cube, leafCueRoot, new Vector3(0f, -0.78f, -0.03f), new Vector3(0.82f, 0.08f, 0.07f), frameMaterial);
-            CreatePart("HandlePlate", PrimitiveType.Cube, leafCueRoot, new Vector3(0.34f, -0.04f, -0.11f), new Vector3(0.06f, 0.22f, 0.03f), hardwareMaterial);
-            CreatePart("HandleGrip", PrimitiveType.Cube, leafCueRoot, new Vector3(0.42f, -0.04f, -0.14f), new Vector3(0.12f, 0.03f, 0.03f), hardwareMaterial);
-            CreatePart("KeyLock", PrimitiveType.Sphere, leafCueRoot, new Vector3(0.33f, -0.18f, -0.12f), new Vector3(0.04f, 0.04f, 0.02f), hardwareMaterial);
-            CreatePart("Peephole", PrimitiveType.Sphere, leafCueRoot, new Vector3(0f, 0.58f, -0.11f), new Vector3(0.04f, 0.04f, 0.02f), hardwareMaterial);
+            CreatePart("UpperPanel", PrimitiveType.Cube, leafVisualRoot, new Vector3(0f, 0.38f, -0.02f), new Vector3(0.74f, 0.56f, 0.06f), panelMaterial);
+            CreatePart("LowerPanel", PrimitiveType.Cube, leafVisualRoot, new Vector3(0f, -0.32f, -0.02f), new Vector3(0.74f, 0.74f, 0.06f), panelMaterial);
+            CreatePart("MiddleRail", PrimitiveType.Cube, leafVisualRoot, new Vector3(0f, 0.02f, -0.03f), new Vector3(0.82f, 0.08f, 0.07f), frameMaterial);
+            CreatePart("LeftStile", PrimitiveType.Cube, leafVisualRoot, new Vector3(-0.44f, 0f, -0.03f), new Vector3(0.08f, 1.64f, 0.07f), frameMaterial);
+            CreatePart("RightStile", PrimitiveType.Cube, leafVisualRoot, new Vector3(0.44f, 0f, -0.03f), new Vector3(0.08f, 1.64f, 0.07f), frameMaterial);
+            CreatePart("TopRail", PrimitiveType.Cube, leafVisualRoot, new Vector3(0f, 0.78f, -0.03f), new Vector3(0.82f, 0.08f, 0.07f), frameMaterial);
+            CreatePart("BottomRail", PrimitiveType.Cube, leafVisualRoot, new Vector3(0f, -0.78f, -0.03f), new Vector3(0.82f, 0.08f, 0.07f), frameMaterial);
+            CreatePart("HandlePlate", PrimitiveType.Cube, leafVisualRoot, new Vector3(0.34f, -0.04f, 0.11f), new Vector3(0.06f, 0.22f, 0.03f), hardwareMaterial);
+            CreatePart("HandleGrip", PrimitiveType.Cube, leafVisualRoot, new Vector3(0.42f, -0.04f, 0.14f), new Vector3(0.12f, 0.03f, 0.03f), hardwareMaterial);
+            CreatePart("KeyLock", PrimitiveType.Sphere, leafVisualRoot, new Vector3(0.33f, -0.18f, 0.12f), new Vector3(0.04f, 0.04f, 0.02f), hardwareMaterial);
+            CreatePart("Peephole", PrimitiveType.Sphere, leafVisualRoot, new Vector3(0f, 0.58f, -0.11f), new Vector3(0.04f, 0.04f, 0.02f), hardwareMaterial);
         }
 
         private static void EnsureDoorway(GameObject frontDoor)
@@ -128,7 +140,14 @@ namespace TWD.Core
                 Object.Destroy(strayRightSegment);
 
             frontDoor.transform.position = new Vector3(4f, 1.75f, -0.08f);
-            frontDoor.transform.localScale = new Vector3(2f, 3.5f, 0.18f);
+            frontDoor.transform.localScale = Vector3.one;
+
+            BoxCollider doorCollider = frontDoor.GetComponent<BoxCollider>();
+            if (doorCollider != null)
+            {
+                doorCollider.size = new Vector3(0.9f, 1.84f, 0.12f);
+                doorCollider.center = Vector3.zero;
+            }
         }
 
         private static void EnsureExitZone()

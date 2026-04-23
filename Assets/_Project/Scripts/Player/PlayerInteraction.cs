@@ -27,7 +27,7 @@ namespace TWD.Player
         [Header("Raycast Settings")]
         [SerializeField] private float _interactDistance = Constants.Player.INTERACT_DISTANCE;
         [SerializeField] private float _interactRadius = 0.35f;
-        [SerializeField] private float _pickupAssistRadius = 1.75f;
+        [SerializeField] private float _pickupAssistRadius = 2.15f;
         [SerializeField] private LayerMask _interactableLayer;
 
         [Header("References")]
@@ -176,7 +176,7 @@ namespace TWD.Player
                 }
 
                 float facingScore = Vector3.Dot(_cameraTransform.forward, toPickup.normalized);
-                if (facingScore < 0.2f)
+                if (facingScore < 0.05f)
                 {
                     continue;
                 }
