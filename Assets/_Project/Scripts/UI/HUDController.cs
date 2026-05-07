@@ -69,6 +69,7 @@ namespace TWD.UI
         private PlayerCombat _playerCombat;
         private GameObject _hotbarPanel;
         private Image[] _hotbarSlotBackgrounds;
+        private Image[] _hotbarSlotIcons;
         private Text[] _hotbarSlotLabels;
         private Text[] _hotbarSlotNumbers;
 
@@ -504,6 +505,7 @@ namespace TWD.UI
             GameObject panel = CreatePanel("HotbarPanel", transform, new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), new Vector2(0f, 18f), new Vector2(504f, 56f), new Color(0f, 0f, 0f, 0f));
             _hotbarPanel = panel;
             _hotbarSlotBackgrounds = new Image[HotbarSlotCount];
+            _hotbarSlotIcons = new Image[HotbarSlotCount];
             _hotbarSlotLabels = new Text[HotbarSlotCount];
             _hotbarSlotNumbers = new Text[HotbarSlotCount];
 
@@ -526,10 +528,29 @@ namespace TWD.UI
                 slotOutline.effectDistance = new Vector2(1f, -1f);
 
                 Text number = CreateText($"HotbarNumber_{i}", slot.transform, font, (i + 1).ToString(), 9, FontStyle.Bold, TextAnchor.UpperLeft, new Vector2(4f, -4f), new Vector2(16f, 12f), new Color(0.74f, 0.77f, 0.8f, 0.95f), false);
+                Image icon = CreateHotbarIcon($"HotbarIcon_{i}", slot.transform);
                 Text label = CreateText($"HotbarLabel_{i}", slot.transform, font, "---", 10, FontStyle.Bold, TextAnchor.MiddleCenter, new Vector2(5f, -10f), new Vector2(40f, 30f), new Color(0.9f, 0.9f, 0.88f, 0.96f));
                 _hotbarSlotNumbers[i] = number;
+                _hotbarSlotIcons[i] = icon;
                 _hotbarSlotLabels[i] = label;
             }
+        }
+
+        private static Image CreateHotbarIcon(string name, Transform parent)
+        {
+            GameObject iconObject = CreateUiChild(name, parent);
+            RectTransform rect = iconObject.GetComponent<RectTransform>();
+            rect.anchorMin = new Vector2(0.5f, 0.5f);
+            rect.anchorMax = new Vector2(0.5f, 0.5f);
+            rect.pivot = new Vector2(0.5f, 0.5f);
+            rect.anchoredPosition = new Vector2(0f, -1f);
+            rect.sizeDelta = new Vector2(31f, 31f);
+
+            Image icon = iconObject.AddComponent<Image>();
+            icon.enabled = false;
+            icon.preserveAspect = true;
+            icon.raycastTarget = false;
+            return icon;
         }
 
         private void CreateRuntimePickupToast()
@@ -771,6 +792,9 @@ namespace TWD.UI
             if (_hotbarSlotLabels == null || _hotbarSlotLabels.Length != HotbarSlotCount)
                 _hotbarSlotLabels = new Text[HotbarSlotCount];
 
+            if (_hotbarSlotIcons == null || _hotbarSlotIcons.Length != HotbarSlotCount)
+                _hotbarSlotIcons = new Image[HotbarSlotCount];
+
             if (_hotbarSlotNumbers == null || _hotbarSlotNumbers.Length != HotbarSlotCount)
                 _hotbarSlotNumbers = new Text[HotbarSlotCount];
 
@@ -780,6 +804,8 @@ namespace TWD.UI
                     _hotbarSlotBackgrounds[i] = FindNamedComponentInChildren<Image>($"HotbarSlot_{i}", _hotbarPanel.transform);
                 if (_hotbarSlotLabels[i] == null)
                     _hotbarSlotLabels[i] = FindNamedComponentInChildren<Text>($"HotbarLabel_{i}", _hotbarPanel.transform);
+                if (_hotbarSlotIcons[i] == null)
+                    _hotbarSlotIcons[i] = FindNamedComponentInChildren<Image>($"HotbarIcon_{i}", _hotbarPanel.transform);
                 if (_hotbarSlotNumbers[i] == null)
                     _hotbarSlotNumbers[i] = FindNamedComponentInChildren<Text>($"HotbarNumber_{i}", _hotbarPanel.transform);
             }
@@ -797,6 +823,7 @@ namespace TWD.UI
 
                 WeaponData weapon = _playerCombat.GetHotbarWeapon(i);
                 bool isSelected = _playerCombat.SelectedHotbarIndex == i;
+                Sprite weaponIcon = weapon != null ? weapon.icon : null;
 
                 _hotbarSlotBackgrounds[i].color = isSelected
                     ? new Color(0.76f, 0.18f, 0.14f, 0.94f)
@@ -804,7 +831,16 @@ namespace TWD.UI
                         ? new Color(0.1f, 0.12f, 0.14f, 0.82f)
                         : new Color(0.05f, 0.06f, 0.07f, 0.55f);
 
-                _hotbarSlotLabels[i].text = weapon != null ? GetHotbarLabel(weapon) : "---";
+                if (_hotbarSlotIcons != null && _hotbarSlotIcons[i] != null)
+                {
+                    _hotbarSlotIcons[i].sprite = weaponIcon;
+                    _hotbarSlotIcons[i].enabled = weaponIcon != null;
+                    _hotbarSlotIcons[i].color = isSelected
+                        ? new Color(1f, 0.96f, 0.88f, 1f)
+                        : new Color(0.88f, 0.9f, 0.9f, weaponIcon != null ? 0.96f : 0f);
+                }
+
+                _hotbarSlotLabels[i].text = weapon == null ? "---" : weaponIcon != null ? string.Empty : GetHotbarLabel(weapon);
                 _hotbarSlotLabels[i].color = isSelected
                     ? new Color(1f, 0.96f, 0.88f, 1f)
                     : weapon != null

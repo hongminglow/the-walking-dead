@@ -15,7 +15,7 @@ MonoBehaviour:
   weaponName: Kitchen Knife
   weaponId: weapon_knife
   weaponType: 0
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: c1a9a5e7d2c04667a7db2d15f5b3c4a1, type: 3}
   weaponPrefab: {fileID: 0}
   damage: 15
   fireRate: 0.8

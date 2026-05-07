@@ -96,6 +96,7 @@ ignore.conf
 *.github
 .agents/*
 .codex/*
+.codex_tmp/*
 
 # ---- Local AI / Codex / Unity MCP tooling ----
 .codex-unity-ping.json
