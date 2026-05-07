@@ -158,6 +158,9 @@ namespace TWD.Player
             if (kb != null && kb.vKey.wasPressedThisFrame)
                 PerformMelee();
 
+            if (mouse != null)
+                ReadHotbarScrollInput(mouse);
+
             if (kb != null)
                 ReadHotbarInput(kb);
         }
@@ -647,6 +650,51 @@ namespace TWD.Player
             else if (keyboard.digit7Key.wasPressedThisFrame || keyboard.numpad7Key.wasPressedThisFrame) EquipHotbarSlot(6);
             else if (keyboard.digit8Key.wasPressedThisFrame || keyboard.numpad8Key.wasPressedThisFrame) EquipHotbarSlot(7);
             else if (keyboard.digit9Key.wasPressedThisFrame || keyboard.numpad9Key.wasPressedThisFrame) EquipHotbarSlot(8);
+        }
+
+        private void ReadHotbarScrollInput(Mouse mouse)
+        {
+            float scrollY = mouse.scroll.ReadValue().y;
+            if (Mathf.Abs(scrollY) < 0.01f)
+                return;
+
+            CycleHotbar(scrollY < 0f ? 1 : -1);
+        }
+
+        private bool CycleHotbar(int direction)
+        {
+            if (_hotbarWeapons == null || _hotbarWeapons.Length == 0 || direction == 0)
+                return false;
+
+            int startIndex = _selectedHotbarIndex >= 0 ? _selectedHotbarIndex : FindCurrentHotbarIndex();
+            if (startIndex < 0)
+                startIndex = direction > 0 ? -1 : _hotbarWeapons.Length;
+
+            for (int offset = 1; offset <= _hotbarWeapons.Length; offset++)
+            {
+                int nextIndex = (startIndex + direction * offset) % _hotbarWeapons.Length;
+                if (nextIndex < 0)
+                    nextIndex += _hotbarWeapons.Length;
+
+                if (EquipHotbarSlot(nextIndex))
+                    return true;
+            }
+
+            return false;
+        }
+
+        private int FindCurrentHotbarIndex()
+        {
+            if (_currentWeaponData == null || _hotbarWeapons == null)
+                return -1;
+
+            for (int i = 0; i < _hotbarWeapons.Length; i++)
+            {
+                if (_hotbarWeapons[i] == _currentWeaponData)
+                    return i;
+            }
+
+            return -1;
         }
 
         private void BuildDefaultHotbar()
